@@ -1,0 +1,590 @@
+import { RuntimeContext, Value } from './interfaces';
+import { FeitType } from './ast/feittype';
+import { TimelineValueImpl } from './ast/timelines';
+import { DomainModel } from './ast/domain-model';
+import { Dimension } from './ast/dimensions';
+import { DimensionRegistry } from './model/dimensions';
+
+/**
+ * Represents a relationship instance between two objects
+ */
+export interface Relationship {
+  feittypeNaam: string;  // The type of relationship
+  subject: Value;        // The subject of the relationship (must be object type)
+  object: Value;         // The object of the relationship (must be object type)
+  preposition?: string;  // "MET" or "TOT" (optional)
+}
+
+/**
+ * Implementation of runtime context
+ */
+export class Context implements RuntimeContext {
+  private scopes: Map<string, Value>[] = [new Map()];
+  private objects: Map<string, Map<string, any>> = new Map();
+  private executionTrace: string[] = [];
+  private objectCounter: number = 0;
+  public current_instance: Value | undefined;
+  public evaluation_date: Date = new Date();
+  public domainModel: DomainModel;
+  public dimensionRegistry: DimensionRegistry;
+
+  // Store relationships between objects
+  private relationships: Relationship[] = [];
+
+  // Store Feittype definitions
+  private feittypen: Map<string, FeitType> = new Map();
+
+  // Store timeline attributes for objects
+  // Map from object type -> object id -> attribute name -> TimelineValue
+  private timelineAttributes: Map<string, Map<string, Map<string, TimelineValueImpl>>> = new Map();
+
+  // Store timeline parameters
+  private timelineParameters: Map<string, TimelineValueImpl> = new Map();
+
+  // Store kenmerken for objects (separate from attributes, mirroring Python's RuntimeObject.kenmerken)
+  // Map from object type -> object id -> kenmerk name -> boolean value
+  private objectKenmerken: Map<string, Map<string, Map<string, boolean>>> = new Map();
+
+  // Rule execution tracking for regel status conditions
+  private executedRules: Set<string> = new Set();  // Rules that have been executed (fired)
+  private inconsistentRules: Set<string> = new Set();  // Consistency rules that found inconsistencies
+
+  // Configurable maximum iterations for recursive rule groups (spec §9.9)
+  public maxRecursionIterations: number = 100;
+
+  constructor(model?: DomainModel) {
+    if (model) {
+      this.domainModel = model;
+    } else {
+      // Create an empty domain model if none provided
+      this.domainModel = {
+        objectTypes: [],
+        parameters: [],
+        regels: [],
+        regelGroepen: [],
+        beslistabels: [],
+        dimensions: [],
+        dagsoortDefinities: [],
+        domains: [],
+        feitTypes: [],
+        unitSystems: []
+      };
+    }
+
+    // Initialize dimension registry from model
+    this.dimensionRegistry = new DimensionRegistry();
+    if (this.domainModel.dimensions) {
+      for (const dimension of this.domainModel.dimensions) {
+        this.dimensionRegistry.register(dimension);
+      }
+    }
+
+    // Register FeitTypes from model so relationship navigation works
+    // Check both 'feitTypes' and 'feittypen' - AST uses 'feittypen', some code uses 'feitTypes'
+    const feitTypes = this.domainModel.feitTypes || (this.domainModel as any).feittypen || [];
+    for (const feittype of feitTypes) {
+      this.registerFeittype(feittype);
+    }
+  }
+
+  getVariable(name: string): Value | undefined {
+    // Search from innermost to outermost scope
+    for (let i = this.scopes.length - 1; i >= 0; i--) {
+      const value = this.scopes[i].get(name);
+      if (value !== undefined) {
+        return value;
+      }
+    }
+    return undefined;
+  }
+
+  setVariable(name: string, value: Value): void {
+    // Set in current scope
+    this.scopes[this.scopes.length - 1].set(name, value);
+  }
+
+  pushScope(): void {
+    this.scopes.push(new Map());
+  }
+
+  popScope(): void {
+    if (this.scopes.length > 1) {
+      this.scopes.pop();
+    }
+  }
+
+  getParameter(name: string): Value | undefined {
+    // For now, parameters are just variables in the global scope
+    return this.scopes[0].get(name);
+  }
+
+  getObject(type: string, id: string): any | undefined {
+    const typeMap = this.objects.get(type);
+    return typeMap?.get(id);
+  }
+
+  createObject(type: string, id: string, attributes: Record<string, Value>): void {
+    if (!this.objects.has(type)) {
+      this.objects.set(type, new Map());
+    }
+    this.objects.get(type)!.set(id, attributes);
+  }
+
+  /**
+   * Canonicalize type name for comparison (lowercase, no spaces/articles)
+   */
+  private canonicalizeTypeName(name: string): string {
+    return name.toLowerCase()
+      .replace(/^(de|het|een)\s+/g, '')
+      .replace(/\s+/g, '');
+  }
+
+  getObjectsByType(type: string): Value[] {
+    // Try exact match first
+    let typeMap = this.objects.get(type);
+
+    // If no exact match, try canonicalized matching
+    // Handles: "Natuurlijk persoon" matching "Natuurlijkpersoon"
+    if (!typeMap) {
+      const canonicalQuery = this.canonicalizeTypeName(type);
+      for (const [storedType, map] of this.objects.entries()) {
+        if (this.canonicalizeTypeName(storedType) === canonicalQuery) {
+          typeMap = map;
+          break;
+        }
+      }
+    }
+
+    if (!typeMap) {
+      return [];
+    }
+
+    const result: Value[] = [];
+    for (const [id, attributes] of typeMap.entries()) {
+      // Get kenmerken for this object
+      const kenmerken = this.getObjectKenmerkenMap(type, id);
+      result.push({
+        type: 'object',
+        objectType: type,
+        objectId: id,
+        value: attributes,
+        kenmerken: kenmerken  // Include separate kenmerken dict
+      } as any);
+    }
+    return result;
+  }
+
+  addExecutionTrace(message: string): void {
+    this.executionTrace.push(message);
+  }
+
+  getExecutionTrace(): string[] {
+    return [...this.executionTrace];
+  }
+
+  // --- Kenmerken Handling (separate from attributes, mirroring Python) ---
+
+  /**
+   * Get all kenmerken for an object as a Map
+   */
+  private getObjectKenmerkenMap(type: string, id: string): Record<string, boolean> {
+    const typeMap = this.objectKenmerken.get(type);
+    if (!typeMap) return {};
+
+    const objectMap = typeMap.get(id);
+    if (!objectMap) return {};
+
+    // Convert Map to plain object
+    const result: Record<string, boolean> = {};
+    for (const [name, value] of objectMap.entries()) {
+      result[name] = value;
+    }
+    return result;
+  }
+
+  /**
+   * Get a kenmerk value for an object
+   */
+  getKenmerk(type: string, id: string, kenmerkName: string): boolean | undefined {
+    // Try exact type first
+    let typeMap = this.objectKenmerken.get(type);
+
+    // If not found, try canonicalized matching (handles 'vlucht' vs 'Vlucht')
+    if (!typeMap) {
+      const canonicalQuery = this.canonicalizeTypeName(type);
+      for (const [storedType, map] of this.objectKenmerken.entries()) {
+        if (this.canonicalizeTypeName(storedType) === canonicalQuery) {
+          typeMap = map;
+          break;
+        }
+      }
+    }
+
+    if (!typeMap) return undefined;
+
+    const objectMap = typeMap.get(id);
+    if (!objectMap) return undefined;
+
+    // Try exact kenmerk name first
+    let value = objectMap.get(kenmerkName);
+
+    // Try normalized kenmerk name (handles 'is duurzaam' vs 'duurzaam')
+    if (value === undefined) {
+      const normalizedName = this.normalizeKenmerkName(kenmerkName);
+      for (const [storedName, storedValue] of objectMap.entries()) {
+        if (this.normalizeKenmerkName(storedName) === normalizedName) {
+          value = storedValue;
+          break;
+        }
+      }
+    }
+
+    return value;
+  }
+
+  /**
+   * Normalize kenmerk name for comparison (remove 'is '/'heeft ' prefix and articles)
+   */
+  private normalizeKenmerkName(name: string): string {
+    return name.toLowerCase()
+      .replace(/^(is|heeft)\s+/, '')
+      .replace(/^(de|het|een)\s+/, '')
+      .trim();
+  }
+
+  /**
+   * Set a kenmerk value for an object
+   */
+  setKenmerk(type: string, id: string, kenmerkName: string, value: boolean): void {
+    // Find existing type bucket with canonicalized matching, or create new one
+    let typeKey = type;
+    const canonicalQuery = this.canonicalizeTypeName(type);
+
+    for (const storedType of this.objectKenmerken.keys()) {
+      if (this.canonicalizeTypeName(storedType) === canonicalQuery) {
+        typeKey = storedType; // Use existing key for consistency
+        break;
+      }
+    }
+
+    if (!this.objectKenmerken.has(typeKey)) {
+      this.objectKenmerken.set(typeKey, new Map());
+    }
+
+    const typeMap = this.objectKenmerken.get(typeKey)!;
+    if (!typeMap.has(id)) {
+      typeMap.set(id, new Map());
+    }
+
+    const objectMap = typeMap.get(id)!;
+    objectMap.set(kenmerkName, value);
+  }
+
+  /**
+   * Initialize kenmerken for an object (called when creating objects)
+   */
+  initializeKenmerken(type: string, id: string, kenmerkNames: string[]): void {
+    if (!this.objectKenmerken.has(type)) {
+      this.objectKenmerken.set(type, new Map());
+    }
+
+    const typeMap = this.objectKenmerken.get(type)!;
+    if (!typeMap.has(id)) {
+      typeMap.set(id, new Map());
+    }
+
+    const objectMap = typeMap.get(id)!;
+    // Initialize all kenmerken to false (mirroring Python's behavior)
+    for (const name of kenmerkNames) {
+      if (!objectMap.has(name)) {
+        objectMap.set(name, false);
+      }
+    }
+  }
+
+  /**
+   * Get a timeline attribute value at a specific date.
+   */
+  getTimelineAttribute(type: string, id: string, attrName: string, date?: Date): Value | null {
+    const evalDate = date || this.evaluation_date;
+    const typeMap = this.timelineAttributes.get(type);
+    if (!typeMap) return null;
+
+    const objectMap = typeMap.get(id);
+    if (!objectMap) return null;
+
+    const timelineValue = objectMap.get(attrName);
+    if (!timelineValue) return null;
+
+    return timelineValue.getValueAt(evalDate);
+  }
+
+  /**
+   * Set a timeline attribute value.
+   */
+  setTimelineAttribute(type: string, id: string, attrName: string, timelineValue: TimelineValueImpl): void {
+    if (!this.timelineAttributes.has(type)) {
+      this.timelineAttributes.set(type, new Map());
+    }
+
+    const typeMap = this.timelineAttributes.get(type)!;
+    if (!typeMap.has(id)) {
+      typeMap.set(id, new Map());
+    }
+
+    const objectMap = typeMap.get(id)!;
+    objectMap.set(attrName, timelineValue);
+  }
+
+  /**
+   * Get a timeline parameter value.
+   */
+  getTimelineParameter(name: string): TimelineValueImpl | undefined {
+    return this.timelineParameters.get(name);
+  }
+
+  /**
+   * Set a timeline parameter value.
+   */
+  setTimelineParameter(name: string, timelineValue: TimelineValueImpl): void {
+    this.timelineParameters.set(name, timelineValue);
+  }
+
+  generateObjectId(type: string): string {
+    this.objectCounter++;
+    return `${type}_${this.objectCounter}`;
+  }
+
+  getEvaluationDate(): Date {
+    return this.evaluation_date;
+  }
+
+  setEvaluationDate(date: Date): void {
+    this.evaluation_date = date;
+  }
+
+  setCurrentInstance(instance: Value | undefined): void {
+    this.current_instance = instance;
+  }
+
+  // --- Feittype Handling ---
+
+  /**
+   * Register a Feittype definition
+   */
+  registerFeittype(feittype: FeitType): void {
+    this.feittypen.set(feittype.naam, feittype);
+  }
+
+  /**
+   * Get a Feittype definition by name
+   */
+  getFeittype(naam: string): FeitType | undefined {
+    return this.feittypen.get(naam);
+  }
+
+  /**
+   * Get all registered FeitTypes
+   */
+  getAllFeittypen(): FeitType[] {
+    return Array.from(this.feittypen.values());
+  }
+
+  // --- Relationship Handling ---
+
+  /**
+   * Find a FeitType that has the given role
+   */
+  findFeittypeByRole(roleName: string): FeitType | undefined {
+    for (const feittype of this.feittypen.values()) {
+      if (!feittype.rollen) continue;
+
+      for (const rol of feittype.rollen) {
+        if (rol.naam === roleName || rol.meervoud === roleName) {
+          return feittype;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Creates and stores a relationship between two objects
+   */
+  addRelationship(feittypeNaam: string, subject: Value, object: Value, preposition: string = 'MET'): Relationship {
+    if (subject.type !== 'object' || object.type !== 'object') {
+      throw new Error('Relationships can only be created between objects');
+    }
+
+    const relationship: Relationship = {
+      feittypeNaam,
+      subject,
+      object,
+      preposition
+    };
+
+    this.relationships.push(relationship);
+    return relationship;
+  }
+
+  /**
+   * Find relationships matching the given criteria
+   */
+  findRelationships(criteria: {
+    subject?: Value;
+    object?: Value;
+    feittypeNaam?: string;
+  }): Relationship[] {
+    return this.relationships.filter(rel => {
+      if (criteria.subject && !this.objectsMatch(rel.subject, criteria.subject)) {
+        return false;
+      }
+      if (criteria.object && !this.objectsMatch(rel.object, criteria.object)) {
+        return false;
+      }
+      if (criteria.feittypeNaam && rel.feittypeNaam !== criteria.feittypeNaam) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  /**
+   * Get objects related to the given subject via the specified feittype
+   */
+  getRelatedObjects(subject: Value, feittypeNaam: string, asSubject: boolean = true): Value[] {
+    if (subject.type !== 'object') {
+      return [];
+    }
+
+    const related: Value[] = [];
+    for (const rel of this.relationships) {
+      if (rel.feittypeNaam !== feittypeNaam) {
+        continue;
+      }
+
+      // Check if objects match by comparing their identities
+      const subjectMatches = this.objectsMatch(rel.subject, subject);
+      const objectMatches = this.objectsMatch(rel.object, subject);
+
+      if (asSubject && subjectMatches) {
+        related.push(rel.object);
+      } else if (!asSubject && objectMatches) {
+        related.push(rel.subject);
+      }
+    }
+    return related;
+  }
+
+  // --- Rule Execution Tracking (for regel status conditions) ---
+
+  markRuleExecuted(regelNaam: string): void {
+    this.executedRules.add(regelNaam);
+  }
+
+  markRuleInconsistent(regelNaam: string): void {
+    this.inconsistentRules.add(regelNaam);
+  }
+
+  isRuleExecuted(regelNaam: string): boolean {
+    return this.executedRules.has(regelNaam);
+  }
+
+  isRuleInconsistent(regelNaam: string): boolean {
+    return this.inconsistentRules.has(regelNaam);
+  }
+
+  // --- Dimension Handling ---
+
+  /**
+   * Get a dimension definition by name
+   */
+  getDimension(name: string): Dimension | undefined {
+    return this.domainModel.dimensions?.find(d => d.name === name);
+  }
+
+  /**
+   * Helper to check if two object values represent the same object.
+   * Public for reuse by other components that need identity comparison.
+   */
+  objectsMatch(obj1: Value, obj2: Value): boolean {
+    if (obj1.type !== 'object' || obj2.type !== 'object') {
+      return false;
+    }
+
+    // Compare by objectType and objectId if available
+    const o1 = obj1 as any;
+    const o2 = obj2 as any;
+
+    if (o1.objectType && o2.objectType && o1.objectType !== o2.objectType) {
+      return false;
+    }
+
+    if (o1.objectId && o2.objectId) {
+      return o1.objectId === o2.objectId;
+    }
+
+    // If no IDs, compare by reference
+    return obj1 === obj2;
+  }
+
+  /**
+   * Clone the context for temporary evaluation
+   */
+  clone(): Context {
+    const cloned = new Context(this.domainModel);
+
+    // Copy scopes
+    cloned.scopes = this.scopes.map(scope => new Map(scope));
+
+    // Copy objects
+    cloned.objects = new Map();
+    for (const [type, typeMap] of this.objects) {
+      cloned.objects.set(type, new Map(typeMap));
+    }
+
+    // Copy other properties
+    cloned.objectCounter = this.objectCounter;
+    cloned.current_instance = this.current_instance;
+    cloned.evaluation_date = this.evaluation_date;
+    cloned.executionTrace = [...this.executionTrace];
+
+    // Copy relationships
+    cloned.relationships = [...this.relationships];
+
+    // Copy feittypen
+    cloned.feittypen = new Map(this.feittypen);
+
+    // Copy timeline attributes
+    cloned.timelineAttributes = new Map();
+    for (const [type, typeMap] of this.timelineAttributes) {
+      const clonedTypeMap = new Map();
+      for (const [id, objectMap] of typeMap) {
+        clonedTypeMap.set(id, new Map(objectMap));
+      }
+      cloned.timelineAttributes.set(type, clonedTypeMap);
+    }
+
+    // Copy timeline parameters
+    cloned.timelineParameters = new Map(this.timelineParameters);
+
+    // Copy object kenmerken
+    cloned.objectKenmerken = new Map();
+    for (const [type, typeMap] of this.objectKenmerken) {
+      const clonedTypeMap = new Map();
+      for (const [id, objectMap] of typeMap) {
+        clonedTypeMap.set(id, new Map(objectMap));
+      }
+      cloned.objectKenmerken.set(type, clonedTypeMap);
+    }
+
+    // Copy rule execution tracking
+    cloned.executedRules = new Set(this.executedRules);
+    cloned.inconsistentRules = new Set(this.inconsistentRules);
+
+    // Note: dimensionRegistry is already initialized from domainModel in constructor
+    // It references the same dimension definitions, which is correct since they don't change
+
+    return cloned;
+  }
+}
