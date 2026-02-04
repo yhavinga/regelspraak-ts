@@ -1,6 +1,16 @@
 # RegelSpraak TypeScript
 
 ANTLR4-based parser and execution engine for RegelSpraak v2.1.0 (Dutch DSL for business rules).
+Split from [regelspraak-parser](https://github.com/yhavinga/regelspraak-parser) for independent NPM packaging.
+
+## Specification
+
+| Document | PDF | Markdown |
+|----------|-----|----------|
+| RegelSpraak Specificatie v2.1.0 | [PDF](https://github.com/yhavinga/regelspraak-parser/blob/main/specification/RegelSpraak-specificatie%20v2.1.0.pdf) | [MD](https://github.com/yhavinga/regelspraak-parser/blob/main/specification/RegelSpraak-specificatie%20v2.1.0.md) |
+| Typeringen v2.1.0 | [PDF](https://github.com/yhavinga/regelspraak-parser/blob/main/specification/RegelSpraak-specificatie%20-%20typeringen%20v2.1.0.pdf) | [MD](https://github.com/yhavinga/regelspraak-parser/blob/main/specification/RegelSpraak-specificatie%20-%20typeringen%20v2.1.0.md) |
+| Syntaxdiagrammen v2.1.0 | [PDF](https://github.com/yhavinga/regelspraak-parser/blob/main/specification/RegelSpraak-specificatie%20-%20syntaxdiagrammen%20v2.1.0.pdf) | [MD](https://github.com/yhavinga/regelspraak-parser/blob/main/specification/RegelSpraak-specificatie%20-%20syntaxdiagrammen%20v2.1.0.md) |
+| TOKA Casus v2.1.0 | — | [MD](https://github.com/yhavinga/regelspraak-parser/blob/main/specification/RegelSpraak-TOKA-casus-v2.1.0.md) |
 
 ## Installation
 
