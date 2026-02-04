@@ -7,6 +7,7 @@ import { Engine } from '../engine';
 import { Context } from '../context';
 import { Value } from '../interfaces';
 import { DomainModel } from '../ast/domain-model';
+import { extractFiredRules } from '../utils/fired-rules';
 
 export interface ServerOptions {
   model: DomainModel;
@@ -342,12 +343,7 @@ export function createRouter(options: ServerOptions): Router {
         return;
       }
 
-      const firedRules = context.getExecutionTrace()
-        .filter(t => t.includes('RULE_FIRED'))
-        .map(t => {
-          const match = t.match(/rule_name='([^']+)'/);
-          return match ? match[1] : t;
-        });
+      const firedRules = extractFiredRules(context.getExecutionTrace());
 
       res.json({
         success: true,

@@ -30,6 +30,7 @@ export class FeitExecutor {
         console.log(`FeitCreatie: No target objects found for pattern: ${feit.role2} van ${this.getSubjectText(feit.subject2)}`);
         return {
           success: true,
+          createdCount: 0,
           value: { type: 'string', value: 'No objects found to create relationships with' }
         };
       }
@@ -90,9 +91,10 @@ export class FeitExecutor {
 
       return {
         success: true,
-        value: { 
-          type: 'string', 
-          value: `Created ${createdCount} relationship${createdCount !== 1 ? 's' : ''}` 
+        createdCount,
+        value: {
+          type: 'string',
+          value: `Created ${createdCount} relationship${createdCount !== 1 ? 's' : ''}`
         }
       };
 

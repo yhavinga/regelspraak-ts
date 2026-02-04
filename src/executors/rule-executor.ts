@@ -51,6 +51,13 @@ export class RuleExecutor implements IRuleExecutor {
   private expressionEvaluator = new ExpressionEvaluator();
   private feitExecutor = new FeitExecutor();
 
+  private recordRuleFired(context: RuntimeContext, ruleName: string | undefined): void {
+    if (!ruleName) return;
+    const ctx = context as any;
+    if (ctx.markRuleExecuted) ctx.markRuleExecuted(ruleName);
+    if (ctx.addExecutionTrace) ctx.addExecutionTrace(`RULE_FIRED rule_name='${ruleName}'`);
+  }
+
   /**
    * Resolves a role name (e.g., "passagier") to its FeitType objectType (e.g., "Natuurlijk persoon").
    * This enables object-scoped rule detection for role-based targets.
@@ -117,13 +124,17 @@ export class RuleExecutor implements IRuleExecutor {
         }
       }
 
+      // Extract rule name early for tracking in all paths
+      const ruleName = rule.name || rule.naam;
+
       // For Kenmerktoekenning rules with conditions, we handle the condition differently
       // The condition is evaluated per object, not at the rule level
       if (result.type === 'Kenmerktoekenning' && rule.condition) {
         return this.executeKenmerktoekenningWithCondition(
           result as Kenmerktoekenning,
           rule.condition,
-          context
+          context,
+          ruleName
         );
       }
 
@@ -133,7 +144,8 @@ export class RuleExecutor implements IRuleExecutor {
         return this.executeObjectCreationWithCondition(
           result as ObjectCreation,
           rule.condition,
-          context
+          context,
+          ruleName
         );
       }
 
@@ -143,7 +155,8 @@ export class RuleExecutor implements IRuleExecutor {
         return this.executeFeitCreatieWithCondition(
           result as FeitCreatie,
           rule.condition,
-          context
+          context,
+          ruleName
         );
       }
 
@@ -172,12 +185,9 @@ export class RuleExecutor implements IRuleExecutor {
         }
       }
 
-      // Mark rule as executed for regel status tracking
+      // Mark rule as executed for regel status tracking and fired_rules output
       const ctx = context as any;
-      const ruleName = rule.name || rule.naam;
-      if (ctx.markRuleExecuted && ruleName) {
-        ctx.markRuleExecuted(ruleName);
-      }
+      this.recordRuleFired(context, ruleName);
 
       // Set current rule name for consistency rule tracking
       ctx._currentRuleName = ruleName;
@@ -638,7 +648,8 @@ export class RuleExecutor implements IRuleExecutor {
   private executeKenmerktoekenningWithCondition(
     kenmerktoekenning: Kenmerktoekenning,
     condition: Voorwaarde,
-    context: RuntimeContext
+    context: RuntimeContext,
+    ruleName: string | undefined
   ): RuleExecutionResult {
     // Extract the object type from the subject
     // The subject can be:
@@ -672,7 +683,7 @@ export class RuleExecutor implements IRuleExecutor {
         }
       }
 
-      let assignedCount = 0;
+      let writeCount = 0;
 
       // For each object, evaluate the condition with the object as context
       for (const obj of objects) {
@@ -713,9 +724,10 @@ export class RuleExecutor implements IRuleExecutor {
           // Set true OR false based on condition result
           if (this.isTruthy(conditionResult)) {
             (context as Context).setKenmerk(objType, objId, kenmerkKey, true);
-            assignedCount++;
+            writeCount++;
           } else {
             (context as Context).setKenmerk(objType, objId, kenmerkKey, false);
+            writeCount++;
           }
         } catch (error) {
           // If condition evaluation fails (e.g., missing attribute), skip this object
@@ -723,9 +735,12 @@ export class RuleExecutor implements IRuleExecutor {
         }
       }
 
+      // Only fire if at least one kenmerk was actually written
+      if (writeCount > 0) {
+        this.recordRuleFired(context, ruleName);
+      }
       return {
         success: true,
-        // Successfully set characteristic with condition
       };
     }
 
@@ -922,7 +937,8 @@ export class RuleExecutor implements IRuleExecutor {
   private executeObjectCreationWithCondition(
     objectCreation: ObjectCreation,
     condition: Voorwaarde,
-    context: RuntimeContext
+    context: RuntimeContext,
+    ruleName: string | undefined
   ): RuleExecutionResult {
     // Deduce which object type to iterate over from the condition
     const targetType = this.deduceTypeFromCondition(condition, context);
@@ -937,7 +953,12 @@ export class RuleExecutor implements IRuleExecutor {
           reason: 'Condition evaluated to false'
         };
       }
-      return this.executeObjectCreation(objectCreation, context);
+      const result = this.executeObjectCreation(objectCreation, context);
+      // ObjectCreation always creates one object on success, so success implies fired
+      if (result.success && !(result as any).skipped) {
+        this.recordRuleFired(context, ruleName);
+      }
+      return result;
     }
 
     // Get all objects of the deduced type
@@ -983,6 +1004,10 @@ export class RuleExecutor implements IRuleExecutor {
       }
     }
 
+    // Only fire if at least one object was created
+    if (createdCount > 0) {
+      this.recordRuleFired(context, ruleName);
+    }
     return {
       success: true,
       value: {
@@ -998,7 +1023,8 @@ export class RuleExecutor implements IRuleExecutor {
   private executeFeitCreatieWithCondition(
     feitCreatie: FeitCreatie,
     condition: Voorwaarde,
-    context: RuntimeContext
+    context: RuntimeContext,
+    ruleName: string | undefined
   ): RuleExecutionResult {
     // Deduce which object type to iterate over from the condition
     const targetType = this.deduceTypeFromCondition(condition, context);
@@ -1013,7 +1039,12 @@ export class RuleExecutor implements IRuleExecutor {
           reason: 'Condition evaluated to false'
         };
       }
-      return this.feitExecutor.executeFeitCreatie(feitCreatie, context);
+      const result = this.feitExecutor.executeFeitCreatie(feitCreatie, context);
+      // Use structured createdCount from result
+      if ((result as any).createdCount > 0) {
+        this.recordRuleFired(context, ruleName);
+      }
+      return result;
     }
 
     // Get all objects of the deduced type
@@ -1042,14 +1073,8 @@ export class RuleExecutor implements IRuleExecutor {
           // Condition is true, create the relationships with this context
           const result = this.feitExecutor.executeFeitCreatie(feitCreatie, tempContext);
           if (result.success) {
-            // Extract count if available
-            const value = (result as any).value;
-            if (value && value.value && typeof value.value === 'string') {
-              const match = value.value.match(/Created (\d+) relationship/);
-              if (match) {
-                totalCreated += parseInt(match[1], 10);
-              }
-            }
+            // Use structured createdCount from result
+            totalCreated += (result as any).createdCount || 0;
           }
         }
       } catch (error) {
@@ -1058,6 +1083,10 @@ export class RuleExecutor implements IRuleExecutor {
       }
     }
 
+    // Only fire if at least one relationship was created
+    if (totalCreated > 0) {
+      this.recordRuleFired(context, ruleName);
+    }
     return {
       success: true,
       value: {

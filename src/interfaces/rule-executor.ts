@@ -12,6 +12,7 @@ export interface RuleExecutionResult {
   objectId?: string;
   attributes?: Record<string, Value>;
   multipleResults?: RuleExecutionResult[];
+  createdCount?: number;
 }
 
 export interface IRuleExecutor {

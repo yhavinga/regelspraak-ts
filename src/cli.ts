@@ -15,6 +15,7 @@ import { Engine } from './engine';
 import { Context } from './context';
 import { Value } from './interfaces';
 import { startServer } from './server';
+import { extractFiredRules } from './utils/fired-rules';
 
 /**
  * Input data schema for the CLI
@@ -417,12 +418,7 @@ function main(): void {
     const output: OutputData = {
       success: true,
       objects: serializeObjects(context),
-      fired_rules: context.getExecutionTrace()
-        .filter(t => t.includes('RULE_FIRED'))
-        .map(t => {
-          const match = t.match(/rule_name='([^']+)'/);
-          return match ? match[1] : t;
-        })
+      fired_rules: extractFiredRules(context.getExecutionTrace())
     };
 
     console.log(JSON.stringify(output, null, 2));
