@@ -96,27 +96,38 @@
     "child_passenger": {
       "leeftijd": 14,
       "is minderjarig": true,
-      "woonregio factor": 1
+      "woonregio factor": 1,
+      "belasting op basis van afstand": 30,
+      "belasting op basis van reisduur": 4,
+      "te betalen belasting": 29
     },
     "young_adult": {
       "leeftijd": 20,
       "is passagier van 18 tot en met 24 jaar": true,
-      "woonregio factor": 3
+      "woonregio factor": 3,
+      "belasting op basis van reisduur": 0,
+      "te betalen belasting": 0
     },
     "adult_passenger": {
       "leeftijd": 48,
       "is passagier van 25 tot en met 64 jaar": true,
-      "woonregio factor": 2
+      "woonregio factor": 2,
+      "belasting op basis van afstand": 30,
+      "belasting op basis van reisduur": 4,
+      "te betalen belasting": 29
     },
     "senior_passenger": {
       "leeftijd": 69,
       "is passagier van 65 jaar of ouder": true,
-      "woonregio factor": 1
+      "woonregio factor": 1,
+      "belasting op basis van reisduur": 0,
+      "te betalen belasting": 0
     },
     "flight_2": {
       "is belaste reis": true,
       "hoeveelheid passagiers": 4,
-      "leeftijd van de oudste passagier": 69
+      "leeftijd van de oudste passagier": 69,
+      "totaal te betalen belasting": 58
     }
   }
 }

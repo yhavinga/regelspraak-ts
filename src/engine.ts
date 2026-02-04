@@ -271,13 +271,19 @@ export class Engine implements IEngine {
                 }
               }
 
-              // Execute rule for this instance
-              const result = this.ruleExecutor.execute(rule, context);
-              if (!result.success) {
-                return { success: false, error: result.error };
-              }
-              if (result.value) {
-                lastResult = { success: true, value: result.value };
+              // Execute rule for this instance with engine iteration flag
+              const previousIterationFlag = (context as any)._engineControlsIteration;
+              (context as any)._engineControlsIteration = true;
+              try {
+                const result = this.ruleExecutor.execute(rule, context);
+                if (!result.success) {
+                  return { success: false, error: result.error };
+                }
+                if (result.value) {
+                  lastResult = { success: true, value: result.value };
+                }
+              } finally {
+                (context as any)._engineControlsIteration = previousIterationFlag;
               }
             } catch (e) {
               console.warn(`Rule '${rule.name || rule.naam}' failed for ${targetType} instance: ${e}`);
@@ -332,9 +338,16 @@ export class Engine implements IEngine {
             const previousInstance = (context as any).current_instance;
             (context as any).current_instance = instance;
             try {
-              const result = this.ruleExecutor.execute(rule, context);
-              if (result.success && result.value) {
-                lastResult = { success: true, value: result.value };
+              // Execute rule with engine iteration flag
+              const previousIterationFlag = (context as any)._engineControlsIteration;
+              (context as any)._engineControlsIteration = true;
+              try {
+                const result = this.ruleExecutor.execute(rule, context);
+                if (result.success && result.value) {
+                  lastResult = { success: true, value: result.value };
+                }
+              } finally {
+                (context as any)._engineControlsIteration = previousIterationFlag;
               }
             } finally {
               (context as any).current_instance = previousInstance;
@@ -440,13 +453,19 @@ export class Engine implements IEngine {
                 }
               }
 
-              // Execute rule for this instance
-              const result = this.ruleExecutor.execute(rule, context);
-              if (!result.success) {
-                return { success: false, error: result.error };
-              }
-              if (result.value) {
-                lastResult = { success: true, value: result.value };
+              // Execute rule for this instance with engine iteration flag
+              const previousIterationFlag = (context as any)._engineControlsIteration;
+              (context as any)._engineControlsIteration = true;
+              try {
+                const result = this.ruleExecutor.execute(rule, context);
+                if (!result.success) {
+                  return { success: false, error: result.error };
+                }
+                if (result.value) {
+                  lastResult = { success: true, value: result.value };
+                }
+              } finally {
+                (context as any)._engineControlsIteration = previousIterationFlag;
               }
             } catch (e) {
               console.warn(`Rule '${rule.name || rule.naam}' failed for ${targetType} instance: ${e}`);
@@ -505,9 +524,16 @@ export class Engine implements IEngine {
             const previousInstance = (context as any).current_instance;
             (context as any).current_instance = instance;
             try {
-              const result = this.ruleExecutor.execute(rule, context);
-              if (result.success && result.value) {
-                lastResult = { success: true, value: result.value };
+              // Execute rule with engine iteration flag
+              const previousIterationFlag = (context as any)._engineControlsIteration;
+              (context as any)._engineControlsIteration = true;
+              try {
+                const result = this.ruleExecutor.execute(rule, context);
+                if (result.success && result.value) {
+                  lastResult = { success: true, value: result.value };
+                }
+              } finally {
+                (context as any)._engineControlsIteration = previousIterationFlag;
               }
             } finally {
               (context as any).current_instance = previousInstance;

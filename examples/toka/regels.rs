@@ -90,7 +90,7 @@ Regel belasting op basis van afstand
         indien hij aan alle volgende voorwaarden voldoet:
         - zijn reis is een belaste reis
         - hij voldoet aan ten minste één van de volgende voorwaarden:
-          .. hij is een passagier jonger dan 18 jaar
+          .. hij is minderjarig
           .. hij is een passagier van 25 tot en met 64 jaar
         - de afstand tot bestemming van zijn reis is groter dan 0 km
         - de afstand tot bestemming van zijn reis is kleiner of gelijk aan de bovengrens afstand eerste schijf.

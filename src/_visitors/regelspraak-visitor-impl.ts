@@ -4828,12 +4828,9 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
           } as SimplePredicate;
 
         case 'object_check':
-          // Object check requires proper semantic handling
-          return {
-            type: 'SimplePredicate',
-            operator: 'exists' as any,
-            left: vergelijking.onderwerp
-          } as SimplePredicate;
+          // Don't convert to predicate - expression evaluator handles this directly
+          // Return original expression; compound predicate eval will use expression path
+          return vergelijking;
 
         default:
           throw new Error(`Unsupported vergelijkingType: ${(vergelijking as any).vergelijkingType}`);
