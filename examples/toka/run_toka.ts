@@ -11,9 +11,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { Engine } from '../../src/engine/engine';
-import { Context } from '../../src/runtime/context';
-import { Value } from '../../src/interfaces';
+import { Engine, Context, Value } from '../../src';
 
 // Unit aliases mapping (scenario JSON → model definitions)
 const UNIT_ALIASES: Record<string, string> = {
@@ -53,7 +51,7 @@ export class TOKARunner {
 
     constructor(verbose: boolean = false) {
         // Find the TOKA directory relative to this file
-        this.tokaDir = path.resolve(__dirname, '../../../examples/toka');
+        this.tokaDir = path.resolve(__dirname);
         this.engine = new Engine();
         this.verbose = verbose;
     }

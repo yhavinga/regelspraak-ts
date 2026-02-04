@@ -1,0 +1,71 @@
+{
+  "name": "Single Adult Passenger Basic Tax",
+  "description": "Basic tax calculation for single adult passenger on short flight",
+  "parameters": {
+    "volwassenleeftijd": {"value": 18, "unit": "jr"},
+    "pensioenleeftijd": {"value": 65, "unit": "jr"},
+    "korting bij gebruik niet-fossiele brandstof": 5.00,
+    "initiele belasting": 25.00,
+    "duurzaamheidskorting minimale afstand": {"value": 500, "unit": "km"},
+    "bovengrens afstand eerste schijf": {"value": 500, "unit": "km"},
+    "lage basistarief eerste schijf": 50.00,
+    "lage tarief vermindering eerste schijf": 0.05,
+    "percentage reisduur eerste schijf": 10,
+    "percentage reisduur tweede schijf": 15,
+    "percentage reisduur derde schijf": 20,
+    "bovengrens reisduur eerste schijf": {"value": 120, "unit": "min"},
+    "bovengrens reisduur tweede schijf": {"value": 240, "unit": "min"},
+    "aantal treinmiles per passagier voor contingent": 100,
+    "bevestigingsinterval": 2,
+    "eerste boekingsdatum": "2024-01-01"
+  },
+  "objects": {
+    "passengers": [
+      {
+        "id": "passenger_1",
+        "geboortedatum": "1985-03-15",
+        "woonprovincie": "Noord-Holland",
+        "identificatienummer": 12345,
+        "maximaal aantal te ontvangen treinmiles": 150,
+        "maximaal te ontvangen treinmiles bij evenredige verdeling volgens rangorde": 300
+      }
+    ],
+    "flights": [
+      {
+        "id": "flight_1",
+        "luchthaven van vertrek": "Amsterdam Schiphol",
+        "luchthaven van bestemming": "Londen Heathrow",
+        "vluchtdatum": "2024-06-20",
+        "afstand tot bestemming": 450,
+        "reisduur per trein": 180,
+        "bereikbaar per trein": true,
+        "gebruik fossiele brandstof minder dan 50 procent": false,
+        "verwachte datum-tijd van vertrek": "2024-06-20T10:00:00",
+        "verwachte duur": 90,
+        "uiterste boekingstijdstip": "2024-06-19T12:00:00"
+      }
+    ]
+  },
+  "relationships": [
+    {
+      "type": "vlucht van natuurlijke personen",
+      "flight_id": "flight_1",
+      "passenger_id": "passenger_1"
+    }
+  ],
+  "expected": {
+    "passenger_1": {
+      "leeftijd": 39,
+      "is minderjarig": false,
+      "woonregio factor": 3,
+      "belasting op basis van afstand": 27.50,
+      "belasting op basis van reisduur": 4.0,
+      "te betalen belasting": 26.0
+    },
+    "flight_1": {
+      "is belaste reis": true,
+      "hoeveelheid passagiers": 1,
+      "totaal te betalen belasting": 26.0
+    }
+  }
+}
