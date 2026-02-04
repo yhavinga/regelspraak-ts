@@ -540,9 +540,21 @@ voorwaardeKwantificatie
     ;
 
 samengesteldeVoorwaardeOnderdeel
-    : bulletPrefix ( elementaireVoorwaarde | genesteSamengesteldeVoorwaarde )
+    : outerBulletPrefix ( elementaireVoorwaarde | genesteSamengesteldeVoorwaarde )
     ;
 
+// Bullet prefixes for compound condition contexts
+// Outer conditions use MINUS (-) or BULLET (•)
+outerBulletPrefix
+    : MINUS | BULLET
+    ;
+
+// Nested conditions use DOUBLE_DOT (..) or double BULLET (••)
+nestedBulletPrefix
+    : DOUBLE_DOT | BULLET BULLET
+    ;
+
+// Keep flexible bulletPrefix for non-compound contexts (if needed elsewhere)
 bulletPrefix
     : ( MINUS | DOUBLE_DOT | BULLET | ASTERISK )+
     ;
@@ -553,7 +565,11 @@ elementaireVoorwaarde
 
 genesteSamengesteldeVoorwaarde
     : (onderwerpReferentie | HIJ | ER) VOLDOET AAN voorwaardeKwantificatie (VOLGENDE_VOORWAARDEN | VOLGENDE_VOORWAARDE) COLON
-      samengesteldeVoorwaardeOnderdeel+
+      genesteSamengesteldeVoorwaardeOnderdeel+
+    ;
+
+genesteSamengesteldeVoorwaardeOnderdeel
+    : nestedBulletPrefix ( elementaireVoorwaarde | genesteSamengesteldeVoorwaarde )
     ;
 
 // --- RegelSpraak Onderwerpketen (§13.4.1) & References ---

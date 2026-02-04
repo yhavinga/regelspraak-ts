@@ -1,5 +1,5 @@
 import { IEvaluator, Value, RuntimeContext } from '../interfaces';
-import { Expression, NumberLiteral, StringLiteral, BinaryExpression, UnaryExpression, VariableReference, ParameterReference, FunctionCall, AggregationExpression, SubselectieExpression, RegelStatusExpression, AllAttributesExpression, Predicaat, KenmerkPredicaat, AttributeComparisonPredicaat, AttributeReference, SamengesteldeVoorwaarde, QuantifierType } from '../ast/expressions';
+import { Expression, NumberLiteral, StringLiteral, BinaryExpression, UnaryExpression, VariableReference, ParameterReference, FunctionCall, AggregationExpression, SubselectieExpression, RegelStatusExpression, AllAttributesExpression, Predicaat, KenmerkPredicaat, AttributeComparisonPredicaat, AttributeReference, SamengesteldeVoorwaarde, QuantifierType, VergelijkingInPredicaat } from '../ast/expressions';
 import { AggregationEngine } from './aggregation-engine';
 import { TimelineEvaluator } from './timeline-evaluator';
 import { TimelineExpression, TimelineValue, TimelineValueImpl } from '../ast/timelines';
@@ -119,6 +119,8 @@ export class ExpressionEvaluator implements IEvaluator {
         return this.evaluateDisjunctionExpression(expr as any, context);
       case 'ConjunctionExpression':
         return this.evaluateConjunctionExpression(expr as any, context);
+      case 'VergelijkingInPredicaat':
+        return this.evaluateVergelijkingInPredicaat(expr as VergelijkingInPredicaat, context);
       default:
         throw new Error(`Unknown expression type: ${expr.type}`);
     }
@@ -327,25 +329,6 @@ export class ExpressionEvaluator implements IEvaluator {
   }
 
   private evaluateComparisonExpression(expr: BinaryExpression, left: Value, right: Value): Value {
-    // Handle object == true/false as existence/truthiness check
-    // This handles mis-parsed kenmerk checks like "hij is een passagier" → self == true
-    if ((left.type === 'object' && right.type === 'boolean') ||
-      (left.type === 'boolean' && right.type === 'object')) {
-      const objValue = left.type === 'object' ? left : right;
-      const boolValue = left.type === 'boolean' ? left : right;
-
-      // Object exists and is compared to true → check truthiness
-      if (expr.operator === '==') {
-        const objExists = objValue.value !== null && objValue.value !== undefined;
-        const result = boolValue.value === true ? objExists : !objExists;
-        return { type: 'boolean', value: result };
-      } else if (expr.operator === '!=') {
-        const objExists = objValue.value !== null && objValue.value !== undefined;
-        const result = boolValue.value === true ? !objExists : objExists;
-        return { type: 'boolean', value: result };
-      }
-    }
-
     // Check if types are compatible for comparison
     if (left.type !== right.type &&
       !(left.type === 'null' || right.type === 'null')) {
@@ -2742,6 +2725,7 @@ export class ExpressionEvaluator implements IEvaluator {
       // Legacy evaluation - evaluate each condition and count how many are true
       let conditionsMetCount = 0;
       const totalConditions = voorwaarde.voorwaarden.length;
+      const kwantType = String(voorwaarde.kwantificatie?.type || 'alle');
 
       // Evaluate each condition
       for (const conditionExpr of voorwaarde.voorwaarden) {
@@ -2761,7 +2745,6 @@ export class ExpressionEvaluator implements IEvaluator {
 
       // Apply quantifier logic
       let finalResult = false;
-      const kwantType = String(voorwaarde.kwantificatie?.type || 'alle');
 
       if (kwantType === 'alle' || kwantType === QuantifierType.ALLE) {
         // All conditions must be true
@@ -3328,5 +3311,67 @@ export class ExpressionEvaluator implements IEvaluator {
       return { type: 'array', value: evaluatedValues };
     }
     return { type: 'array', value: [] };
+  }
+
+  /**
+   * Evaluate a VergelijkingInPredicaat expression.
+   * Handles kenmerk_check, attribuut_vergelijking, and object_check.
+   */
+  private evaluateVergelijkingInPredicaat(expr: VergelijkingInPredicaat, context: RuntimeContext): Value {
+    switch (expr.vergelijkingType) {
+      case 'kenmerk_check': {
+        // Get the subject value
+        const subjectValue = expr.onderwerp ? this.evaluate(expr.onderwerp, context) : null;
+        const kenmerkNaam = expr.kenmerkNaam;
+
+        if (!subjectValue || !kenmerkNaam) {
+          return { type: 'boolean', value: false };
+        }
+
+        // For object values, use context.getKenmerk
+        if (subjectValue.type === 'object') {
+          // objectType and objectId are on the Value itself, not on value property
+          const objectType = (subjectValue as any).objectType || '';
+          const objectId = (subjectValue as any).objectId || '';
+
+          // Use Context's getKenmerk method which handles normalization
+          const hasKenmerk = (context as Context).getKenmerk(objectType, objectId, kenmerkNaam);
+          return { type: 'boolean', value: hasKenmerk ?? false };
+        }
+
+        // Fallback: check if value has the kenmerk as a property
+        return { type: 'boolean', value: false };
+      }
+
+      case 'attribuut_vergelijking': {
+        // Evaluate attribute comparison
+        const leftValue = expr.attribuut ? this.evaluate(expr.attribuut, context) : null;
+        const rightValue = expr.waarde ? this.evaluate(expr.waarde, context) : null;
+        const operator = (expr.operator || '==') as BinaryExpression['operator'];
+
+        if (!leftValue || !rightValue) {
+          return { type: 'boolean', value: false };
+        }
+
+        // Reuse comparison logic from BinaryExpression
+        const comparisonExpr: BinaryExpression = {
+          type: 'BinaryExpression',
+          operator,
+          left: expr.attribuut!,
+          right: expr.waarde!
+        };
+        return this.evaluateBinaryExpression(comparisonExpr, context);
+      }
+
+      case 'object_check': {
+        // Check if object exists
+        const subjectValue = expr.onderwerp ? this.evaluate(expr.onderwerp, context) : null;
+        const exists = subjectValue !== null && subjectValue.value !== null && subjectValue.value !== undefined;
+        return { type: 'boolean', value: exists };
+      }
+
+      default:
+        throw new Error(`Unknown vergelijkingType: ${(expr as any).vergelijkingType}`);
+    }
   }
 }

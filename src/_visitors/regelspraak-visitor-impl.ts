@@ -4807,6 +4807,39 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       // Add more mappings as needed
     }
 
+    // Handle VergelijkingInPredicaat (kenmerk checks, attribute comparisons)
+    if (expr.type === 'VergelijkingInPredicaat') {
+      const vergelijking = expr as VergelijkingInPredicaat;
+      switch (vergelijking.vergelijkingType) {
+        case 'kenmerk_check':
+          return {
+            type: 'SimplePredicate',
+            operator: 'kenmerk',
+            left: vergelijking.onderwerp,
+            kenmerk: vergelijking.kenmerkNaam
+          } as SimplePredicate;
+
+        case 'attribuut_vergelijking':
+          return {
+            type: 'SimplePredicate',
+            operator: vergelijking.operator as any,
+            left: vergelijking.attribuut,
+            right: vergelijking.waarde
+          } as SimplePredicate;
+
+        case 'object_check':
+          // Object check requires proper semantic handling
+          return {
+            type: 'SimplePredicate',
+            operator: 'exists' as any,
+            left: vergelijking.onderwerp
+          } as SimplePredicate;
+
+        default:
+          throw new Error(`Unsupported vergelijkingType: ${(vergelijking as any).vergelijkingType}`);
+      }
+    }
+
     // For other expressions, don't convert to predicate
     // This preserves the original behavior where non-boolean expressions
     // in compound conditions will cause a type error
@@ -4886,6 +4919,17 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     return this.visit(ctx.expressie());
   }
 
+  visitGenesteSamengesteldeVoorwaardeOnderdeel(ctx: any): Expression | null {
+    // Skip the nested bullet prefix (..) and visit the actual condition
+    if (ctx.elementaireVoorwaarde && ctx.elementaireVoorwaarde()) {
+      return this.visitElementaireVoorwaarde(ctx.elementaireVoorwaarde());
+    } else if (ctx.genesteSamengesteldeVoorwaarde && ctx.genesteSamengesteldeVoorwaarde()) {
+      return this.visitGenesteSamengesteldeVoorwaarde(ctx.genesteSamengesteldeVoorwaarde());
+    }
+
+    return null;
+  }
+
   visitGenesteSamengesteldeVoorwaarde(ctx: any): SamengesteldeVoorwaarde {
     // Extract the quantifier
     const kwantificatie = this.visitVoorwaardeKwantificatie(ctx.voorwaardeKwantificatie());
@@ -4893,12 +4937,12 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     // Extract all condition parts
     const voorwaarden: Expression[] = [];
 
-    // In ANTLR4 TypeScript, use the _list method to get all items
-    const onderdeelContexts = ctx.samengesteldeVoorwaardeOnderdeel_list();
+    // Use genesteSamengesteldeVoorwaardeOnderdeel_list for nested compounds (uses .. bullets)
+    const onderdeelContexts = ctx.genesteSamengesteldeVoorwaardeOnderdeel_list();
 
     if (onderdeelContexts) {
       for (const onderdeelCtx of onderdeelContexts) {
-        const condition = this.visitSamengesteldeVoorwaardeOnderdeel(onderdeelCtx);
+        const condition = this.visitGenesteSamengesteldeVoorwaardeOnderdeel(onderdeelCtx);
         if (condition) {
           voorwaarden.push(condition);
         }
@@ -4958,43 +5002,43 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     return node;
   }
 
-  visitIsKenmerkExpr(ctx: any): BinaryExpression {
+  visitIsKenmerkExpr(ctx: any): VergelijkingInPredicaat {
     // Handle "is kenmerk" expressions (e.g., "hij is minderjarig")
     const left = this.visit(ctx._left || ctx.additiveExpression());
-    // Check for naamwoordWithNumbers first, then fall back to naamwoord
-    const kenmerk = ctx.naamwoordWithNumbers && ctx.naamwoordWithNumbers() ?
-      this.extractTextWithSpaces(ctx.naamwoordWithNumbers()) :
-      (ctx.naamwoord ? ctx.naamwoord().getText() : '');
+    // Extract kenmerk name - always use extractTextWithSpaces to preserve spacing
+    let kenmerk = '';
+    if (ctx.naamwoordWithNumbers && ctx.naamwoordWithNumbers()) {
+      kenmerk = this.extractTextWithSpaces(ctx.naamwoordWithNumbers());
+    } else if (ctx.naamwoord && ctx.naamwoord()) {
+      kenmerk = this.extractTextWithSpaces(ctx.naamwoord());
+    }
 
-    const node: BinaryExpression = {
-      type: 'BinaryExpression',
-      operator: '==',
-      left,
-      right: {
-        type: 'StringLiteral',
-        value: kenmerk
-      } as Expression
+    const node: VergelijkingInPredicaat = {
+      type: 'VergelijkingInPredicaat',
+      vergelijkingType: 'kenmerk_check',
+      onderwerp: left,
+      kenmerkNaam: kenmerk
     };
     this.setLocation(node, ctx);
     return node;
   }
 
-  visitHeeftKenmerkExpr(ctx: any): BinaryExpression {
+  visitHeeftKenmerkExpr(ctx: any): VergelijkingInPredicaat {
     // Handle "heeft kenmerk" expressions (e.g., "hij heeft ervaring")
     const left = this.visit(ctx._left || ctx.additiveExpression());
-    // Check for naamwoordWithNumbers first, then fall back to naamwoord
-    const kenmerk = ctx.naamwoordWithNumbers && ctx.naamwoordWithNumbers() ?
-      this.extractTextWithSpaces(ctx.naamwoordWithNumbers()) :
-      (ctx.naamwoord ? ctx.naamwoord().getText() : '');
+    // Extract kenmerk name - always use extractTextWithSpaces to preserve spacing
+    let kenmerk = '';
+    if (ctx.naamwoordWithNumbers && ctx.naamwoordWithNumbers()) {
+      kenmerk = this.extractTextWithSpaces(ctx.naamwoordWithNumbers());
+    } else if (ctx.naamwoord && ctx.naamwoord()) {
+      kenmerk = this.extractTextWithSpaces(ctx.naamwoord());
+    }
 
-    const node: BinaryExpression = {
-      type: 'BinaryExpression',
-      operator: '==',
-      left,
-      right: {
-        type: 'StringLiteral',
-        value: kenmerk
-      } as Expression
+    const node: VergelijkingInPredicaat = {
+      type: 'VergelijkingInPredicaat',
+      vergelijkingType: 'kenmerk_check',
+      onderwerp: left,
+      kenmerkNaam: kenmerk
     };
     this.setLocation(node, ctx);
     return node;
@@ -5009,24 +5053,24 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     return this.visit(ctx);
   }
 
-  visitSubordinateIsKenmerkExpr(ctx: any): BinaryExpression {
-    // Handle "is kenmerk" expressions in subordinate clauses (e.g., "hij is student")
+  visitSubordinateIsKenmerkExpr(ctx: any): VergelijkingInPredicaat {
+    // Handle "is kenmerk" expressions in subordinate clauses (e.g., "hij is een passagier jonger dan 18 jaar")
     const subject = this.visitOnderwerpReferentie(ctx._subject || ctx.onderwerpReferentie());
-    // Check for naamwoordWithNumbers first
-    const kenmerk = ctx._kenmerk ?
-      (ctx._kenmerk.naamwoordWithNumbers ? this.extractTextWithSpaces(ctx._kenmerk) : ctx._kenmerk.getText()) :
-      (ctx.naamwoordWithNumbers && ctx.naamwoordWithNumbers() ?
-        this.extractTextWithSpaces(ctx.naamwoordWithNumbers()) :
-        (ctx.naamwoord ? ctx.naamwoord().getText() : ''));
+    // Extract kenmerk name - always use extractTextWithSpaces to preserve spacing
+    let kenmerk = '';
+    if (ctx._kenmerk) {
+      kenmerk = this.extractTextWithSpaces(ctx._kenmerk);
+    } else if (ctx.naamwoordWithNumbers && ctx.naamwoordWithNumbers()) {
+      kenmerk = this.extractTextWithSpaces(ctx.naamwoordWithNumbers());
+    } else if (ctx.naamwoord && ctx.naamwoord()) {
+      kenmerk = this.extractTextWithSpaces(ctx.naamwoord());
+    }
 
-    const node: BinaryExpression = {
-      type: 'BinaryExpression',
-      operator: '==',
-      left: subject,
-      right: {
-        type: 'BooleanLiteral',
-        value: true
-      } as Expression
+    const node: VergelijkingInPredicaat = {
+      type: 'VergelijkingInPredicaat',
+      vergelijkingType: 'kenmerk_check',
+      onderwerp: subject,
+      kenmerkNaam: kenmerk
     };
     this.setLocation(node, ctx);
     return node;

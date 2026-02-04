@@ -96,9 +96,12 @@ import { VoorwaardeDeelContext } from "./RegelSpraakParser";
 import { ToplevelSamengesteldeVoorwaardeContext } from "./RegelSpraakParser";
 import { VoorwaardeKwantificatieContext } from "./RegelSpraakParser";
 import { SamengesteldeVoorwaardeOnderdeelContext } from "./RegelSpraakParser";
+import { OuterBulletPrefixContext } from "./RegelSpraakParser";
+import { NestedBulletPrefixContext } from "./RegelSpraakParser";
 import { BulletPrefixContext } from "./RegelSpraakParser";
 import { ElementaireVoorwaardeContext } from "./RegelSpraakParser";
 import { GenesteSamengesteldeVoorwaardeContext } from "./RegelSpraakParser";
+import { GenesteSamengesteldeVoorwaardeOnderdeelContext } from "./RegelSpraakParser";
 import { OnderwerpReferentieContext } from "./RegelSpraakParser";
 import { OnderwerpReferentieWithNumbersContext } from "./RegelSpraakParser";
 import { OnderwerpBasisContext } from "./RegelSpraakParser";
@@ -835,6 +838,18 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitSamengesteldeVoorwaardeOnderdeel?: (ctx: SamengesteldeVoorwaardeOnderdeelContext) => Result;
 	/**
+	 * Visit a parse tree produced by `RegelSpraakParser.outerBulletPrefix`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitOuterBulletPrefix?: (ctx: OuterBulletPrefixContext) => Result;
+	/**
+	 * Visit a parse tree produced by `RegelSpraakParser.nestedBulletPrefix`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitNestedBulletPrefix?: (ctx: NestedBulletPrefixContext) => Result;
+	/**
 	 * Visit a parse tree produced by `RegelSpraakParser.bulletPrefix`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -852,6 +867,12 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitGenesteSamengesteldeVoorwaarde?: (ctx: GenesteSamengesteldeVoorwaardeContext) => Result;
+	/**
+	 * Visit a parse tree produced by `RegelSpraakParser.genesteSamengesteldeVoorwaardeOnderdeel`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitGenesteSamengesteldeVoorwaardeOnderdeel?: (ctx: GenesteSamengesteldeVoorwaardeOnderdeelContext) => Result;
 	/**
 	 * Visit a parse tree produced by `RegelSpraakParser.onderwerpReferentie`.
 	 * @param ctx the parse tree
