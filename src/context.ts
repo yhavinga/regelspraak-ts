@@ -102,6 +102,9 @@ export class Context implements RuntimeContext {
   initializeKenmerkRegistries(): void {
     if (!this.domainModel) return;
 
+    // Clear existing registries to prevent stale equivalences
+    this.kenmerkRegistries.clear();
+
     for (const objectType of this.domainModel.objectTypes || []) {
       const registry = this.getKenmerkRegistry(objectType.name);
 
@@ -227,7 +230,17 @@ export class Context implements RuntimeContext {
    * Returns both canonical keys and 'is ' prefixed variants for backward compatibility.
    */
   private getObjectKenmerkenMap(type: string, id: string): Record<string, boolean> {
-    const typeMap = this.objectKenmerken.get(type);
+    // Use canonicalized type matching (same as getKenmerk)
+    let typeMap = this.objectKenmerken.get(type);
+    if (!typeMap) {
+      const canonicalQuery = this.canonicalizeTypeName(type);
+      for (const [storedType, map] of this.objectKenmerken.entries()) {
+        if (this.canonicalizeTypeName(storedType) === canonicalQuery) {
+          typeMap = map;
+          break;
+        }
+      }
+    }
     if (!typeMap) return {};
 
     const objectMap = typeMap.get(id);
@@ -239,6 +252,8 @@ export class Context implements RuntimeContext {
       result[name] = value;
       // Also include 'is ' prefixed variant for backward compatibility
       // (tests and some code expect 'is minderjarig' format)
+      // NOTE: This adds 'is ' even for bezittelijk kenmerken, which is
+      // semantically incorrect but harmless for backward compatibility.
       if (!name.startsWith('is ')) {
         result[`is ${name}`] = value;
       }

@@ -2179,7 +2179,7 @@ export class ExpressionEvaluator implements IEvaluator {
       const normalizedKey = predicaat.kenmerk.toLowerCase();
       for (const [storedKey, storedValue] of Object.entries(kenmerken)) {
         const storedNormalized = storedKey.toLowerCase()
-          .replace(/^(is|heeft)\s+/, '')
+          .replace(/^is\s+/, '')
           .replace(/^(de|het|een)\s+/, '');
         if (storedNormalized === normalizedKey) {
           return storedValue;
