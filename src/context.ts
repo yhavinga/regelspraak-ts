@@ -4,6 +4,8 @@ import { TimelineValueImpl } from './ast/timelines';
 import { DomainModel } from './ast/domain-model';
 import { Dimension } from './ast/dimensions';
 import { DimensionRegistry } from './model/dimensions';
+import { KenmerkEquivalenceRegistry } from './kenmerk-equivalence-registry';
+import { KenmerkSpecification } from './ast/object-types';
 
 /**
  * Represents a relationship instance between two objects
@@ -52,6 +54,9 @@ export class Context implements RuntimeContext {
   // Configurable maximum iterations for recursive rule groups (spec §9.9)
   public maxRecursionIterations: number = 100;
 
+  // Per-object-type kenmerk equivalence registries
+  private kenmerkRegistries: Map<string, KenmerkEquivalenceRegistry> = new Map();
+
   constructor(model?: DomainModel) {
     if (model) {
       this.domainModel = model;
@@ -85,6 +90,39 @@ export class Context implements RuntimeContext {
     for (const feittype of feitTypes) {
       this.registerFeittype(feittype);
     }
+
+    // Initialize kenmerk registries from model
+    this.initializeKenmerkRegistries();
+  }
+
+  /**
+   * Initialize kenmerk equivalence registries from model object types.
+   * Can be called after domain model is updated to re-initialize registries.
+   */
+  initializeKenmerkRegistries(): void {
+    if (!this.domainModel) return;
+
+    for (const objectType of this.domainModel.objectTypes || []) {
+      const registry = this.getKenmerkRegistry(objectType.name);
+
+      // Register kenmerken from object type members
+      for (const member of objectType.members || []) {
+        if (member.type === 'KenmerkSpecification') {
+          registry.registerKenmerk(member as KenmerkSpecification);
+        }
+      }
+    }
+  }
+
+  /**
+   * Get or create equivalence registry for an object type.
+   */
+  getKenmerkRegistry(objectType: string): KenmerkEquivalenceRegistry {
+    const canonicalType = this.canonicalizeTypeName(objectType);
+    if (!this.kenmerkRegistries.has(canonicalType)) {
+      this.kenmerkRegistries.set(canonicalType, new KenmerkEquivalenceRegistry());
+    }
+    return this.kenmerkRegistries.get(canonicalType)!;
   }
 
   getVariable(name: string): Value | undefined {
@@ -185,7 +223,8 @@ export class Context implements RuntimeContext {
   // --- Kenmerken Handling (separate from attributes, mirroring Python) ---
 
   /**
-   * Get all kenmerken for an object as a Map
+   * Get all kenmerken for an object as a Map.
+   * Returns both canonical keys and 'is ' prefixed variants for backward compatibility.
    */
   private getObjectKenmerkenMap(type: string, id: string): Record<string, boolean> {
     const typeMap = this.objectKenmerken.get(type);
@@ -194,22 +233,32 @@ export class Context implements RuntimeContext {
     const objectMap = typeMap.get(id);
     if (!objectMap) return {};
 
-    // Convert Map to plain object
+    // Convert Map to plain object with both canonical and 'is ' prefixed keys
     const result: Record<string, boolean> = {};
     for (const [name, value] of objectMap.entries()) {
       result[name] = value;
+      // Also include 'is ' prefixed variant for backward compatibility
+      // (tests and some code expect 'is minderjarig' format)
+      if (!name.startsWith('is ')) {
+        result[`is ${name}`] = value;
+      }
     }
     return result;
   }
 
   /**
-   * Get a kenmerk value for an object
+   * Get a kenmerk value for an object.
+   * Uses KenmerkEquivalenceRegistry for canonical key resolution.
    */
   getKenmerk(type: string, id: string, kenmerkName: string): boolean | undefined {
-    // Try exact type first
-    let typeMap = this.objectKenmerken.get(type);
+    // Get registry for this type
+    const registry = this.getKenmerkRegistry(type);
 
-    // If not found, try canonicalized matching (handles 'vlucht' vs 'Vlucht')
+    // Resolve to canonical storage key
+    const canonical = registry.getCanonicalLabel(kenmerkName);
+
+    // Find type map (with canonicalized type matching)
+    let typeMap = this.objectKenmerken.get(type);
     if (!typeMap) {
       const canonicalQuery = this.canonicalizeTypeName(type);
       for (const [storedType, map] of this.objectKenmerken.entries()) {
@@ -225,44 +274,38 @@ export class Context implements RuntimeContext {
     const objectMap = typeMap.get(id);
     if (!objectMap) return undefined;
 
-    // Try exact kenmerk name first
-    let value = objectMap.get(kenmerkName);
+    // Look up by canonical key
+    const value = objectMap.get(canonical);
+    if (value !== undefined) return value;
 
-    // Try normalized kenmerk name (handles 'is duurzaam' vs 'duurzaam')
-    if (value === undefined) {
-      const normalizedName = this.normalizeKenmerkName(kenmerkName);
-      for (const [storedName, storedValue] of objectMap.entries()) {
-        if (this.normalizeKenmerkName(storedName) === normalizedName) {
-          value = storedValue;
-          break;
-        }
+    // Fallback: check all stored keys for equivalence (handles legacy data)
+    for (const [storedName, storedValue] of objectMap.entries()) {
+      if (registry.areEquivalent(storedName, kenmerkName)) {
+        return storedValue;
       }
     }
 
-    return value;
+    return undefined;
   }
 
   /**
-   * Normalize kenmerk name for comparison (remove 'is '/'heeft ' prefix and articles)
-   */
-  private normalizeKenmerkName(name: string): string {
-    return name.toLowerCase()
-      .replace(/^(is|heeft)\s+/, '')
-      .replace(/^(de|het|een)\s+/, '')
-      .trim();
-  }
-
-  /**
-   * Set a kenmerk value for an object
+   * Set a kenmerk value for an object.
+   * Always stores under the canonical key.
    */
   setKenmerk(type: string, id: string, kenmerkName: string, value: boolean): void {
-    // Find existing type bucket with canonicalized matching, or create new one
+    // Get registry for this type
+    const registry = this.getKenmerkRegistry(type);
+
+    // Resolve to canonical storage key
+    const canonical = registry.getCanonicalLabel(kenmerkName);
+
+    // Find existing type bucket or create new one
     let typeKey = type;
     const canonicalQuery = this.canonicalizeTypeName(type);
 
     for (const storedType of this.objectKenmerken.keys()) {
       if (this.canonicalizeTypeName(storedType) === canonicalQuery) {
-        typeKey = storedType; // Use existing key for consistency
+        typeKey = storedType;
         break;
       }
     }
@@ -277,7 +320,9 @@ export class Context implements RuntimeContext {
     }
 
     const objectMap = typeMap.get(id)!;
-    objectMap.set(kenmerkName, value);
+
+    // Store under canonical key
+    objectMap.set(canonical, value);
   }
 
   /**

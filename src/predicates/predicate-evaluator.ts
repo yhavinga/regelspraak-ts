@@ -71,7 +71,7 @@ export class PredicateEvaluator {
 
       // Kenmerk check (heeft/is kenmerk)
       case 'kenmerk':
-        result = this.evaluateKenmerk(predicate, value);
+        result = this.evaluateKenmerk(predicate, value, context);
         break;
 
       // Dagsoort check (is een dagsoort)
@@ -275,24 +275,45 @@ export class PredicateEvaluator {
   }
 
   /**
-   * Helper: Evaluate kenmerk predicate
+   * Helper: Evaluate kenmerk predicate.
+   * Uses RuntimeContext.getKenmerk() which handles equivalence.
    */
-  private evaluateKenmerk(predicate: SimplePredicate, value: Value): boolean {
+  private evaluateKenmerk(
+    predicate: SimplePredicate,
+    value: Value,
+    context: RuntimeContext
+  ): boolean {
     if (!predicate.kenmerk) {
       throw new Error('Kenmerk predicate requires kenmerk property');
     }
 
-    // Check if value is an object
     if (value.type !== 'object') {
       return false;
     }
 
-    // Check if object has the kenmerk
+    const valueAny = value as any;
+    const objectType = valueAny.objectType || '';
+    const objectId = valueAny.objectId || '';
+
+    // Primary path: use RuntimeContext.getKenmerk() which handles equivalence
+    if (objectType && objectId) {
+      const hasKenmerk = context.getKenmerk(objectType, objectId, predicate.kenmerk);
+      if (hasKenmerk !== undefined) {
+        return hasKenmerk;
+      }
+    }
+
+    // Fallback: check value directly (for mock objects without objectType/objectId)
     const kenmerkKey = `is ${predicate.kenmerk}`;
     const kenmerkValue = value.value[kenmerkKey];
-
     if (kenmerkValue && kenmerkValue.type === 'boolean') {
       return kenmerkValue.value === true;
+    }
+
+    // Also check without 'is ' prefix
+    const directValue = value.value[predicate.kenmerk];
+    if (directValue && directValue.type === 'boolean') {
+      return directValue.value === true;
     }
 
     return false;

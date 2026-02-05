@@ -678,6 +678,10 @@ export class Engine implements IEngine {
         if (!ctx.domainModel || ctx.domainModel.dimensions.length === 0) {
           ctx.domainModel = model;
         }
+        // Re-initialize kenmerk registries with the updated model
+        if ((ctx as Context).initializeKenmerkRegistries) {
+          (ctx as Context).initializeKenmerkRegistries();
+        }
       }
     } else {
       // Create a new context with the parsed model if it's a DomainModel

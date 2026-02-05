@@ -2133,7 +2133,7 @@ export class ExpressionEvaluator implements IEvaluator {
   private evaluatePredicaat(predicaat: Predicaat, item: Value, context: RuntimeContext): boolean {
     switch (predicaat.type) {
       case 'KenmerkPredicaat':
-        return this.evaluateKenmerkPredicaat(predicaat as KenmerkPredicaat, item);
+        return this.evaluateKenmerkPredicaat(predicaat as KenmerkPredicaat, item, context);
 
       case 'AttributeComparisonPredicaat':
         return this.evaluateAttributeComparisonPredicaat(predicaat as AttributeComparisonPredicaat, item, context);
@@ -2143,38 +2143,39 @@ export class ExpressionEvaluator implements IEvaluator {
     }
   }
 
-  private evaluateKenmerkPredicaat(predicaat: KenmerkPredicaat, item: Value): boolean {
-    // Check if the item is an object
+  private evaluateKenmerkPredicaat(
+    predicaat: KenmerkPredicaat,
+    item: Value,
+    context: RuntimeContext
+  ): boolean {
     if (item.type !== 'object') {
       return false;
     }
 
-    const objectData = item.value as Record<string, Value>;
     const itemAny = item as any;
+    const objectType = itemAny.objectType || '';
+    const objectId = itemAny.objectId || '';
 
-    // Check if the kenmerk exists and is true
-    const kenmerkKey = `is ${predicaat.kenmerk}`;
-
-    // First check object attributes (legacy path)
-    const kenmerkValue = objectData[kenmerkKey];
-    if (kenmerkValue && kenmerkValue.type === 'boolean') {
-      return kenmerkValue.value as boolean;
+    // Primary path: use RuntimeContext.getKenmerk() which handles equivalence
+    if (objectType && objectId) {
+      const hasKenmerk = context.getKenmerk(objectType, objectId, predicaat.kenmerk);
+      if (hasKenmerk !== undefined) {
+        return hasKenmerk;
+      }
     }
 
-    // Fallback: check the separate kenmerken dict (added in getObjectsByType)
+    // Fallback: check the separate kenmerken dict (for objects from getObjectsByType)
     const kenmerken = itemAny.kenmerken as Record<string, boolean> | undefined;
     if (kenmerken) {
-      // Try with 'is ' prefix
+      // Try various forms
+      const kenmerkKey = `is ${predicaat.kenmerk}`;
       if (kenmerken[kenmerkKey] !== undefined) {
         return kenmerken[kenmerkKey];
       }
-
-      // Try without prefix (for bezittelijk kenmerken like "recht op duurzaamheidskorting")
       if (kenmerken[predicaat.kenmerk] !== undefined) {
         return kenmerken[predicaat.kenmerk];
       }
-
-      // Try normalized matching (handles case differences)
+      // Normalized matching for legacy compatibility
       const normalizedKey = predicaat.kenmerk.toLowerCase();
       for (const [storedKey, storedValue] of Object.entries(kenmerken)) {
         const storedNormalized = storedKey.toLowerCase()
@@ -2184,6 +2185,14 @@ export class ExpressionEvaluator implements IEvaluator {
           return storedValue;
         }
       }
+    }
+
+    // Fallback: check object attributes directly (legacy path for mock objects)
+    const objectData = item.value as Record<string, Value>;
+    const kenmerkKey = `is ${predicaat.kenmerk}`;
+    const kenmerkValue = objectData[kenmerkKey];
+    if (kenmerkValue && kenmerkValue.type === 'boolean') {
+      return kenmerkValue.value as boolean;
     }
 
     return false;

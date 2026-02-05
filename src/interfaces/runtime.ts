@@ -55,4 +55,8 @@ export interface RuntimeContext {
   
   // Context cloning for temporary evaluation
   clone?(): RuntimeContext;
+
+  // Kenmerk access (REQUIRED - implementations must provide these)
+  getKenmerk(type: string, id: string, kenmerkName: string): boolean | undefined;
+  setKenmerk(type: string, id: string, kenmerkName: string, value: boolean): void;
 }

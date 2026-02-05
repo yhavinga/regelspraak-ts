@@ -3873,10 +3873,10 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       name = ctx.identifier().getText();
     } else if (ctx.naamwoordWithNumbers && ctx.naamwoordWithNumbers()) {
       const naamwoordCtx = ctx.naamwoordWithNumbers();
-      name = this.extractText(naamwoordCtx);
+      name = this.extractTextWithSpaces(naamwoordCtx);
     } else {
       const naamwoordCtx = ctx.naamwoord();
-      name = this.extractText(naamwoordCtx);
+      name = this.extractTextWithSpaces(naamwoordCtx);
     }
 
     // Check for type (bijvoeglijk or bezittelijk)
