@@ -88,6 +88,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
   private objectTypeAttributes: Map<string, Set<string>> = new Map();
   private feitTypes: Map<string, any> = new Map();
   private parameterNames: Set<string> = new Set();
+  // Track registered dimension labels for model-driven stripping (label -> dimension name)
+  private registeredDimensionLabels: Map<string, string> = new Map();
 
   /**
    * Set location directly on the node.
@@ -2599,16 +2601,16 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     }
 
     // Check for dimensional patterns like "het bruto inkomen" or "het inkomen van huidig jaar"
-    const dimensionKeywords = ['bruto', 'netto', 'huidig jaar', 'vorig jaar', 'volgend jaar'];
+    // Only strip keywords that are actually registered as dimension labels (model-driven)
     const dimensionLabels: string[] = [];
 
     // Check if attribute contains dimension keywords (adjectival style)
     let cleanAttrText = attrText;
-    for (const keyword of dimensionKeywords) {
-      if (attrText.includes(keyword)) {
-        dimensionLabels.push(keyword);
+    for (const [label, dimensionName] of this.registeredDimensionLabels) {
+      if (attrText.includes(label)) {
+        dimensionLabels.push(label);
         // Remove the dimension keyword from the attribute text
-        cleanAttrText = cleanAttrText.replace(keyword, '').trim();
+        cleanAttrText = cleanAttrText.replace(label, '').trim();
       }
     }
 
@@ -2619,13 +2621,13 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     if (onderwerpBasisCtx) {
       const onderwerpText = this.extractTextWithSpaces(onderwerpBasisCtx);
 
-      // Check if this is a dimension keyword
+      // Check if this is a registered dimension label (model-driven)
       let isDimensionKeyword = false;
       let matchedKeyword = '';
-      for (const keyword of dimensionKeywords) {
-        if (onderwerpText.includes(keyword)) {
+      for (const [label, dimensionName] of this.registeredDimensionLabels) {
+        if (onderwerpText.includes(label)) {
           isDimensionKeyword = true;
-          matchedKeyword = keyword;
+          matchedKeyword = label;
           break;
         }
       }
@@ -4204,6 +4206,11 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       preposition,
       labels
     };
+
+    // Register dimension labels for model-driven stripping
+    for (const labelObj of labels) {
+      this.registeredDimensionLabels.set(labelObj.label, name);
+    }
 
     // Store location separately
     this.setLocation(dimension, ctx);
