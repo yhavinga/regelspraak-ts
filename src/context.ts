@@ -8,6 +8,17 @@ import { KenmerkEquivalenceRegistry } from './kenmerk-equivalence-registry';
 import { KenmerkSpecification } from './ast/object-types';
 
 /**
+ * Structured trace entry for explainability
+ */
+export interface StructuredTraceEntry {
+  type: 'RULE_FIRED' | 'OBJECT_CREATED' | 'ATTRIBUTE_SET';
+  ruleName?: string;
+  target?: string;
+  value?: any;
+  timestamp: number;
+}
+
+/**
  * Represents a relationship instance between two objects
  */
 export interface Relationship {
@@ -24,6 +35,7 @@ export class Context implements RuntimeContext {
   private scopes: Map<string, Value>[] = [new Map()];
   private objects: Map<string, Map<string, any>> = new Map();
   private executionTrace: string[] = [];
+  private structuredTrace: StructuredTraceEntry[] = [];
   private objectCounter: number = 0;
   public current_instance: Value | undefined;
   public evaluation_date: Date = new Date();
@@ -221,6 +233,20 @@ export class Context implements RuntimeContext {
 
   getExecutionTrace(): string[] {
     return [...this.executionTrace];
+  }
+
+  /**
+   * Add a structured trace entry for explainability.
+   */
+  addStructuredTrace(entry: Omit<StructuredTraceEntry, 'timestamp'>): void {
+    this.structuredTrace.push({ ...entry, timestamp: Date.now() });
+  }
+
+  /**
+   * Get all structured trace entries.
+   */
+  getStructuredTrace(): StructuredTraceEntry[] {
+    return [...this.structuredTrace];
   }
 
   // --- Kenmerken Handling (separate from attributes, mirroring Python) ---
@@ -608,6 +634,7 @@ export class Context implements RuntimeContext {
     cloned.current_instance = this.current_instance;
     cloned.evaluation_date = this.evaluation_date;
     cloned.executionTrace = [...this.executionTrace];
+    cloned.structuredTrace = [...this.structuredTrace];
 
     // Copy relationships
     cloned.relationships = [...this.relationships];

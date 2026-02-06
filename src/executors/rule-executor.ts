@@ -51,11 +51,42 @@ export class RuleExecutor implements IRuleExecutor {
   private expressionEvaluator = new ExpressionEvaluator();
   private feitExecutor = new FeitExecutor();
 
-  private recordRuleFired(context: RuntimeContext, ruleName: string | undefined): void {
+  private recordRuleFired(
+    context: RuntimeContext,
+    ruleName: string | undefined,
+    target?: string,
+    value?: Value
+  ): void {
     if (!ruleName) return;
     const ctx = context as any;
     if (ctx.markRuleExecuted) ctx.markRuleExecuted(ruleName);
-    if (ctx.addExecutionTrace) ctx.addExecutionTrace(`RULE_FIRED rule_name='${ruleName}'`);
+
+    // Build trace message with optional target/value
+    const parts = [`rule_name='${ruleName}'`];
+    if (target !== undefined) {
+      parts.push(`target='${target}'`);
+    }
+    if (value !== undefined && value.value !== undefined) {
+      parts.push(`value=${this.formatValue(value)}`);
+    }
+
+    if (ctx.addExecutionTrace) {
+      ctx.addExecutionTrace(`RULE_FIRED ${parts.join(',')}`);
+    }
+  }
+
+  private formatValue(value: Value): string {
+    if (value.type === 'number') {
+      return String(value.value);
+    } else if (value.type === 'string') {
+      return `"${String(value.value).replace(/"/g, '\\"')}"`;
+    } else if (value.type === 'boolean') {
+      return String(value.value);
+    } else if (value.type === 'date') {
+      const dateVal = value.value instanceof Date ? value.value : new Date(value.value);
+      return `"${dateVal.toISOString().split('T')[0]}"`;
+    }
+    return '[complex]';
   }
 
   /**
@@ -338,9 +369,13 @@ export class RuleExecutor implements IRuleExecutor {
 
       // Mark rule as executed for regel status tracking and fired_rules output
       const ctx = context as any;
-      this.recordRuleFired(context, ruleName);
 
-      // Set current rule name for consistency rule tracking
+      // For Gelijkstelling, defer trace to executeGelijkstelling where we have target/value
+      if (result.type !== 'Gelijkstelling') {
+        this.recordRuleFired(context, ruleName);
+      }
+
+      // Set current rule name for consistency rule tracking and Gelijkstelling trace
       ctx._currentRuleName = ruleName;
 
       // Special handling for inconsistent-type consistency rules
@@ -435,6 +470,12 @@ export class RuleExecutor implements IRuleExecutor {
       const value = this.expressionEvaluator.evaluate(gelijkstelling.expression, context);
       const result = this.navigateAndSetAttribute(engineInstance, targetPath, value, context);
 
+      // Record rule fired with target and value for explainability
+      const ruleName = (context as any)._currentRuleName;
+      if (ruleName) {
+        this.recordRuleFired(context, ruleName, targetPath.join('.'), value);
+      }
+
       // Return success even if navigation fails - matches original behavior where
       // navigation failures are silently skipped (just like the multi-instance path)
       return {
@@ -480,6 +521,7 @@ export class RuleExecutor implements IRuleExecutor {
 
       if (objects.length > 0) {
         // Object-scoped rule - iterate over all objects of this type
+        let lastValue: Value | undefined;
         for (const obj of objects) {
           // Set current_instance for pronoun resolution
           const objCtx = context as Context;
@@ -489,12 +531,19 @@ export class RuleExecutor implements IRuleExecutor {
           try {
             // Evaluate expression in the context of this object
             const value = this.expressionEvaluator.evaluate(gelijkstelling.expression, context);
+            lastValue = value;
 
             // Use shared helper for navigation and assignment
             this.navigateAndSetAttribute(obj, targetPath, value, context, true);
           } finally {
             objCtx.current_instance = oldInstance;
           }
+        }
+
+        // Record rule fired with target and value for explainability
+        const ruleName = (context as any)._currentRuleName;
+        if (ruleName) {
+          this.recordRuleFired(context, ruleName, targetPath.join('.'), lastValue);
         }
 
         return {
@@ -516,6 +565,7 @@ export class RuleExecutor implements IRuleExecutor {
         const objects = (context as Context).getObjectsByType(resolvedType);
 
         if (objects.length > 0) {
+          let lastValue: Value | undefined;
           for (const obj of objects) {
             // Set current_instance for pronoun resolution
             const roleCtx = context as Context;
@@ -525,6 +575,7 @@ export class RuleExecutor implements IRuleExecutor {
             try {
               // Evaluate the expression for this instance
               const instanceValue = this.expressionEvaluator.evaluate(gelijkstelling.expression, context);
+              lastValue = instanceValue;
 
               // Use shared helper for navigation and assignment
               this.navigateAndSetAttribute(obj, targetPath, instanceValue, context, true);
@@ -532,6 +583,12 @@ export class RuleExecutor implements IRuleExecutor {
               // Restore previous current_instance
               roleCtx.current_instance = oldInstance;
             }
+          }
+
+          // Record rule fired with target and value for explainability
+          const ruleName = (context as any)._currentRuleName;
+          if (ruleName) {
+            this.recordRuleFired(context, ruleName, targetPath.join('.'), lastValue);
           }
 
           return {
@@ -549,6 +606,13 @@ export class RuleExecutor implements IRuleExecutor {
     if (targetPath.length === 1) {
       // Simple attribute name - likely a variable assignment
       context.setVariable(targetPath[0], value);
+
+      // Record rule fired with target and value for explainability
+      const ruleName = (context as any)._currentRuleName;
+      if (ruleName) {
+        this.recordRuleFired(context, ruleName, targetPath.join('.'), value);
+      }
+
       return {
         success: true,
         target: targetPath.join('.'),
@@ -611,6 +675,13 @@ export class RuleExecutor implements IRuleExecutor {
           }
         }
       }
+
+      // Record rule fired with target and value for explainability
+      const ruleName = (context as any)._currentRuleName;
+      if (ruleName) {
+        this.recordRuleFired(context, ruleName, targetPath.join('.'), value);
+      }
+
       return {
         success: true,
         target: targetPath.join('.'),
@@ -622,6 +693,12 @@ export class RuleExecutor implements IRuleExecutor {
 
       if (!result.success) {
         throw new Error(`Failed to set value at path ${targetPath.join('.')}: ${result.error}`);
+      }
+
+      // Record rule fired with target and value for explainability
+      const ruleName = (context as any)._currentRuleName;
+      if (ruleName) {
+        this.recordRuleFired(context, ruleName, targetPath.join('.'), value);
       }
 
       return {

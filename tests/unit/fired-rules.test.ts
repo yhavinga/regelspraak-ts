@@ -1,4 +1,4 @@
-import { Engine, Context } from '../../src';
+import { Engine, Context, extractFiredRules, extractFiredRulesWithDetails } from '../../src';
 
 describe('fired_rules tracking', () => {
   let engine: Engine;
@@ -269,6 +269,158 @@ geldig altijd
       // Verify no kenmerk was set
       const persons = context.getObjectsByType('Persoon');
       expect(persons[0].kenmerken['is minderjarig']).toBeUndefined();
+    });
+  });
+
+  describe('Enhanced trace format for Gelijkstelling', () => {
+    test('includes target and numeric value for computation rules', () => {
+      const context = new Context();
+      const id = context.generateObjectId('Scenario');
+      context.createObject('Scenario', id, {
+        pensioenvermogen: { type: 'number', value: 85000 },
+        'opname percentage': { type: 'number', value: 10 }
+      });
+
+      const result = engine.run(`
+Objecttype het Scenario
+    het bedrag ineens Numeriek;
+    het opname percentage Numeriek;
+    het pensioenvermogen Numeriek;
+
+Regel Bereken bedrag ineens
+geldig altijd
+    De bedrag ineens van een Scenario moet berekend worden als
+        het pensioenvermogen maal het opname percentage gedeeld door 100.
+`, context);
+
+      expect(result.success).toBe(true);
+
+      const trace = context.getExecutionTrace();
+      const ruleTrace = trace.find(t => t.includes("rule_name='Bereken bedrag ineens'"));
+
+      expect(ruleTrace).toBeDefined();
+      expect(ruleTrace).toContain("target='Scenario.bedrag ineens'");
+      expect(ruleTrace).toContain('value=8500');
+    });
+
+    test('extractFiredRules works with enhanced format (backward compatibility)', () => {
+      const trace = [
+        "RULE_FIRED rule_name='Rule1',target='A.b',value=100",
+        "RULE_FIRED rule_name='Rule2'"
+      ];
+      expect(extractFiredRules(trace)).toEqual(['Rule1', 'Rule2']);
+    });
+
+    test('extractFiredRulesWithDetails extracts target and value', () => {
+      const trace = [
+        "RULE_FIRED rule_name='Bereken bedrag',target='Scenario.bedrag',value=8500",
+        "RULE_FIRED rule_name='Bereken percentage',target='Scenario.percentage',value=10.5",
+        "RULE_FIRED rule_name='Simple Rule'"
+      ];
+
+      const details = extractFiredRulesWithDetails(trace);
+
+      expect(details).toHaveLength(3);
+      expect(details[0]).toEqual({
+        ruleName: 'Bereken bedrag',
+        target: 'Scenario.bedrag',
+        value: '8500'
+      });
+      expect(details[1]).toEqual({
+        ruleName: 'Bereken percentage',
+        target: 'Scenario.percentage',
+        value: '10.5'
+      });
+      expect(details[2]).toEqual({
+        ruleName: 'Simple Rule',
+        target: undefined,
+        value: undefined
+      });
+    });
+
+    test('handles string values with quotes', () => {
+      const context = new Context();
+      const id = context.generateObjectId('Rapport');
+      context.createObject('Rapport', id, {});
+
+      const result = engine.run(`
+Objecttype het Rapport
+    de status Tekst;
+
+Regel Zet status
+geldig altijd
+    De status van een Rapport moet gesteld worden op "voltooid".
+`, context);
+
+      expect(result.success).toBe(true);
+
+      const trace = context.getExecutionTrace();
+      const ruleTrace = trace.find(t => t.includes("rule_name='Zet status'"));
+
+      expect(ruleTrace).toBeDefined();
+      expect(ruleTrace).toContain("target='Rapport.status'");
+      expect(ruleTrace).toContain('value="voltooid"');
+    });
+
+    test('handles boolean values', () => {
+      const context = new Context();
+      const id = context.generateObjectId('Status');
+      context.createObject('Status', id, {
+        bereikbaar: { type: 'boolean', value: true }
+      });
+
+      const result = engine.run(`
+Objecttype de Status
+    de actief Boolean;
+    de bereikbaar Boolean;
+
+Regel Zet actief
+geldig altijd
+    De actief van een Status moet gesteld worden op de bereikbaar van de Status.
+`, context);
+
+      expect(result.success).toBe(true);
+
+      const trace = context.getExecutionTrace();
+      const ruleTrace = trace.find(t => t.includes("rule_name='Zet actief'"));
+
+      expect(ruleTrace).toBeDefined();
+      expect(ruleTrace).toContain("target='Status.actief'");
+      expect(ruleTrace).toContain('value=true');
+    });
+
+    test('deduplicates rules when iterating over multiple objects', () => {
+      const context = new Context();
+      // Create multiple objects
+      context.createObject('Scenario', context.generateObjectId('Scenario'), {
+        pensioenvermogen: { type: 'number', value: 85000 },
+        'opname percentage': { type: 'number', value: 10 }
+      });
+      context.createObject('Scenario', context.generateObjectId('Scenario'), {
+        pensioenvermogen: { type: 'number', value: 170000 },
+        'opname percentage': { type: 'number', value: 5 }
+      });
+
+      const result = engine.run(`
+Objecttype het Scenario
+    het bedrag ineens Numeriek;
+    het opname percentage Numeriek;
+    het pensioenvermogen Numeriek;
+
+Regel Bereken bedrag ineens
+geldig altijd
+    De bedrag ineens van een Scenario moet berekend worden als
+        het pensioenvermogen maal het opname percentage gedeeld door 100.
+`, context);
+
+      expect(result.success).toBe(true);
+
+      // Check that extractFiredRulesWithDetails deduplicates
+      const details = extractFiredRulesWithDetails(context.getExecutionTrace());
+      const berekeningRules = details.filter(d => d.ruleName === 'Bereken bedrag ineens');
+
+      // Should only have one entry even with multiple objects
+      expect(berekeningRules).toHaveLength(1);
     });
   });
 });
