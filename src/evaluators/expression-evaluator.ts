@@ -346,29 +346,52 @@ export class ExpressionEvaluator implements IEvaluator {
     else if (expr.operator === '>' || expr.operator === '<' ||
       expr.operator === '>=' || expr.operator === '<=') {
 
-      // Only numbers and strings support ordering
-      if (left.type !== 'number' && left.type !== 'string') {
+      // Numbers, strings, and dates support ordering
+      if (left.type !== 'number' && left.type !== 'string' && left.type !== 'date') {
         throw new Error(`Cannot use ${expr.operator} with ${left.type}`);
       }
 
-      const leftVal = left.value as number | string;
-      const rightVal = right.value as number | string;
+      // For dates, compare using getTime() for proper ordering
+      if (left.type === 'date') {
+        const leftTime = (left.value as Date).getTime();
+        const rightTime = (right.value as Date).getTime();
 
-      switch (expr.operator) {
-        case '>':
-          result = leftVal > rightVal;
-          break;
-        case '<':
-          result = leftVal < rightVal;
-          break;
-        case '>=':
-          result = leftVal >= rightVal;
-          break;
-        case '<=':
-          result = leftVal <= rightVal;
-          break;
-        default:
-          throw new Error(`Unknown comparison operator: ${expr.operator}`);
+        switch (expr.operator) {
+          case '>':
+            result = leftTime > rightTime;
+            break;
+          case '<':
+            result = leftTime < rightTime;
+            break;
+          case '>=':
+            result = leftTime >= rightTime;
+            break;
+          case '<=':
+            result = leftTime <= rightTime;
+            break;
+          default:
+            throw new Error(`Unknown comparison operator: ${expr.operator}`);
+        }
+      } else {
+        const leftVal = left.value as number | string;
+        const rightVal = right.value as number | string;
+
+        switch (expr.operator) {
+          case '>':
+            result = leftVal > rightVal;
+            break;
+          case '<':
+            result = leftVal < rightVal;
+            break;
+          case '>=':
+            result = leftVal >= rightVal;
+            break;
+          case '<=':
+            result = leftVal <= rightVal;
+            break;
+          default:
+            throw new Error(`Unknown comparison operator: ${expr.operator}`);
+        }
       }
     } else {
       throw new Error(`Unknown comparison operator: ${expr.operator}`);
@@ -1286,6 +1309,9 @@ export class ExpressionEvaluator implements IEvaluator {
   /**
    * Add or subtract a time unit from a date.
    * Ports Python's _add_time_to_date (engine.py:5316-5398)
+   *
+   * FIXED: Uses UTC-based arithmetic to avoid timezone issues and properly
+   * handles day overflow when adding months/years (e.g., Jan 31 + 1 month).
    */
   private addTimeToDate(dateVal: Value, timeVal: Value, subtract: boolean, context: RuntimeContext): Value {
     if (dateVal.value === null || dateVal.value === undefined) {
@@ -1301,61 +1327,80 @@ export class ExpressionEvaluator implements IEvaluator {
     // Handle both string unit and Unit object
     const unitName = typeof timeVal.unit === 'string' ? timeVal.unit : timeVal.unit?.name;
     const multiplier = subtract ? -1 : 1;
+    const delta = amount * multiplier;
 
-    let newDate = new Date(date);
+    // Use UTC to avoid timezone issues
+    let year = date.getUTCFullYear();
+    let month = date.getUTCMonth();
+    let day = date.getUTCDate();
+    let hours = date.getUTCHours();
+    let minutes = date.getUTCMinutes();
+    let seconds = date.getUTCSeconds();
+    let ms = date.getUTCMilliseconds();
 
     switch (unitName) {
       case 'jaren':
       case 'jaar':
       case 'jr':
-        newDate.setFullYear(date.getFullYear() + amount * multiplier);
+        year += delta;
+        // Clamp day to valid range for the target month (handles Feb 29 in non-leap years)
+        const maxDayYear = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+        day = Math.min(day, maxDayYear);
         break;
 
       case 'maanden':
       case 'maand':
       case 'mnd':
-        newDate.setMonth(date.getMonth() + amount * multiplier);
+        // Calculate total months and normalize
+        const totalMonths = month + delta;
+        year += Math.floor(totalMonths / 12);
+        month = ((totalMonths % 12) + 12) % 12; // Handle negative modulo
+        // Clamp day to valid range for the target month
+        const maxDayMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+        day = Math.min(day, maxDayMonth);
         break;
 
       case 'weken':
       case 'week':
-        newDate.setDate(date.getDate() + (amount * 7 * multiplier));
+        day += delta * 7;
         break;
 
       case 'dagen':
       case 'dag':
       case 'dg':
-        newDate.setDate(date.getDate() + amount * multiplier);
+        day += delta;
         break;
 
       case 'uren':
       case 'uur':
       case 'u':
-        newDate.setHours(date.getHours() + amount * multiplier);
+        hours += delta;
         break;
 
       case 'minuten':
       case 'minuut':
-        newDate.setMinutes(date.getMinutes() + amount * multiplier);
+        minutes += delta;
         break;
 
       case 'seconden':
       case 'seconde':
       case 's':
-        newDate.setSeconds(date.getSeconds() + amount * multiplier);
+        seconds += delta;
         break;
 
       case 'milliseconden':
       case 'milliseconde':
       case 'ms':
-        newDate.setMilliseconds(date.getMilliseconds() + amount * multiplier);
+        ms += delta;
         break;
 
       default:
         // Default to days
-        newDate.setDate(date.getDate() + amount * multiplier);
+        day += delta;
     }
 
+    // Date.UTC handles overflow/underflow for day, hours, minutes, seconds, ms
+    const newDate = new Date(Date.UTC(year, month, day, hours, minutes, seconds, ms));
     return { type: 'date', value: newDate };
   }
 
