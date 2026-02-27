@@ -1796,12 +1796,13 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
   }
 
   visitTijdsduurFuncExpr(ctx: any): Expression {
-    // TIJDSDUUR_VAN primaryExpression TOT primaryExpression (IN_HELE unitName=IDENTIFIER)?
+    // TIJDSDUUR_VAN primaryExpression TOT primaryExpression (IN_HELE unitIdentifierWithTime)?
     const fromExpr = this.visit(ctx.primaryExpression(0));
     const toExpr = this.visit(ctx.primaryExpression(1));
 
     // Check for unit specification and normalize to lowercase
-    const unitIdCtx = ctx.unitIdentifier ? ctx.unitIdentifier() : null;
+    // Uses unitIdentifierWithTime which includes time keywords like jaren, maanden, etc.
+    const unitIdCtx = ctx.unitIdentifierWithTime ? ctx.unitIdentifierWithTime() : null;
     const unit = unitIdCtx ? unitIdCtx.getText().toLowerCase() : undefined;
 
     const funcCall: FunctionCall = {
@@ -1815,12 +1816,13 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
   }
 
   visitAbsTijdsduurFuncExpr(ctx: any): Expression {
-    // DE_ABSOLUTE_TIJDSDUUR_VAN primaryExpression TOT primaryExpression (IN_HELE unitName=IDENTIFIER)?
+    // DE_ABSOLUTE_TIJDSDUUR_VAN primaryExpression TOT primaryExpression (IN_HELE unitIdentifierWithTime)?
     const fromExpr = this.visit(ctx.primaryExpression(0));
     const toExpr = this.visit(ctx.primaryExpression(1));
 
     // Check for unit specification and normalize to lowercase
-    const unitIdCtx = ctx.unitIdentifier ? ctx.unitIdentifier() : null;
+    // Uses unitIdentifierWithTime which includes time keywords like jaren, maanden, etc.
+    const unitIdCtx = ctx.unitIdentifierWithTime ? ctx.unitIdentifierWithTime() : null;
     const unit = unitIdCtx ? unitIdCtx.getText().toLowerCase() : undefined;
 
     const funcCall: FunctionCall = {
@@ -5765,14 +5767,18 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       throw new Error('Expected parameterMetLidwoord in ParamRefExpr');
     }
 
+    return this.visitParameterMetLidwoord(paramCtx);
+  }
+
+  visitParameterMetLidwoord(ctx: any): Expression {
     let paramName: string;
 
-    if (paramCtx.naamwoord && paramCtx.naamwoord()) {
+    if (ctx.naamwoord && ctx.naamwoord()) {
       // Simple case: just a naamwoord
-      paramName = this.visitNaamwoord(paramCtx.naamwoord());
+      paramName = this.visitNaamwoord(ctx.naamwoord());
     } else {
-      // Complex case: parameter with prepositions
-      const fullText = this.extractTextWithSpaces(paramCtx);
+      // Complex case: parameter with prepositions or just parameterNamePart
+      const fullText = this.extractTextWithSpaces(ctx);
       // Remove leading articles
       paramName = this._stripArticle(fullText);
     }

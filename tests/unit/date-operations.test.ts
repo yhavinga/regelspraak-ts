@@ -346,13 +346,12 @@ describe('Date Operations', () => {
     test('should handle year boundary (Dec 31 + 1 day)', () => {
       // Dec 31 + 1 day = Jan 1 of next year
       // Day arithmetic relies on Date.UTC overflow handling
-      // Note: using 'dg' instead of 'dagen' due to parser bug with 'dagen'
       context.setVariable('startdatum', {
         type: 'date',
         value: new Date(Date.UTC(2024, 11, 31)) // Dec 31, 2024
       });
 
-      const parseResult = engine.parse('startdatum plus 1 dg');
+      const parseResult = engine.parse('startdatum plus 1 dagen');
       expect(parseResult.success).toBe(true);
 
       const result = evaluator.evaluate(parseResult.ast as any, context);
@@ -371,7 +370,7 @@ describe('Date Operations', () => {
         value: new Date(Date.UTC(2024, 0, 31)) // Jan 31, 2024
       });
 
-      const parseResult = engine.parse('startdatum plus 1 dg');
+      const parseResult = engine.parse('startdatum plus 1 dagen');
       expect(parseResult.success).toBe(true);
 
       const result = evaluator.evaluate(parseResult.ast as any, context);

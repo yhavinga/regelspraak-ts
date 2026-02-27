@@ -265,21 +265,30 @@ eenheidsysteemDefinition
     ;
 
 eenheidEntry
-    : (DE | HET) unitName=unitIdentifier
-      (MV_START pluralName=unitIdentifier RPAREN)?  // Optional plural form
-      abbrev=unitIdentifier // abbreviation
-      symbol=unitIdentifier? // optional symbol like € or °C
-      (EQUALS (SLASH)? value=NUMBER targetUnit=unitIdentifier)? // conversion spec with optional fraction
+    : (DE | HET) unitName=unitIdentifierWithTime
+      (MV_START pluralName=unitIdentifierWithTime RPAREN)?  // Optional plural form
+      abbrev=unitIdentifierWithTime // abbreviation
+      symbol=unitIdentifierWithTime? // optional symbol like € or °C
+      (EQUALS (SLASH)? value=NUMBER targetUnit=unitIdentifierWithTime)? // conversion spec with optional fraction
     ;
 
-// New rule to allow keywords or identifiers as units
+// Unit identifier for general use (attribute definitions, number literals).
+// Time keywords (DAGEN, JAREN, etc.) are NOT included here to avoid grammar ambiguity
+// with DateCalcExpr where "1 dagen" would greedily match NUMBER unitIdentifier.
+// Per spec §13.4.16.33, unit specifications use abbreviations (dg, jr, mnd) from Eenheidsysteem.
 unitIdentifier
     : IDENTIFIER
     | METER | KILOGRAM | MILLISECONDE | SECONDE | MINUUT | MINUTEN | UUR | UREN | VOET | POND | MIJL // Keywords
     | M | KG | S | FT | LB | MIN | MI // Abbreviations + Keyword MIN
     | EURO_SYMBOL | DOLLAR_SYMBOL | DEGREE_SYMBOL
-    | DAG | DAGEN | MAAND | MAANDEN | JAAR | JAREN | WEEK | WEKEN | KWARTAAL // Time units
     | SECONDEN // Additional time units
+    ;
+
+// Extended unit identifier including time keywords - used where there's no ambiguity,
+// e.g., after "in hele" in tijdsduur expressions.
+unitIdentifierWithTime
+    : unitIdentifier
+    | DAG | DAGEN | MAAND | MAANDEN | JAAR | JAREN | WEEK | WEKEN | KWARTAAL
     ;
 
 // Eenheid expressions
@@ -863,8 +872,8 @@ primaryExpression : // Corresponds roughly to terminals/functions/references in 
     | NIET primaryExpression                                                                        # UnaryNietExpr
     
     // Functions (Simplified subset)
-    | DE_ABSOLUTE_TIJDSDUUR_VAN primaryExpression TOT primaryExpression (IN_HELE unitIdentifier)?  # AbsTijdsduurFuncExpr
-    | TIJDSDUUR_VAN primaryExpression TOT primaryExpression (IN_HELE unitIdentifier)?            # TijdsduurFuncExpr
+    | DE_ABSOLUTE_TIJDSDUUR_VAN primaryExpression TOT primaryExpression (IN_HELE unitIdentifierWithTime)?  # AbsTijdsduurFuncExpr
+    | TIJDSDUUR_VAN primaryExpression TOT primaryExpression (IN_HELE unitIdentifierWithTime)?            # TijdsduurFuncExpr
     | SOM_VAN primaryExpression (COMMA primaryExpression)* EN primaryExpression                    # SomFuncExpr // Simple aggregation of comma-separated values
     | SOM_VAN ALLE naamwoord                                                                       # SomAlleExpr // Aggregate all instances of something
     | SOM_VAN ALLE attribuutReferentie                                                            # SomAlleAttribuutExpr // Sum all attributes with filtering
