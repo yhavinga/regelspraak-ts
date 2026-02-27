@@ -137,8 +137,11 @@ describe('Date Operations', () => {
       expect(resultDate.getUTCDate()).toBe(15);
     });
 
-    test('should handle leap year edge case (Feb 29 + years)', () => {
-      // Feb 29, 2000 (leap year) + 1 year = Feb 28, 2001 (non-leap year)
+    test('should handle leap year edge case (Feb 29 + years) per Dutch law', () => {
+      // Feb 29, 2000 (leap year) + 1 year = March 1, 2001 (non-leap year)
+      // Dutch legal convention: you only reach your next birthday once the full
+      // period has elapsed. Feb 28 is still within your birth year, so you turn
+      // a year older on March 1.
       context.setVariable('startdatum', {
         type: 'date',
         value: new Date(Date.UTC(2000, 1, 29)) // Feb 29, 2000
@@ -152,8 +155,46 @@ describe('Date Operations', () => {
 
       const resultDate = result.value as Date;
       expect(resultDate.getUTCFullYear()).toBe(2001);
+      expect(resultDate.getUTCMonth()).toBe(2); // March
+      expect(resultDate.getUTCDate()).toBe(1);  // First of next month
+    });
+
+    test('should handle AOW calculation for Feb 29 birth (67 years)', () => {
+      // Born Feb 29, 1960 + 67 years = March 1, 2027
+      // 2027 is not a leap year, so AOW starts March 1
+      context.setVariable('geboortedatum', {
+        type: 'date',
+        value: new Date(Date.UTC(1960, 1, 29)) // Feb 29, 1960
+      });
+
+      const parseResult = engine.parse('geboortedatum plus 67 jr');
+      expect(parseResult.success).toBe(true);
+
+      const result = evaluator.evaluate(parseResult.ast as any, context);
+      expect(result.type).toBe('date');
+
+      const resultDate = result.value as Date;
+      expect(resultDate.getUTCFullYear()).toBe(2027);
+      expect(resultDate.getUTCMonth()).toBe(2); // March
+      expect(resultDate.getUTCDate()).toBe(1);
+    });
+
+    test('should keep Feb 29 when target year is leap year', () => {
+      // Feb 29, 2000 + 4 years = Feb 29, 2004 (both leap years)
+      context.setVariable('startdatum', {
+        type: 'date',
+        value: new Date(Date.UTC(2000, 1, 29))
+      });
+
+      const parseResult = engine.parse('startdatum plus 4 jr');
+      expect(parseResult.success).toBe(true);
+
+      const result = evaluator.evaluate(parseResult.ast as any, context);
+      const resultDate = result.value as Date;
+
+      expect(resultDate.getUTCFullYear()).toBe(2004);
       expect(resultDate.getUTCMonth()).toBe(1); // February
-      expect(resultDate.getUTCDate()).toBe(28); // Clamped to Feb 28
+      expect(resultDate.getUTCDate()).toBe(29); // Still Feb 29
     });
   });
 
@@ -177,7 +218,9 @@ describe('Date Operations', () => {
     });
 
     test('should handle month overflow (Jan 31 + 1 month)', () => {
-      // Jan 31 + 1 month = Feb 28/29 (day clamped)
+      // Jan 31 + 1 month = March 1 (day overflows February)
+      // Same principle as leap year: if the day doesn't exist in the target
+      // month, advance to the first of the next month.
       context.setVariable('startdatum', {
         type: 'date',
         value: new Date(Date.UTC(2024, 0, 31)) // Jan 31, 2024
@@ -191,8 +234,44 @@ describe('Date Operations', () => {
 
       const resultDate = result.value as Date;
       expect(resultDate.getUTCFullYear()).toBe(2024);
+      expect(resultDate.getUTCMonth()).toBe(2); // March
+      expect(resultDate.getUTCDate()).toBe(1);  // First of next month
+    });
+
+    test('should handle Jan 30 + 1 month in leap year', () => {
+      // Jan 30, 2024 + 1 month = March 1, 2024 (Feb has only 29 days)
+      context.setVariable('startdatum', {
+        type: 'date',
+        value: new Date(Date.UTC(2024, 0, 30)) // Jan 30, 2024
+      });
+
+      const parseResult = engine.parse('startdatum plus 1 mnd');
+      expect(parseResult.success).toBe(true);
+
+      const result = evaluator.evaluate(parseResult.ast as any, context);
+      const resultDate = result.value as Date;
+
+      expect(resultDate.getUTCFullYear()).toBe(2024);
+      expect(resultDate.getUTCMonth()).toBe(2); // March
+      expect(resultDate.getUTCDate()).toBe(1);
+    });
+
+    test('should keep day 29 when month has 29+ days', () => {
+      // Jan 29, 2024 + 1 month = Feb 29, 2024 (leap year, Feb has 29 days)
+      context.setVariable('startdatum', {
+        type: 'date',
+        value: new Date(Date.UTC(2024, 0, 29)) // Jan 29, 2024
+      });
+
+      const parseResult = engine.parse('startdatum plus 1 mnd');
+      expect(parseResult.success).toBe(true);
+
+      const result = evaluator.evaluate(parseResult.ast as any, context);
+      const resultDate = result.value as Date;
+
+      expect(resultDate.getUTCFullYear()).toBe(2024);
       expect(resultDate.getUTCMonth()).toBe(1); // February
-      expect(resultDate.getUTCDate()).toBe(29); // 2024 is leap year
+      expect(resultDate.getUTCDate()).toBe(29); // Day fits
     });
 
     test('should handle year rollover (Dec + 2 months)', () => {
@@ -260,6 +339,47 @@ describe('Date Operations', () => {
       expect(resultDate.getUTCFullYear()).toBe(2031);
       expect(resultDate.getUTCMonth()).toBe(11); // December
       expect(resultDate.getUTCDate()).toBe(30);
+    });
+  });
+
+  describe('Date Arithmetic - Day Addition', () => {
+    test('should handle year boundary (Dec 31 + 1 day)', () => {
+      // Dec 31 + 1 day = Jan 1 of next year
+      // Day arithmetic relies on Date.UTC overflow handling
+      // Note: using 'dg' instead of 'dagen' due to parser bug with 'dagen'
+      context.setVariable('startdatum', {
+        type: 'date',
+        value: new Date(Date.UTC(2024, 11, 31)) // Dec 31, 2024
+      });
+
+      const parseResult = engine.parse('startdatum plus 1 dg');
+      expect(parseResult.success).toBe(true);
+
+      const result = evaluator.evaluate(parseResult.ast as any, context);
+      expect(result.type).toBe('date');
+
+      const resultDate = result.value as Date;
+      expect(resultDate.getUTCFullYear()).toBe(2025);
+      expect(resultDate.getUTCMonth()).toBe(0); // January
+      expect(resultDate.getUTCDate()).toBe(1);
+    });
+
+    test('should handle month boundary (Jan 31 + 1 day)', () => {
+      // Jan 31 + 1 day = Feb 1
+      context.setVariable('startdatum', {
+        type: 'date',
+        value: new Date(Date.UTC(2024, 0, 31)) // Jan 31, 2024
+      });
+
+      const parseResult = engine.parse('startdatum plus 1 dg');
+      expect(parseResult.success).toBe(true);
+
+      const result = evaluator.evaluate(parseResult.ast as any, context);
+      const resultDate = result.value as Date;
+
+      expect(resultDate.getUTCFullYear()).toBe(2024);
+      expect(resultDate.getUTCMonth()).toBe(1); // February
+      expect(resultDate.getUTCDate()).toBe(1);
     });
   });
 

@@ -1343,9 +1343,14 @@ export class ExpressionEvaluator implements IEvaluator {
       case 'jaar':
       case 'jr':
         year += delta;
-        // Clamp day to valid range for the target month (handles Feb 29 in non-leap years)
+        // If day doesn't exist in target month, advance to first of next month.
+        // This follows Dutch legal convention: someone born Feb 29 reaches their
+        // next birthday on March 1 in non-leap years, not Feb 28.
         const maxDayYear = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-        day = Math.min(day, maxDayYear);
+        if (day > maxDayYear) {
+          month += 1;
+          day = 1;
+        }
         break;
 
       case 'maanden':
@@ -1355,9 +1360,12 @@ export class ExpressionEvaluator implements IEvaluator {
         const totalMonths = month + delta;
         year += Math.floor(totalMonths / 12);
         month = ((totalMonths % 12) + 12) % 12; // Handle negative modulo
-        // Clamp day to valid range for the target month
+        // If day doesn't exist in target month, advance to first of next month
         const maxDayMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-        day = Math.min(day, maxDayMonth);
+        if (day > maxDayMonth) {
+          month += 1;
+          day = 1;
+        }
         break;
 
       case 'weken':
