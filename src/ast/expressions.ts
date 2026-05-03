@@ -3,10 +3,18 @@
  */
 
 import { SourceLocation } from './location';
+import { ResolvedInfo } from '../resolver/types';
 
 export interface Expression {
   type: string;
   location?: SourceLocation;  // Set by visitor - guaranteed to exist after parsing
+
+  /**
+   * Resolution metadata - set by resolver phase.
+   * Contains type information, symbol resolution, and navigation paths.
+   * Optional: only present after calling resolveExpression().
+   */
+  resolved?: ResolvedInfo;
 }
 
 export interface NumberLiteral extends Expression {
