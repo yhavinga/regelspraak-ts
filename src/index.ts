@@ -6,6 +6,7 @@ export type { StructuredTraceEntry } from './context';
 export { AntlrParser } from './parser';
 export { SemanticAnalyzer } from './semantic-analyzer';
 export * from './ast';
+export * from './resolver';
 
 // Unified predicate system
 export * from './predicates/predicate-types';

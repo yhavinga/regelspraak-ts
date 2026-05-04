@@ -88,4 +88,12 @@ export interface ResolvedInfo {
    * Important for transpilation: 1:N requires materialization.
    */
   hasCollectionNavigation?: boolean;
+
+  /**
+   * Source-language unit string (e.g. 'jr', 'mnd', 'dg') propagated from
+   * the originating AttributeSpecification, ParameterDefinition or NumberLiteral.
+   * Required by transpilers for date arithmetic codegen. Absence is meaningful:
+   * a Numeriek without a unit cannot be added to a Datum.
+   */
+  unit?: string;
 }

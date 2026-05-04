@@ -22,6 +22,7 @@ import {
   StringLiteral,
   BooleanLiteral,
   FunctionCall,
+  SamengesteldeVoorwaarde,
 } from '../ast/expressions';
 import {
   ObjectTypeDefinition,
@@ -74,9 +75,11 @@ interface ResolutionMaps {
 }
 
 /**
- * Possessive pronouns in Dutch
+ * Possessive markers in Dutch RegelSpraak.
+ * 'self' is the canonical placeholder the parser emits for any possessive
+ * pronoun ("zijn", "haar", "hun") in path form.
  */
-const POSSESSIVE_PRONOUNS = ['zijn', 'haar', 'hun'];
+const POSSESSIVE_PRONOUNS = ['zijn', 'haar', 'hun', 'self'];
 
 /**
  * Build lookup maps from domain model
@@ -208,6 +211,9 @@ function resolveExpressionInternal(
     case 'FunctionCall':
       return resolveFunctionCall(expr as FunctionCall, context, maps);
 
+    case 'SamengesteldeVoorwaarde':
+      return resolveSamengesteldeVoorwaarde(expr as SamengesteldeVoorwaarde, context, maps);
+
     default:
       // Unknown expression type - leave unresolved
       return expr;
@@ -221,6 +227,7 @@ function resolveExpressionInternal(
 function resolveNumberLiteral(expr: NumberLiteral): NumberLiteral {
   expr.resolved = {
     resolvedType: { type: 'Numeriek' },
+    unit: expr.unit,
   };
   return expr;
 }
@@ -292,6 +299,7 @@ function resolveVariableReference(
         dataType: param.dataType,
       },
       resolvedType: param.dataType,
+      unit: param.unit,
     };
     return expr;
   }
@@ -317,6 +325,7 @@ function resolveParameterReference(
         dataType: param.dataType,
       },
       resolvedType: param.dataType,
+      unit: param.unit,
     };
   }
 
@@ -337,6 +346,7 @@ function resolveAttributeReference(
   let currentType = context.currentObjectType;
   let possessiveOwner: string | undefined;
   let hasCollectionNavigation = false;
+  let terminalUnit: string | undefined;
 
   // Check if first segment is a possessive pronoun
   const firstSegment = path[0].toLowerCase();
@@ -429,6 +439,10 @@ function resolveAttributeReference(
         cardinality,
       });
 
+      // Capture unit from this attribute. If it's not the terminal segment,
+      // it'll be overwritten or cleared by subsequent navigation.
+      terminalUnit = attr.unit;
+
       // Update current type for next segment (if it's an object type)
       const nextObjectType = maps.objectTypes.get(targetType) || maps.objectTypes.get(targetType.toLowerCase());
       currentType = nextObjectType?.name;
@@ -487,6 +501,7 @@ function resolveAttributeReference(
       resolvedType,
       possessiveOwner,
       hasCollectionNavigation,
+      unit: terminalUnit,
     };
   }
 
@@ -516,10 +531,26 @@ function resolveBinaryExpression(
       resolvedType: { type: 'Boolean' },
     };
   } else if (arithmeticOps.includes(expr.operator)) {
-    // Result type is typically Numeriek for arithmetic
-    expr.resolved = {
-      resolvedType: { type: 'Numeriek' },
-    };
+    // Type-aware arithmetic: Datum ± Numeriek → Datum
+    const leftType = (expr.left.resolved?.resolvedType as any)?.type;
+    const rightType = (expr.right.resolved?.resolvedType as any)?.type;
+    const isDateLike = (t: string | undefined) => t === 'Datum' || t === 'DatumTijd';
+
+    if ((expr.operator === '+' || expr.operator === '-') &&
+        isDateLike(leftType) && rightType === 'Numeriek') {
+      expr.resolved = {
+        resolvedType: { type: leftType } as DataType,
+      };
+    } else if (expr.operator === '-' && isDateLike(leftType) && isDateLike(rightType)) {
+      // Date - Date → Numeriek (duration). Unit unknown without explicit annotation.
+      expr.resolved = {
+        resolvedType: { type: 'Numeriek' },
+      };
+    } else {
+      expr.resolved = {
+        resolvedType: { type: 'Numeriek' },
+      };
+    }
   }
 
   return expr;
@@ -665,5 +696,28 @@ function resolveFunctionCall(
     };
   }
 
+  return expr;
+}
+
+/**
+ * Resolve a SamengesteldeVoorwaarde (compound condition).
+ *
+ * The compound itself has Boolean type. Each inner voorwaarde is an
+ * Expression that must be resolved in the same context — without this
+ * recursion, AttributeReferences inside compound conditions never receive
+ * `resolved` metadata and downstream consumers (transpilers) cannot
+ * disambiguate possessive `self` references or detect date types.
+ */
+function resolveSamengesteldeVoorwaarde(
+  expr: SamengesteldeVoorwaarde,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): SamengesteldeVoorwaarde {
+  for (const voorwaarde of expr.voorwaarden) {
+    resolveExpressionInternal(voorwaarde, context, maps);
+  }
+  expr.resolved = {
+    resolvedType: { type: 'Boolean' },
+  };
   return expr;
 }
