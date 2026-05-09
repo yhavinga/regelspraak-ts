@@ -30,13 +30,23 @@ export interface AttributeSpecification {
   timeline?: boolean;
 }
 
+// Numeric constraint types - derived from ANTLR grammar tokens
+export type SignConstraint = 'negatief' | 'niet-negatief' | 'positief';
+export type NumberFormat = 'geheel getal' | 'getal';
+
+export interface NumericSpecification {
+  signConstraint?: SignConstraint;
+  format: NumberFormat;
+  decimals?: number;  // only for 'getal met N decimalen'
+}
+
 export type DataType =
   | { type: 'Tekst' }
-  | { type: 'Numeriek'; specification?: string }
+  | { type: 'Numeriek'; numericSpec?: NumericSpecification }
   | { type: 'Boolean' }
   | { type: 'Datum' }
   | { type: 'DatumTijd' }
-  | { type: 'Percentage'; specification?: string }
+  | { type: 'Percentage'; numericSpec?: NumericSpecification }
   | { type: 'Lijst'; specification?: string };
 
 export interface DomainReference {

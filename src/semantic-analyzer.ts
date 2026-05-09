@@ -456,7 +456,15 @@ export class SemanticAnalyzer {
     }
     switch (dataType.type) {
       case 'Tekst': return 'Tekst';
-      case 'Numeriek': return dataType.specification ? `Numeriek(${dataType.specification})` : 'Numeriek';
+      case 'Numeriek': {
+        if (!dataType.numericSpec) return 'Numeriek';
+        const { signConstraint, format, decimals } = dataType.numericSpec;
+        const parts: string[] = [];
+        if (signConstraint) parts.push(signConstraint);
+        parts.push(format);
+        if (decimals !== undefined) parts.push(`met ${decimals} decimalen`);
+        return `Numeriek(${parts.join(' ')})`;
+      }
       case 'Boolean': return 'Boolean';
       case 'Datum': return 'Datum';
       case 'DatumTijd': return 'DatumTijd';

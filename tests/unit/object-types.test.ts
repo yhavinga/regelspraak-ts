@@ -129,7 +129,7 @@ describe('Engine - Object Type Definitions', () => {
       expect(stripLocations(result.ast?.members[0])).toEqual({
         type: 'AttributeSpecification',
         name: 'leeftijd',
-        dataType: { type: 'Numeriek', specification: 'geheel getal' }
+        dataType: { type: 'Numeriek', numericSpec: { format: 'geheel getal', signConstraint: undefined, decimals: undefined } }
       });
     });
 
@@ -146,7 +146,7 @@ describe('Engine - Object Type Definitions', () => {
       expect(stripLocations(result.ast?.members[0])).toEqual({
         type: 'AttributeSpecification',
         name: 'snelheid',
-        dataType: { type: 'Numeriek', specification: 'getal' },
+        dataType: { type: 'Numeriek', numericSpec: { format: 'getal', signConstraint: undefined, decimals: undefined } },
         unit: 'km'
       });
     });
@@ -228,7 +228,7 @@ describe('Engine - Object Type Definitions', () => {
           {
             type: 'AttributeSpecification',
             name: 'leeftijd',
-            dataType: { type: 'Numeriek', specification: 'geheel getal' }
+            dataType: { type: 'Numeriek', numericSpec: { format: 'geheel getal', signConstraint: undefined, decimals: undefined } }
           },
           {
             type: 'AttributeSpecification',

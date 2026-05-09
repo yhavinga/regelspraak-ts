@@ -37,24 +37,24 @@ describe('Engine - Parameter Definitions', () => {
       expect(stripLocations(result.ast)).toEqual({
         type: 'ParameterDefinition',
         name: 'volwassenleeftijd',
-        dataType: { type: 'Numeriek', specification: 'geheel getal' }
+        dataType: { type: 'Numeriek', numericSpec: { format: 'geheel getal', signConstraint: undefined, decimals: undefined } }
       });
     });
 
     test('should parse parameter with unit', () => {
       const source = `Parameter de volwassenleeftijd : Numeriek (geheel getal) met eenheid jr`;
-      
+
       const result = engine.parse(source);
-      
+
       if (!result.success) {
         console.log('Parse error:', result.errors);
       }
-      
+
       expect(result.success).toBe(true);
       expect(stripLocations(result.ast)).toEqual({
         type: 'ParameterDefinition',
         name: 'volwassenleeftijd',
-        dataType: { type: 'Numeriek', specification: 'geheel getal' },
+        dataType: { type: 'Numeriek', numericSpec: { format: 'geheel getal', signConstraint: undefined, decimals: undefined } },
         unit: 'jr'
       });
     });
@@ -159,7 +159,7 @@ describe('Engine - Parameter Definitions', () => {
       expect(stripLocations(result.ast)).toEqual({
         type: 'ParameterDefinition',
         name: 'volwassenleeftijd',
-        dataType: { type: 'Numeriek', specification: 'geheel getal' },
+        dataType: { type: 'Numeriek', numericSpec: { format: 'geheel getal', signConstraint: undefined, decimals: undefined } },
         unit: 'jr'
       });
     });

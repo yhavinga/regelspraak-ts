@@ -72,7 +72,7 @@ import {
   FeitCreatie,
   VariableAssignment
 } from '../ast/rules';
-import { ObjectTypeDefinition, KenmerkSpecification, AttributeSpecification, DataType, DomainReference, DomainDefinition } from '../ast/object-types';
+import { ObjectTypeDefinition, KenmerkSpecification, AttributeSpecification, DataType, DomainReference, DomainDefinition, NumericSpecification, SignConstraint, NumberFormat } from '../ast/object-types';
 import { ParameterDefinition } from '../ast/parameters';
 import { UnitSystemDefinition, UnitDefinition, UnitConversion } from '../ast/unit-systems';
 import { createSourceLocation } from '../ast/location';
@@ -4007,13 +4007,46 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     // numeriekDatatype : NUMERIEK ( LPAREN getalSpecificatie RPAREN )?
     const result: DataType = { type: 'Numeriek' };
 
-    if (ctx.getalSpecificatie && ctx.getalSpecificatie()) {
-      const spec = this.extractText(ctx.getalSpecificatie());
-      result.specification = spec;
+    const specCtx = ctx.getalSpecificatie?.();
+    if (specCtx) {
+      result.numericSpec = this.parseGetalSpecificatie(specCtx);
     }
 
     this.setLocation(result, ctx);
     return result;
+  }
+
+  /**
+   * Parse getalSpecificatie context into structured NumericSpecification.
+   * Grammar: (NEGATIEF | NIET_NEGATIEF | POSITIEF)? (GEHEEL_GETAL | (GETAL MET NUMBER DECIMALEN) | GETAL)
+   */
+  private parseGetalSpecificatie(ctx: any): NumericSpecification {
+    // Sign constraint detection via AST token accessors
+    let signConstraint: SignConstraint | undefined;
+    if (ctx.NIET_NEGATIEF?.()) {
+      signConstraint = 'niet-negatief';
+    } else if (ctx.POSITIEF?.()) {
+      signConstraint = 'positief';
+    } else if (ctx.NEGATIEF?.()) {
+      signConstraint = 'negatief';
+    }
+
+    // Number format detection
+    let format: NumberFormat;
+    let decimals: number | undefined;
+
+    if (ctx.GEHEEL_GETAL?.()) {
+      format = 'geheel getal';
+    } else {
+      format = 'getal';
+      // Check for explicit decimals: GETAL MET NUMBER DECIMALEN
+      const numberToken = ctx.NUMBER?.();
+      if (numberToken && ctx.MET?.() && ctx.DECIMALEN?.()) {
+        decimals = parseInt(numberToken.getText(), 10);
+      }
+    }
+
+    return { signConstraint, format, decimals };
   }
 
   visitDatumTijdDatatype(ctx: any): DataType {
@@ -4029,9 +4062,9 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     // percentageDatatype : PERCENTAGE ( LPAREN getalSpecificatie RPAREN )?
     const result: DataType = { type: 'Percentage' };
 
-    if (ctx.getalSpecificatie && ctx.getalSpecificatie()) {
-      const spec = this.extractText(ctx.getalSpecificatie());
-      result.specification = spec;
+    const specCtx = ctx.getalSpecificatie?.();
+    if (specCtx) {
+      result.numericSpec = this.parseGetalSpecificatie(specCtx);
     }
 
     this.setLocation(result, ctx);

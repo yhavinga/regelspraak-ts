@@ -106,7 +106,7 @@ Objecttype de Natuurlijk persoon (mv: Natuurlijke personen) (bezield)
     expect(inkomenAttr).toMatchObject({
       type: 'AttributeSpecification',
       name: 'inkomen',
-      dataType: { type: 'Numeriek', specification: 'geheel getal' },
+      dataType: { type: 'Numeriek', numericSpec: { format: 'geheel getal', signConstraint: undefined, decimals: undefined } },
       dimensions: ['jaardimensie', 'brutonettodimensie']
     });
   });
