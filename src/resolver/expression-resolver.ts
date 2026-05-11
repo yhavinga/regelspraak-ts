@@ -82,6 +82,33 @@ interface ResolutionMaps {
 const POSSESSIVE_PRONOUNS = ['zijn', 'haar', 'hun', 'self'];
 
 /**
+ * Normalize compound possessives in path arrays.
+ * Example: ["zijn reis", "vluchtdatum"] → ["self", "reis", "vluchtdatum"]
+ *
+ * This handles cases where the parser emits a compound segment like "zijn reis"
+ * instead of separate ["zijn", "reis"] segments.
+ */
+function normalizeCompoundPossessives(path: string[]): string[] {
+  if (path.length === 0) return path;
+
+  const firstSegment = path[0];
+  const firstSegmentLower = firstSegment.toLowerCase();
+
+  // Check if first segment is a compound possessive: "zijn X", "haar X", "hun X"
+  for (const possessive of ['zijn ', 'haar ', 'hun ']) {
+    if (firstSegmentLower.startsWith(possessive)) {
+      // Split: "zijn reis" → "self" + "reis"
+      const remainder = firstSegment.substring(possessive.length).trim();
+      if (remainder) {
+        return ['self', remainder, ...path.slice(1)];
+      }
+    }
+  }
+
+  return path;
+}
+
+/**
  * Build lookup maps from domain model
  */
 function buildMaps(model: DomainModel): ResolutionMaps {
@@ -332,12 +359,78 @@ function resolveParameterReference(
   return expr;
 }
 
+/**
+ * Resolve FeitType navigation: given a segment name and a sourceType,
+ * find a FeitType role that navigates from sourceType to another objectType.
+ *
+ * Example: from "Natuurlijk persoon", segment "reis" resolves via
+ * FeitType "vlucht van natuurlijke personen" → role "reis" → "Vlucht"
+ *
+ * Also supports plural aliases: from "Vlucht", segment "passagiers" resolves
+ * via the same FeitType → role "passagier" (meervoud: "passagiers") → "Natuurlijk persoon"
+ * with cardinality 'N'.
+ */
+function resolveFeitTypeNavigation(
+  segment: string,
+  sourceType: string,
+  feitTypes: Map<string, FeitType>,
+  objectTypes: Map<string, ObjectTypeDefinition>
+): ResolvedPathSegment | null {
+  const segmentLower = segment.toLowerCase();
+  const sourceTypeLower = sourceType.toLowerCase();
+
+  // Search all FeitTypes for a matching navigation
+  for (const [, feitType] of feitTypes) {
+    // Find which roles involve sourceType
+    const sourceRoles = feitType.rollen.filter(
+      (r) => r.objectType?.toLowerCase() === sourceTypeLower
+    );
+
+    if (sourceRoles.length === 0) {
+      continue; // This FeitType doesn't involve our sourceType
+    }
+
+    // Find a role that matches the segment name (this is the navigation target)
+    // Check both singular (naam) and plural (meervoud) forms
+    for (const targetRole of feitType.rollen) {
+      if (!targetRole.objectType) continue;
+
+      const matchesSingular = targetRole.naam.toLowerCase() === segmentLower;
+      const matchesPlural = targetRole.meervoud?.toLowerCase() === segmentLower;
+
+      if (matchesSingular || matchesPlural) {
+        // Verify the target objectType exists
+        const targetObjectType =
+          objectTypes.get(targetRole.objectType) ||
+          objectTypes.get(targetRole.objectType.toLowerCase());
+
+        if (targetObjectType) {
+          // Determine cardinality: plural match = N, singular match = 1
+          const cardinality: '1' | 'N' = matchesPlural ? 'N' : '1';
+
+          return {
+            sourceName: segment,
+            resolvedName: matchesPlural ? (targetRole.meervoud || targetRole.naam) : targetRole.naam,
+            kind: 'feittype',
+            sourceType: sourceType,
+            targetType: targetObjectType.name,
+            cardinality,
+          };
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 function resolveAttributeReference(
   expr: AttributeReference,
   context: ResolutionContext,
   maps: ResolutionMaps
 ): AttributeReference {
-  const path = expr.path;
+  // Normalize path: handle compound possessives like "zijn reis" → ["self", "reis"]
+  const path = normalizeCompoundPossessives(expr.path);
   if (path.length === 0) {
     return expr;
   }
@@ -462,9 +555,25 @@ function resolveAttributeReference(
         });
         currentType = undefined; // Boolean is a leaf type
       } else {
-        // Could be a FeitType navigation - check for role names
-        // TODO: Implement FeitType navigation resolution
-        break;
+        // Try FeitType navigation - check if segment matches a role name
+        // that navigates from currentType to another objectType
+        const feitTypeNavigation = resolveFeitTypeNavigation(
+          segment,
+          currentType,
+          maps.feitTypes,
+          maps.objectTypes
+        );
+
+        if (feitTypeNavigation) {
+          resolvedPath.push(feitTypeNavigation);
+          currentType = feitTypeNavigation.targetType;
+          if (feitTypeNavigation.cardinality === 'N') {
+            hasCollectionNavigation = true;
+          }
+        } else {
+          // Could not resolve - unknown segment
+          break;
+        }
       }
     }
   }

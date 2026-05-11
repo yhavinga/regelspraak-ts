@@ -426,4 +426,125 @@ describe('Expression Resolver', () => {
       unitSystems: [],
     };
   }
+
+  describe('FeitType Navigation Resolution', () => {
+    function createFlightModel(): DomainModel {
+      return {
+        objectTypes: [
+          {
+            type: 'ObjectTypeDefinition',
+            name: 'Natuurlijk persoon',
+            animated: true,
+            members: [
+              { type: 'AttributeSpecification', name: 'geboortedatum', dataType: { type: 'Datum' } },
+            ],
+          },
+          {
+            type: 'ObjectTypeDefinition',
+            name: 'Vlucht',
+            animated: false,
+            members: [
+              { type: 'AttributeSpecification', name: 'vluchtdatum', dataType: { type: 'Datum' } },
+            ],
+          },
+        ],
+        parameters: [],
+        regels: [],
+        regelGroepen: [],
+        beslistabels: [],
+        dimensions: [],
+        dagsoortDefinities: [],
+        domains: [],
+        feitTypes: [
+          {
+            type: 'FeitType',
+            naam: 'vlucht van natuurlijke personen',
+            wederkerig: false,
+            rollen: [
+              { naam: 'reis', objectType: 'Vlucht' },
+              { naam: 'passagier', meervoud: 'passagiers', objectType: 'Natuurlijk persoon' },
+            ],
+          },
+        ],
+        unitSystems: [],
+      };
+    }
+
+    it('resolves forward FeitType navigation: Natuurlijk persoon -> reis -> Vlucht (cardinality 1)', () => {
+      const model = createFlightModel();
+      const context = createResolutionContext(model, 'Natuurlijk persoon', 'persoon');
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['zijn', 'reis', 'vluchtdatum'],
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.resolvedPath).toHaveLength(3);
+      const [possessive, feitNav, attr] = expr.resolved!.resolvedPath!;
+
+      expect(possessive.kind).toBe('possessive');
+      expect(possessive.targetType).toBe('Natuurlijk persoon');
+
+      expect(feitNav.kind).toBe('feittype');
+      expect(feitNav.resolvedName).toBe('reis');
+      expect(feitNav.sourceType).toBe('Natuurlijk persoon');
+      expect(feitNav.targetType).toBe('Vlucht');
+      expect(feitNav.cardinality).toBe('1');
+
+      expect(attr.kind).toBe('attribute');
+      expect(attr.resolvedName).toBe('vluchtdatum');
+      expect(attr.targetType).toBe('Datum');
+
+      expect(expr.resolved?.hasCollectionNavigation).toBeFalsy();
+    });
+
+    it('resolves reverse FeitType navigation with plural alias: Vlucht -> passagiers -> Natuurlijk persoon (cardinality N)', () => {
+      const model = createFlightModel();
+      const context = createResolutionContext(model, 'Vlucht', 'vlucht');
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['Vlucht', 'passagiers'],
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.resolvedPath).toHaveLength(2);
+      const [objSegment, feitNav] = expr.resolved!.resolvedPath!;
+
+      expect(objSegment.kind).toBe('variable');
+      expect(objSegment.targetType).toBe('Vlucht');
+
+      expect(feitNav.kind).toBe('feittype');
+      expect(feitNav.resolvedName).toBe('passagiers');
+      expect(feitNav.sourceType).toBe('Vlucht');
+      expect(feitNav.targetType).toBe('Natuurlijk persoon');
+      expect(feitNav.cardinality).toBe('N');
+
+      expect(expr.resolved?.hasCollectionNavigation).toBe(true);
+    });
+
+    it('resolves reverse FeitType navigation with singular: Vlucht -> passagier -> Natuurlijk persoon (cardinality 1)', () => {
+      const model = createFlightModel();
+      const context = createResolutionContext(model, 'Vlucht', 'vlucht');
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['Vlucht', 'passagier'],
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.resolvedPath).toHaveLength(2);
+      const [, feitNav] = expr.resolved!.resolvedPath!;
+
+      expect(feitNav.kind).toBe('feittype');
+      expect(feitNav.resolvedName).toBe('passagier');
+      expect(feitNav.cardinality).toBe('1');
+
+      expect(expr.resolved?.hasCollectionNavigation).toBeFalsy();
+    });
+  });
 });

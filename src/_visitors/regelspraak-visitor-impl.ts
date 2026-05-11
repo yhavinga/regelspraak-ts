@@ -4268,10 +4268,18 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const rollen: Rol[] = [];
     const rolDefs = ctx.rolDefinition_list() || [];
 
+    // Known invalid objectTypes that indicate a parsing error
+    // (e.g., prepositions from cardinality line being parsed as roles)
+    const invalidObjectTypes = new Set(['van', 'de', 'het', 'een', 'met', 'voor', 'in', 'op', 'bij', 'uit', 'tot', 'en', 'of']);
+
     for (const rolDef of rolDefs) {
       const rol = this.visitRolDefinition(rolDef);
       if (rol) {
-        rollen.push(rol);
+        // Filter out bogus roles where objectType is just a preposition
+        // (this happens when the grammar greedily parses the cardinality line)
+        if (rol.objectType && !invalidObjectTypes.has(rol.objectType.toLowerCase())) {
+          rollen.push(rol);
+        }
       }
     }
 
@@ -4469,6 +4477,18 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         // Fallback to extractTextWithSpaces if no children found
         if (!objectType) {
           objectType = this.extractTextWithSpaces(ctx._objecttype);
+        }
+
+        // The grammar may have greedily consumed cardinality text into the objectType.
+        // Truncate at cardinality indicators: "één", "meerdere", "Een", etc.
+        // These words start the cardinality description, not the objectType.
+        const cardinalityIndicators = ['één', 'meerdere', 'een ', 'Één', 'Een', 'Meerdere'];
+        for (const indicator of cardinalityIndicators) {
+          const idx = objectType.toLowerCase().indexOf(indicator.toLowerCase());
+          if (idx > 0) {
+            objectType = objectType.substring(0, idx).trim();
+            break;
+          }
         }
       }
 
