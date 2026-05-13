@@ -1,4 +1,5 @@
 import { Engine, Context, Value } from '../../src';
+import { AntlrParser } from '../../src';
 
 /**
  * Tests for possessive pronouns (zijn/haar/hun) in bezieldeReferentie navigation.
@@ -63,6 +64,65 @@ geldig altijd
                 console.error('Parse error:', result.errors);
             }
             expect(result.success).toBe(true);
+        });
+    });
+
+    describe('multi-word attribute names in possessive references', () => {
+        test('should preserve spaces in multi-word attribute names', () => {
+            const parser = new AntlrParser();
+            const code = `
+Objecttype de Persoon (mv: personen) (bezield)
+  de waarde a Numeriek;
+  de resultaat Numeriek;
+
+Regel test
+geldig altijd
+  De resultaat van een Persoon moet berekend worden als zijn waarde a.
+`;
+            const parsed = parser.parse(code);
+            const regel = parsed.find((r: any) => r.type === 'Rule');
+
+            // The possessive reference should preserve "waarde a" with the space
+            expect(regel.result.expression.type).toBe('AttributeReference');
+            expect(regel.result.expression.path).toEqual(['self', 'waarde a']);
+        });
+
+        test('should handle multi-word attributes in binary expressions', () => {
+            const parser = new AntlrParser();
+            const code = `
+Objecttype de Persoon (mv: personen) (bezield)
+  de waarde a Numeriek;
+  de waarde b Numeriek;
+  de totaal Numeriek;
+
+Regel test
+geldig altijd
+  De totaal van een Persoon moet berekend worden als zijn waarde a plus zijn waarde b.
+`;
+            const parsed = parser.parse(code);
+            const regel = parsed.find((r: any) => r.type === 'Rule');
+
+            // Binary expression with both operands using multi-word attributes
+            expect(regel.result.expression.type).toBe('BinaryExpression');
+            expect(regel.result.expression.left.path).toEqual(['self', 'waarde a']);
+            expect(regel.result.expression.right.path).toEqual(['self', 'waarde b']);
+        });
+
+        test('should handle three-word attribute names', () => {
+            const parser = new AntlrParser();
+            const code = `
+Objecttype de Persoon (mv: personen) (bezield)
+  de bruto jaar inkomen Numeriek;
+  de resultaat Numeriek;
+
+Regel test
+geldig altijd
+  De resultaat van een Persoon moet berekend worden als zijn bruto jaar inkomen.
+`;
+            const parsed = parser.parse(code);
+            const regel = parsed.find((r: any) => r.type === 'Rule');
+
+            expect(regel.result.expression.path).toEqual(['self', 'bruto jaar inkomen']);
         });
     });
 

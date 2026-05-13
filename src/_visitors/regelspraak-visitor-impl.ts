@@ -5211,11 +5211,18 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const bezieldeRef = ctx.bezieldeReferentie();
 
     // The grammar is: bezieldeReferentie : (ZIJN | HAAR | HUN) naamwoord
-    // Get the naamwoord (noun)
+    // naamwoord is required by grammar — if missing, ANTLR has a bug or input was corrupted
     const naamwoordCtx = bezieldeRef.naamwoord();
-    const attribute = naamwoordCtx ? naamwoordCtx.getText() : 'unknown';
+    if (!naamwoordCtx) {
+      throw new Error(
+        `Missing naamwoord in bezieldeReferentie at ${ctx.start?.line}:${ctx.start?.column}. ` +
+        `This indicates a grammar/parser inconsistency.`
+      );
+    }
 
-    // Return an AttributeReference with 'self' path, matching Python implementation
+    // extractTextWithSpaces preserves multi-word attribute names like "waarde a"
+    const attribute = this.extractTextWithSpaces(naamwoordCtx);
+
     const node = {
       type: 'AttributeReference',
       path: ['self', attribute]
