@@ -3324,10 +3324,10 @@ export class ExpressionEvaluator implements IEvaluator {
 
   /**
    * Evaluate a DisjunctionExpression (values connected by "of").
-   * Returns an array of the evaluated values, or extracts string values from location if values array is empty.
+   * Returns an array of the evaluated values.
    */
   private evaluateDisjunctionExpression(expr: any, context: RuntimeContext): Value {
-    // If values array is populated, evaluate each value
+    // Evaluate each value in the disjunction
     if (expr.values && expr.values.length > 0) {
       const evaluatedValues: Value[] = [];
       for (const val of expr.values) {
@@ -3336,27 +3336,7 @@ export class ExpressionEvaluator implements IEvaluator {
       return { type: 'array', value: evaluatedValues };
     }
 
-    // If values array is empty but we have location, try to extract strings from source
-    // This handles the parser bug where DisjunctionExpression values aren't captured
-    if (expr.location && (context as any).sourceText) {
-      const sourceText = (context as any).sourceText as string;
-      const lines = sourceText.split('\n');
-      const line = lines[expr.location.startLine - 1];
-      if (line) {
-        const cellText = line.substring(expr.location.startColumn - 1, expr.location.endColumn);
-        // Extract quoted strings from the cell text
-        const stringMatches = cellText.match(/'[^']+'/g);
-        if (stringMatches && stringMatches.length > 0) {
-          const values: Value[] = stringMatches.map(s => ({
-            type: 'string' as const,
-            value: s.replace(/'/g, '')
-          }));
-          return { type: 'array', value: values };
-        }
-      }
-    }
-
-    // Fallback: return empty array
+    // Empty disjunction - return empty array
     return { type: 'array', value: [] };
   }
 

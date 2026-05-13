@@ -405,10 +405,146 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       return this.visitHeeftKenmerkExpr(ctx);
     } else if (contextName === 'SubordinateClauseExprContext') {
       return this.visitSubordinateClauseExpr(ctx);
+    } else if (contextName === 'GelijkIsAanOfExprContext') {
+      return this.visitGelijkIsAanOfExpr(ctx);
     } else {
       // Fallback - try to visit it generically
       return this.visit(ctx);
     }
+  }
+
+  /**
+   * Handle "x gelijk is aan 'A', 'B' of 'C'" pattern (§5.6)
+   * This creates a BinaryExpression with operator '==' and a DisjunctionExpression on the right.
+   */
+  visitGelijkIsAanOfExpr(ctx: any): Expression {
+    // Get the left side (the attribute/variable being compared)
+    const left = this.visit(ctx._left);
+
+    // Collect all literal values: firstValue, middleValues, lastValue
+    const values: Expression[] = [];
+
+    // First value
+    if (ctx._firstValue) {
+      values.push(this.visitLiteralValue(ctx._firstValue));
+    }
+
+    // Middle values (comma-separated)
+    if (ctx._middleValues) {
+      for (const midVal of ctx._middleValues) {
+        values.push(this.visitLiteralValue(midVal));
+      }
+    }
+
+    // Last value (after 'of')
+    if (ctx._lastValue) {
+      values.push(this.visitLiteralValue(ctx._lastValue));
+    }
+
+    // Create disjunction expression for the right side
+    const disjunction: DisjunctionExpression = {
+      type: 'DisjunctionExpression',
+      values
+    };
+    this.setLocation(disjunction, ctx);
+
+    // Create binary comparison with '==' operator
+    const node: BinaryExpression = {
+      type: 'BinaryExpression',
+      operator: '==',
+      left,
+      right: disjunction
+    };
+    this.setLocation(node, ctx);
+    return node;
+  }
+
+  /**
+   * Visit a literal value (used in GelijkIsAanOfExpr).
+   * Aligns with existing literal visitor semantics.
+   */
+  visitLiteralValue(ctx: any): Expression {
+    // ENUM_LITERAL: 'value' (single quotes)
+    if (ctx.ENUM_LITERAL && ctx.ENUM_LITERAL()) {
+      const text = ctx.ENUM_LITERAL().getText();
+      const value = text.slice(1, -1); // Remove surrounding quotes
+      const node: StringLiteral = {
+        type: 'StringLiteral',
+        value
+      };
+      this.setLocation(node, ctx);
+      return node;
+    }
+
+    // STRING_LITERAL: "value" (double quotes)
+    if (ctx.STRING_LITERAL && ctx.STRING_LITERAL()) {
+      const text = ctx.STRING_LITERAL().getText();
+      const value = text.slice(1, -1);
+      const node: StringLiteral = {
+        type: 'StringLiteral',
+        value
+      };
+      this.setLocation(node, ctx);
+      return node;
+    }
+
+    // NUMBER with optional unitIdentifier - matches visitNumberLiteralExpr behavior
+    if (ctx.NUMBER && ctx.NUMBER()) {
+      const text = ctx.NUMBER().getText();
+      const normalizedText = text.replace(',', '.');
+      const value = parseFloat(normalizedText);
+
+      const unitCtx = ctx.unitIdentifier ? ctx.unitIdentifier() : null;
+      if (unitCtx) {
+        const unit = unitCtx.getText();
+        const node = {
+          type: 'NumberLiteral',
+          value,
+          unit
+        } as NumberLiteral;
+        this.setLocation(node, ctx);
+        return node;
+      }
+
+      const node: NumberLiteral = {
+        type: 'NumberLiteral',
+        value
+      };
+      this.setLocation(node, ctx);
+      return node;
+    }
+
+    // PERCENTAGE_LITERAL - matches visitPercentageLiteralExpr behavior (NO division by 100)
+    if (ctx.PERCENTAGE_LITERAL && ctx.PERCENTAGE_LITERAL()) {
+      const text = ctx.PERCENTAGE_LITERAL().getText();
+      const numericPart = text.replace('%', '').trim().replace(',', '.');
+      const value = parseFloat(numericPart);
+      const node: NumberLiteral = {
+        type: 'NumberLiteral',
+        value
+      };
+      this.setLocation(node, ctx);
+      return node;
+    }
+
+    // datumLiteral - delegate to existing visitor
+    if (ctx.datumLiteral && ctx.datumLiteral()) {
+      return this.visit(ctx.datumLiteral());
+    }
+
+    // identifier - matches visitIdentifierExpr behavior
+    if (ctx.identifier && ctx.identifier()) {
+      const name = this.extractText(ctx.identifier());
+      const node: VariableReference = {
+        type: 'VariableReference',
+        variableName: name
+      };
+      this.setLocation(node, ctx);
+      return node;
+    }
+
+    // Fallback
+    return this.visitChildren(ctx);
   }
 
   visitBinaryComparisonExpr(ctx: BinaryComparisonExprContext): Expression {
@@ -1207,8 +1343,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     let hasOf = false;
     let hasEn = false;
 
-    // Get all primary expressions
-    const primaryExprs = ctx.primaryExpression ? ctx.primaryExpression() : [];
+    // Get all primary expressions - use primaryExpression_list() for the array method
+    const primaryExprs = ctx.primaryExpression_list ? ctx.primaryExpression_list() : [];
     const expressions = Array.isArray(primaryExprs) ? primaryExprs : [primaryExprs];
 
     // Visit each primary expression
@@ -1293,8 +1429,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     let hasOf = false;
     let hasEn = false;
 
-    // Get all primary expressions
-    const primaryExprs = ctx.primaryExpression ? ctx.primaryExpression() : [];
+    // Get all primary expressions - use primaryExpression_list() for the array method
+    const primaryExprs = ctx.primaryExpression_list ? ctx.primaryExpression_list() : [];
     const expressions = Array.isArray(primaryExprs) ? primaryExprs : [primaryExprs];
 
     // Visit each primary expression

@@ -1,4 +1,5 @@
-import { Engine, Context } from '../../src';
+import { Engine, Context, AntlrParser } from '../../src';
+import { DisjunctionExpression, StringLiteral } from '../../src/ast/expressions';
 
 describe('Engine - Decision Tables', () => {
   let engine: Engine;
@@ -222,14 +223,156 @@ geldig altijd
 |   | de result moet gesteld worden op | indien value gelijk is aan |
 |---|-----------------------------------|----------------------------|
 | 1 | 10                                | 5                          |`;
-      
+
       const context = new Context();
       // 'value' is not defined in context
-      
+
       const result = engine.run(decisionTable, context);
-      
+
       expect(result.success).toBe(false);
       expect(result.error?.message).toContain('No matching row');
+    });
+  });
+
+  describe('disjunction conditions ("X of Y of Z" pattern)', () => {
+    // Regression tests for parser bug where DisjunctionExpression.values was empty
+
+    describe('AST parsing', () => {
+      test('should parse disjunction condition as DisjunctionExpression with populated values', () => {
+        const parser = new AntlrParser();
+        const decisionTable = `Beslistabel Woonregio
+geldig altijd
+|   | de factor moet gesteld worden op | indien provincie gelijk is aan |
+|---|----------------------------------|--------------------------------|
+| 1 | 1                                | 'Friesland', 'Groningen' of 'Drenthe' |
+| 2 | 3                                | 'Noord-Holland', 'Zuid-Holland' of 'Utrecht' |`;
+
+        const model = parser.parseModel(decisionTable);
+
+        expect(model.beslistabels).toHaveLength(1);
+        const table = model.beslistabels[0];
+        expect(table.rows).toHaveLength(2);
+
+        // Check row 1 condition
+        const row1Cond = table.rows[0].conditionValues[0];
+        expect(row1Cond).not.toBe('n.v.t.');
+        expect((row1Cond as DisjunctionExpression).type).toBe('DisjunctionExpression');
+        expect((row1Cond as DisjunctionExpression).values).toHaveLength(3);
+        expect(((row1Cond as DisjunctionExpression).values[0] as StringLiteral).value).toBe('Friesland');
+        expect(((row1Cond as DisjunctionExpression).values[1] as StringLiteral).value).toBe('Groningen');
+        expect(((row1Cond as DisjunctionExpression).values[2] as StringLiteral).value).toBe('Drenthe');
+
+        // Check row 2 condition
+        const row2Cond = table.rows[1].conditionValues[0];
+        expect(row2Cond).not.toBe('n.v.t.');
+        expect((row2Cond as DisjunctionExpression).type).toBe('DisjunctionExpression');
+        expect((row2Cond as DisjunctionExpression).values).toHaveLength(3);
+        expect(((row2Cond as DisjunctionExpression).values[0] as StringLiteral).value).toBe('Noord-Holland');
+        expect(((row2Cond as DisjunctionExpression).values[1] as StringLiteral).value).toBe('Zuid-Holland');
+        expect(((row2Cond as DisjunctionExpression).values[2] as StringLiteral).value).toBe('Utrecht');
+      });
+
+      test('should parse longer disjunction with 5 values', () => {
+        const parser = new AntlrParser();
+        const decisionTable = `Beslistabel Test
+geldig altijd
+|   | de factor moet gesteld worden op | indien regio gelijk is aan |
+|---|----------------------------------|----------------------------|
+| 1 | 1                                | 'A', 'B', 'C', 'D' of 'E'  |`;
+
+        const model = parser.parseModel(decisionTable);
+        const cond = model.beslistabels[0].rows[0].conditionValues[0];
+
+        expect((cond as DisjunctionExpression).type).toBe('DisjunctionExpression');
+        expect((cond as DisjunctionExpression).values).toHaveLength(5);
+      });
+    });
+
+    describe('execution', () => {
+      test('should match first value in disjunction', () => {
+        const decisionTable = `Beslistabel Woonregio
+geldig altijd
+|   | de factor moet gesteld worden op | indien provincie gelijk is aan |
+|---|----------------------------------|--------------------------------|
+| 1 | 1                                | 'Friesland', 'Groningen' of 'Drenthe' |
+| 2 | 3                                | 'Noord-Holland', 'Zuid-Holland' of 'Utrecht' |`;
+
+        const context = new Context();
+        context.setVariable('provincie', { type: 'string', value: 'Friesland' });
+
+        const result = engine.run(decisionTable, context);
+
+        expect(result.success).toBe(true);
+        expect(result.value?.value).toBe(1);
+      });
+
+      test('should match middle value in disjunction (Groningen)', () => {
+        const decisionTable = `Beslistabel Woonregio
+geldig altijd
+|   | de factor moet gesteld worden op | indien provincie gelijk is aan |
+|---|----------------------------------|--------------------------------|
+| 1 | 1                                | 'Friesland', 'Groningen' of 'Drenthe' |
+| 2 | 3                                | 'Noord-Holland', 'Zuid-Holland' of 'Utrecht' |`;
+
+        const context = new Context();
+        context.setVariable('provincie', { type: 'string', value: 'Groningen' });
+
+        const result = engine.run(decisionTable, context);
+
+        expect(result.success).toBe(true);
+        expect(result.value?.value).toBe(1);
+      });
+
+      test('should match last value in disjunction (Drenthe)', () => {
+        const decisionTable = `Beslistabel Woonregio
+geldig altijd
+|   | de factor moet gesteld worden op | indien provincie gelijk is aan |
+|---|----------------------------------|--------------------------------|
+| 1 | 1                                | 'Friesland', 'Groningen' of 'Drenthe' |
+| 2 | 3                                | 'Noord-Holland', 'Zuid-Holland' of 'Utrecht' |`;
+
+        const context = new Context();
+        context.setVariable('provincie', { type: 'string', value: 'Drenthe' });
+
+        const result = engine.run(decisionTable, context);
+
+        expect(result.success).toBe(true);
+        expect(result.value?.value).toBe(1);
+      });
+
+      test('should match second row disjunction (Utrecht)', () => {
+        const decisionTable = `Beslistabel Woonregio
+geldig altijd
+|   | de factor moet gesteld worden op | indien provincie gelijk is aan |
+|---|----------------------------------|--------------------------------|
+| 1 | 1                                | 'Friesland', 'Groningen' of 'Drenthe' |
+| 2 | 3                                | 'Noord-Holland', 'Zuid-Holland' of 'Utrecht' |`;
+
+        const context = new Context();
+        context.setVariable('provincie', { type: 'string', value: 'Utrecht' });
+
+        const result = engine.run(decisionTable, context);
+
+        expect(result.success).toBe(true);
+        expect(result.value?.value).toBe(3);
+      });
+
+      test('should not match value not in any disjunction', () => {
+        const decisionTable = `Beslistabel Woonregio
+geldig altijd
+|   | de factor moet gesteld worden op | indien provincie gelijk is aan |
+|---|----------------------------------|--------------------------------|
+| 1 | 1                                | 'Friesland', 'Groningen' of 'Drenthe' |
+| 2 | 3                                | 'Noord-Holland', 'Zuid-Holland' of 'Utrecht' |`;
+
+        const context = new Context();
+        context.setVariable('provincie', { type: 'string', value: 'Limburg' });
+
+        const result = engine.run(decisionTable, context);
+
+        expect(result.success).toBe(false);
+        expect(result.error?.message).toContain('No matching row');
+      });
     });
   });
 });
