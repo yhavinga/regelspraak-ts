@@ -427,6 +427,117 @@ describe('Expression Resolver', () => {
     };
   }
 
+  describe('Kenmerk Resolution with Equivalence', () => {
+    function createKenmerkModel(): DomainModel {
+      return {
+        objectTypes: [{
+          type: 'ObjectTypeDefinition',
+          name: 'Natuurlijk persoon',
+          animated: true,
+          members: [
+            {
+              type: 'KenmerkSpecification',
+              name: 'minderjarig',
+              kenmerkType: 'bijvoeglijk',
+            },
+            {
+              type: 'KenmerkSpecification',
+              name: 'recht op kindkorting',
+              kenmerkType: 'bezittelijk',
+            },
+          ],
+        }],
+        parameters: [],
+        regels: [],
+        regelGroepen: [],
+        beslistabels: [],
+        dimensions: [],
+        dagsoortDefinities: [],
+        domains: [],
+        feitTypes: [],
+        unitSystems: [],
+      };
+    }
+
+    it('resolves ["self", "is minderjarig"] to canonical "minderjarig" for bijvoeglijk kenmerk', () => {
+      const model = createKenmerkModel();
+      const context = createResolutionContext(model, 'Natuurlijk persoon', 'persoon');
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['self', 'is minderjarig'],
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.resolvedPath).toHaveLength(2);
+      const [possessive, kenmerkSegment] = expr.resolved!.resolvedPath!;
+
+      expect(possessive.kind).toBe('possessive');
+      expect(possessive.targetType).toBe('Natuurlijk persoon');
+
+      expect(kenmerkSegment.sourceName).toBe('is minderjarig');
+      expect(kenmerkSegment.resolvedName).toBe('minderjarig');
+      expect(kenmerkSegment.kind).toBe('attribute');
+      expect(kenmerkSegment.targetType).toBe('Boolean');
+    });
+
+    it('resolves ["self", "heeft recht op kindkorting"] to canonical "recht op kindkorting" for bezittelijk kenmerk', () => {
+      const model = createKenmerkModel();
+      const context = createResolutionContext(model, 'Natuurlijk persoon', 'persoon');
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['self', 'heeft recht op kindkorting'],
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.resolvedPath).toHaveLength(2);
+      const [, kenmerkSegment] = expr.resolved!.resolvedPath!;
+
+      expect(kenmerkSegment.sourceName).toBe('heeft recht op kindkorting');
+      expect(kenmerkSegment.resolvedName).toBe('recht op kindkorting');
+      expect(kenmerkSegment.targetType).toBe('Boolean');
+    });
+
+    it('does NOT resolve ["self", "heeft minderjarig"] for bijvoeglijk kenmerk', () => {
+      const model = createKenmerkModel();
+      const context = createResolutionContext(model, 'Natuurlijk persoon', 'persoon');
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['self', 'heeft minderjarig'],
+      };
+
+      resolveExpression(expr, context);
+
+      // Should only have possessive segment, kenmerk should NOT resolve
+      // because "heeft" is not valid for bijvoeglijk kenmerken
+      expect(expr.resolved?.resolvedPath).toHaveLength(1);
+      expect(expr.resolved?.resolvedPath![0].kind).toBe('possessive');
+    });
+
+    it('resolves direct kenmerk name without prefix', () => {
+      const model = createKenmerkModel();
+      const context = createResolutionContext(model, 'Natuurlijk persoon', 'persoon');
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['self', 'minderjarig'],
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.resolvedPath).toHaveLength(2);
+      const [, kenmerkSegment] = expr.resolved!.resolvedPath!;
+
+      expect(kenmerkSegment.sourceName).toBe('minderjarig');
+      expect(kenmerkSegment.resolvedName).toBe('minderjarig');
+      expect(kenmerkSegment.targetType).toBe('Boolean');
+    });
+  });
+
   describe('FeitType Navigation Resolution', () => {
     function createFlightModel(): DomainModel {
       return {

@@ -35,6 +35,7 @@ import { ParameterDefinition } from '../ast/parameters';
 import { DomainModel } from '../ast/domain-model';
 import { FeitType, Rol } from '../ast/feittype';
 import { ResolvedInfo, ResolvedSymbol, ResolvedPathSegment, SymbolKind } from './types';
+import { KenmerkEquivalenceRegistry } from '../kenmerk-equivalence-registry';
 
 /**
  * Scope frame for tracking variable bindings
@@ -72,6 +73,8 @@ interface ResolutionMaps {
   attributes: Map<string, Map<string, AttributeSpecification>>;
   /** objectType → kenmerk name → KenmerkSpecification */
   kenmerken: Map<string, Map<string, KenmerkSpecification>>;
+  /** objectType → KenmerkEquivalenceRegistry for variant matching */
+  kenmerkRegistries: Map<string, KenmerkEquivalenceRegistry>;
 }
 
 /**
@@ -117,6 +120,7 @@ function buildMaps(model: DomainModel): ResolutionMaps {
   const feitTypes = new Map<string, FeitType>();
   const attributes = new Map<string, Map<string, AttributeSpecification>>();
   const kenmerken = new Map<string, Map<string, KenmerkSpecification>>();
+  const kenmerkRegistries = new Map<string, KenmerkEquivalenceRegistry>();
 
   for (const ot of model.objectTypes || []) {
     objectTypes.set(ot.name, ot);
@@ -124,6 +128,7 @@ function buildMaps(model: DomainModel): ResolutionMaps {
 
     const attrMap = new Map<string, AttributeSpecification>();
     const kenmerkMap = new Map<string, KenmerkSpecification>();
+    const registry = new KenmerkEquivalenceRegistry();
 
     for (const member of ot.members) {
       if (member.type === 'AttributeSpecification') {
@@ -132,6 +137,8 @@ function buildMaps(model: DomainModel): ResolutionMaps {
       } else if (member.type === 'KenmerkSpecification') {
         kenmerkMap.set(member.name, member);
         kenmerkMap.set(member.name.toLowerCase(), member);
+        // Register kenmerk with equivalence registry for variant matching
+        registry.registerKenmerk(member);
       }
     }
 
@@ -139,6 +146,8 @@ function buildMaps(model: DomainModel): ResolutionMaps {
     attributes.set(ot.name.toLowerCase(), attrMap);
     kenmerken.set(ot.name, kenmerkMap);
     kenmerken.set(ot.name.toLowerCase(), kenmerkMap);
+    kenmerkRegistries.set(ot.name, registry);
+    kenmerkRegistries.set(ot.name.toLowerCase(), registry);
   }
 
   for (const param of model.parameters || []) {
@@ -151,7 +160,7 @@ function buildMaps(model: DomainModel): ResolutionMaps {
     feitTypes.set(ft.naam.toLowerCase(), ft);
   }
 
-  return { objectTypes, parameters, feitTypes, attributes, kenmerken };
+  return { objectTypes, parameters, feitTypes, attributes, kenmerken, kenmerkRegistries };
 }
 
 /**
@@ -540,9 +549,18 @@ function resolveAttributeReference(
       const nextObjectType = maps.objectTypes.get(targetType) || maps.objectTypes.get(targetType.toLowerCase());
       currentType = nextObjectType?.name;
     } else {
-      // Check if it's a kenmerk
+      // Check if it's a kenmerk (using equivalence registry for variant matching)
       const kenmerkMap = maps.kenmerken.get(currentType) || maps.kenmerken.get(currentType.toLowerCase());
-      const kenmerk = kenmerkMap?.get(segment) || kenmerkMap?.get(segmentLower);
+      const registry = maps.kenmerkRegistries.get(currentType) || maps.kenmerkRegistries.get(currentType.toLowerCase());
+
+      // First try direct lookup
+      let kenmerk = kenmerkMap?.get(segment) || kenmerkMap?.get(segmentLower);
+
+      // If not found, use registry to resolve variant (e.g., "is minderjarig" → "minderjarig")
+      if (!kenmerk && registry && kenmerkMap) {
+        const canonicalName = registry.getCanonicalLabel(segment);
+        kenmerk = kenmerkMap.get(canonicalName) || kenmerkMap.get(canonicalName.toLowerCase());
+      }
 
       if (kenmerk) {
         resolvedPath.push({
