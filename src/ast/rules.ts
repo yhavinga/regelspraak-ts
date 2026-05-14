@@ -37,6 +37,7 @@ export interface Gelijkstelling {
   type: 'Gelijkstelling';
   target: AttributeReference; // The attribute being assigned to
   expression: Expression;
+  assignmentKind?: 'berekend' | 'gesteld' | 'geinitialiseerd';
 }
 
 export interface ObjectCreation {

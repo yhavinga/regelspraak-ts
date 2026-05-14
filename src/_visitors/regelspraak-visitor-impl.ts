@@ -1979,11 +1979,12 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
     // Get all primary expressions
     const primaryExprs = ctx.primaryExpression_list();
-    if (primaryExprs && primaryExprs.length > 0) {
-      for (const expr of primaryExprs) {
-        args.push(this.visit(expr));
+    primaryExprs.forEach((expr: any) => {
+      const result = this.visit(expr);
+      if (result) {
+        args.push(result);
       }
-    }
+    });
 
     const node = {
       type: 'FunctionCall',
@@ -2699,7 +2700,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     // "het percentage X van Y" should be parsed as (X / 100) * Y
     // E.g., "het percentage reisduur eerste schijf van zijn belasting op basis van afstand"
     // → (percentage reisduur eerste schijf / 100) * belasting op basis van afstand
-    const percentageMatch = attrText.toLowerCase().match(/^(?:het\s+)?percentage\s+(.+)$/);
+    const percentageMatch = attrText.toLowerCase().match(/^(?:het)?percentage\s+(.+)$/);
     if (percentageMatch) {
       const parameterName = percentageMatch[1].trim();
 
@@ -3034,7 +3035,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
     if (path.length === 0) {
       // Fallback: extract text without articles
-      const fallback = ctx.getText().replace(/^(de|het|een|alle)\s*/i, '').trim();
+      const fallback = ctx.getText().replace(/^(de|het|een|zijn|alle)\s*/i, '').trim();
       // Even for fallback, use AttributeReference to maintain consistency
       const ref: AttributeReference = {
         type: 'AttributeReference',
@@ -3619,12 +3620,16 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
     // Get the expression - check which operator is used
     let expression;
+    let assignmentKind: 'berekend' | 'gesteld' | 'geinitialiseerd';
     if (ctx.WORDT_BEREKEND_ALS()) {
       expression = this.visit(ctx.expressie());
+      assignmentKind = 'berekend';
     } else if (ctx.WORDT_GESTELD_OP()) {
       expression = this.visit(ctx.expressie());
+      assignmentKind = 'gesteld';
     } else if (ctx.WORDT_GEINITIALISEERD_OP()) {
       expression = this.visit(ctx.expressie());
+      assignmentKind = 'geinitialiseerd';
     } else {
       throw new Error('Expected gelijkstelling operator');
     }
@@ -3632,7 +3637,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const result = {
       type: 'Gelijkstelling',
       target,
-      expression
+      expression,
+      assignmentKind
     };
 
     // Store location for this gelijkstelling
@@ -3764,7 +3770,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       for (const rol of feitType.rollen || []) {
         // Clean role name by removing articles
         let roleNameClean = (rol.naam || '').toLowerCase();
-        for (const article of ['de ', 'het ', 'een ']) {
+        for (const article of ['de', 'het', 'een']) {
           if (roleNameClean.startsWith(article)) {
             roleNameClean = roleNameClean.substring(article.length);
             break;
@@ -3773,7 +3779,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
         // Clean object type by removing articles
         let objectTypeClean = objectType.toLowerCase();
-        for (const article of ['de ', 'het ', 'een ']) {
+        for (const article of ['de', 'het', 'een']) {
           if (objectTypeClean.startsWith(article)) {
             objectTypeClean = objectTypeClean.substring(article.length);
             break;
@@ -4465,7 +4471,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       const numCtx = domeinType.numeriekDatatype();
       const getalSpec = numCtx.getalSpecificatie();
       if (getalSpec && getalSpec.NUMBER()) {
-        decimals = parseInt(getalSpec.NUMBER().getText());
+        decimals = parseInt(getalSpec.NUMBER().getText(), 10);
       }
     } else if (domeinType.enumeratieSpecificatie()) {
       // ENUMERATIE token text from lexer
@@ -4511,7 +4517,6 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       decimals,
       enumerationValues
     };
-
     this.setLocation(node, ctx);
     return node;
   }
@@ -4609,11 +4614,6 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
           }
         }
         objectType = objectTypeWords.join(' ');
-
-        // Fallback to extractTextWithSpaces if no children found
-        if (!objectType) {
-          objectType = this.extractTextWithSpaces(ctx._objecttype);
-        }
 
         // The grammar may have greedily consumed cardinality text into the objectType.
         // Truncate at cardinality indicators: "één", "meerdere", "Een", etc.
@@ -5523,14 +5523,14 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         for (let j = 0; j < phraseChildCount; j++) {
           const subchild = child.getChild(j);
           if (subchild.getText) {
-            const text = subchild.getText();
+            const tokenText = subchild.getText().toLowerCase();
             // Track if phrase starts with article (navigation indicator)
-            if (j === 0 && ['de', 'het', 'een', 'De', 'Het', 'Een', 'alle'].includes(text)) {
+            if (j === 0 && ['de', 'het', 'een', 'De', 'Het', 'Een', 'alle'].includes(tokenText)) {
               startsWithArticle = true;
             }
             // Skip articles in output
-            if (!['de', 'het', 'een', 'De', 'Het', 'Een'].includes(text)) {
-              phraseText.push(text);
+            if (!['de', 'het', 'een', 'De', 'Het', 'Een'].includes(tokenText)) {
+              phraseText.push(subchild.getText());
             }
           }
         }
@@ -5897,15 +5897,13 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
           // Build path in Dutch right-to-left order:
           // "de naam van persoon" → ["persoon", "naam"]
-          if (navigationParts.length > 0) {
-            const path = [...navigationParts.reverse(), attrName];
-            const node: AttributeReference = {
-              type: 'AttributeReference',
-              path: path
-            };
-            this.setLocation(node, ctx);
-            return node;
-          }
+          const path = [...navigationParts.reverse(), attrName];
+          const node: AttributeReference = {
+            type: 'AttributeReference',
+            path: path
+          };
+          this.setLocation(node, ctx);
+          return node;
         }
       }
 
@@ -6625,8 +6623,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     if (lastWord.match(/\d$/)) {
       pluralLastWord = lastWord + 's';
     }
-    // 2. Words ending in 's' often change s→z (e.g., reis -> reizen)
-    else if (lastWord.endsWith('eis') || lastWord.endsWith('uis') || lastWord.endsWith('oos')) {
+    // 2. Words ending in 'eis' or 'uis' change s→z (e.g., reis -> reizen)
+    else if (lastWord.endsWith('eis') || lastWord.endsWith('uis')) {
       // Common Dutch words where s→z before adding 'en'
       pluralLastWord = lastWord.slice(0, -1) + 'zen';
     }
@@ -6657,3 +6655,4 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
   }
 
 }
+
