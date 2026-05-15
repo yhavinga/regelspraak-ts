@@ -11,6 +11,7 @@ export type {
   ResolvedSymbol,
   ResolvedPathSegment,
   SymbolKind,
+  TimelineInfo,
 } from './types';
 
 export type {
