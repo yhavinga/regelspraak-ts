@@ -658,4 +658,259 @@ describe('Expression Resolver', () => {
       expect(expr.resolved?.hasCollectionNavigation).toBeFalsy();
     });
   });
+
+  describe('Timeline Metadata Propagation', () => {
+    function createTimelineModel(): DomainModel {
+      return {
+        objectTypes: [{
+          type: 'ObjectTypeDefinition',
+          name: 'Persoon',
+          animated: true,
+          members: [
+            {
+              type: 'AttributeSpecification',
+              name: 'inkomen',
+              dataType: { type: 'DomainReference', domain: 'Bedrag' },
+              timelineGranularity: 'jaar',
+            },
+            {
+              type: 'AttributeSpecification',
+              name: 'salaris',
+              dataType: { type: 'DomainReference', domain: 'Bedrag' },
+              timelineGranularity: 'maand',
+            },
+            {
+              type: 'AttributeSpecification',
+              name: 'aanwezigheid',
+              dataType: { type: 'Boolean' },
+              timelineGranularity: 'dag',
+            },
+            {
+              type: 'AttributeSpecification',
+              name: 'leeftijd',
+              dataType: { type: 'Numeriek' },
+              // No timeline - scalar attribute
+            },
+          ],
+        }],
+        parameters: [
+          {
+            type: 'ParameterDefinition',
+            name: 'belastingpercentage',
+            dataType: { type: 'Numeriek' },
+            timelineGranularity: 'jaar',
+          },
+          {
+            type: 'ParameterDefinition',
+            name: 'vaste aftrek',
+            dataType: { type: 'DomainReference', domain: 'Bedrag' },
+            // No timeline - scalar parameter
+          },
+        ],
+        regels: [],
+        regelGroepen: [],
+        beslistabels: [],
+        dimensions: [],
+        dagsoortDefinities: [],
+        domains: [],
+        feitTypes: [],
+        unitSystems: [],
+      };
+    }
+
+    it('resolves attribute with yearly timeline', () => {
+      const model = createTimelineModel();
+      const context = createResolutionContext(model, 'Persoon', 'persoon');
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['self', 'inkomen'],
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.timeline).toBeDefined();
+      expect(expr.resolved?.timeline?.granularity).toBe('jaar');
+      expect(expr.resolved?.timeline?.source).toBe('attribute');
+    });
+
+    it('resolves attribute with monthly timeline', () => {
+      const model = createTimelineModel();
+      const context = createResolutionContext(model, 'Persoon', 'persoon');
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['self', 'salaris'],
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.timeline).toBeDefined();
+      expect(expr.resolved?.timeline?.granularity).toBe('maand');
+      expect(expr.resolved?.timeline?.source).toBe('attribute');
+    });
+
+    it('resolves attribute with daily timeline', () => {
+      const model = createTimelineModel();
+      const context = createResolutionContext(model, 'Persoon', 'persoon');
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['self', 'aanwezigheid'],
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.timeline).toBeDefined();
+      expect(expr.resolved?.timeline?.granularity).toBe('dag');
+      expect(expr.resolved?.timeline?.source).toBe('attribute');
+    });
+
+    it('resolves scalar attribute without timeline', () => {
+      const model = createTimelineModel();
+      const context = createResolutionContext(model, 'Persoon', 'persoon');
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['self', 'leeftijd'],
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.timeline).toBeUndefined();
+    });
+
+    it('resolves parameter with yearly timeline', () => {
+      const model = createTimelineModel();
+      const context = createResolutionContext(model);
+
+      const expr = {
+        type: 'ParameterReference',
+        parameterName: 'belastingpercentage',
+      } as Expression;
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.timeline).toBeDefined();
+      expect(expr.resolved?.timeline?.granularity).toBe('jaar');
+      expect(expr.resolved?.timeline?.source).toBe('parameter');
+    });
+
+    it('resolves scalar parameter without timeline', () => {
+      const model = createTimelineModel();
+      const context = createResolutionContext(model);
+
+      const expr = {
+        type: 'ParameterReference',
+        parameterName: 'vaste aftrek',
+      } as Expression;
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.timeline).toBeUndefined();
+    });
+
+    it('propagates timeline through binary expression (timeline + scalar)', () => {
+      const model = createTimelineModel();
+      const context = createResolutionContext(model, 'Persoon', 'persoon');
+
+      const expr = {
+        type: 'BinaryExpression',
+        operator: '+',
+        left: {
+          type: 'AttributeReference',
+          path: ['self', 'inkomen'],
+        },
+        right: {
+          type: 'NumberLiteral',
+          value: 1000,
+        },
+      } as Expression;
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.timeline).toBeDefined();
+      expect(expr.resolved?.timeline?.granularity).toBe('jaar');
+      // When only one operand has timeline, we preserve its source (attribute/parameter)
+      expect(expr.resolved?.timeline?.source).toBe('attribute');
+    });
+
+    it('combines timelines using finest granularity (year + month = month)', () => {
+      const model = createTimelineModel();
+      const context = createResolutionContext(model, 'Persoon', 'persoon');
+
+      const expr = {
+        type: 'BinaryExpression',
+        operator: '+',
+        left: {
+          type: 'AttributeReference',
+          path: ['self', 'inkomen'],  // yearly
+        },
+        right: {
+          type: 'AttributeReference',
+          path: ['self', 'salaris'],  // monthly
+        },
+      } as Expression;
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.timeline).toBeDefined();
+      expect(expr.resolved?.timeline?.granularity).toBe('maand');
+      expect(expr.resolved?.timeline?.source).toBe('expression');
+    });
+
+    it('combines timelines using finest granularity (month + day = day)', () => {
+      const model = createTimelineModel();
+      const context = createResolutionContext(model, 'Persoon', 'persoon');
+
+      // We need a numeric expression, so let's create one that makes sense
+      // aanwezigheid is Boolean daily, salaris is Bedrag monthly
+      // In practice we wouldn't add these, but the resolver doesn't check semantics
+      const expr = {
+        type: 'BinaryExpression',
+        operator: '*',
+        left: {
+          type: 'AttributeReference',
+          path: ['self', 'salaris'],  // monthly
+        },
+        right: {
+          type: 'UnaryExpression',
+          operator: '-',
+          operand: {
+            type: 'AttributeReference',
+            path: ['self', 'aanwezigheid'],  // daily
+          },
+        },
+      } as Expression;
+
+      resolveExpression(expr, context);
+
+      // The inner unary should have day timeline
+      expect((expr as any).right.resolved?.timeline?.granularity).toBe('dag');
+
+      // The outer binary should combine month and day to day (finest)
+      expect(expr.resolved?.timeline).toBeDefined();
+      expect(expr.resolved?.timeline?.granularity).toBe('dag');
+      expect(expr.resolved?.timeline?.source).toBe('expression');
+    });
+
+    it('propagates timeline through unary expression', () => {
+      const model = createTimelineModel();
+      const context = createResolutionContext(model, 'Persoon', 'persoon');
+
+      const expr = {
+        type: 'UnaryExpression',
+        operator: '-',
+        operand: {
+          type: 'AttributeReference',
+          path: ['self', 'inkomen'],
+        },
+      } as Expression;
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.timeline).toBeDefined();
+      expect(expr.resolved?.timeline?.granularity).toBe('jaar');
+    });
+  });
 });

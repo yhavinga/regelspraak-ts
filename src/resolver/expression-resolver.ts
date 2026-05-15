@@ -30,11 +30,12 @@ import {
   KenmerkSpecification,
   DataType,
   DomainReference,
+  TimelineGranularity,
 } from '../ast/object-types';
 import { ParameterDefinition } from '../ast/parameters';
 import { DomainModel } from '../ast/domain-model';
 import { FeitType, Rol } from '../ast/feittype';
-import { ResolvedInfo, ResolvedSymbol, ResolvedPathSegment, SymbolKind } from './types';
+import { ResolvedInfo, ResolvedSymbol, ResolvedPathSegment, SymbolKind, TimelineInfo } from './types';
 import { KenmerkEquivalenceRegistry } from '../kenmerk-equivalence-registry';
 
 /**
@@ -354,7 +355,7 @@ function resolveParameterReference(
 
   const param = maps.parameters.get(name) || maps.parameters.get(nameLower);
   if (param) {
-    expr.resolved = {
+    const resolved: ResolvedInfo = {
       resolvedSymbol: {
         kind: 'parameter',
         name: param.name,
@@ -363,6 +364,16 @@ function resolveParameterReference(
       resolvedType: param.dataType,
       unit: param.unit,
     };
+
+    // Propagate timeline metadata if the parameter is time-dependent
+    if (param.timelineGranularity) {
+      resolved.timeline = {
+        granularity: param.timelineGranularity,
+        source: 'parameter',
+      };
+    }
+
+    expr.resolved = resolved;
   }
 
   return expr;
@@ -449,6 +460,7 @@ function resolveAttributeReference(
   let possessiveOwner: string | undefined;
   let hasCollectionNavigation = false;
   let terminalUnit: string | undefined;
+  let terminalTimelineInfo: TimelineInfo | undefined;
 
   // Check if first segment is a possessive pronoun
   const firstSegment = path[0].toLowerCase();
@@ -545,6 +557,16 @@ function resolveAttributeReference(
       // it'll be overwritten or cleared by subsequent navigation.
       terminalUnit = attr.unit;
 
+      // Capture timeline info from this attribute
+      if (attr.timelineGranularity) {
+        terminalTimelineInfo = {
+          granularity: attr.timelineGranularity,
+          source: 'attribute',
+        };
+      } else {
+        terminalTimelineInfo = undefined;
+      }
+
       // Update current type for next segment (if it's an object type)
       const nextObjectType = maps.objectTypes.get(targetType) || maps.objectTypes.get(targetType.toLowerCase());
       currentType = nextObjectType?.name;
@@ -571,6 +593,17 @@ function resolveAttributeReference(
           targetType: 'Boolean',
           cardinality: '1',
         });
+
+        // Capture timeline info from kenmerk if present
+        if (kenmerk.timelineGranularity) {
+          terminalTimelineInfo = {
+            granularity: kenmerk.timelineGranularity,
+            source: 'kenmerk',
+          };
+        } else {
+          terminalTimelineInfo = undefined;
+        }
+
         currentType = undefined; // Boolean is a leaf type
       } else {
         // Try FeitType navigation - check if segment matches a role name
@@ -629,6 +662,7 @@ function resolveAttributeReference(
       possessiveOwner,
       hasCollectionNavigation,
       unit: terminalUnit,
+      timeline: terminalTimelineInfo,
     };
   }
 
@@ -638,6 +672,38 @@ function resolveAttributeReference(
 // ============================================================================
 // Compound Expression Resolvers
 // ============================================================================
+
+/**
+ * Combine timeline info from two operands.
+ * Returns the finest granularity (dag < maand < jaar).
+ * If only one operand has timeline info, returns that.
+ * If neither has timeline info, returns undefined.
+ */
+function combineTimelineInfo(
+  left: TimelineInfo | undefined,
+  right: TimelineInfo | undefined
+): TimelineInfo | undefined {
+  if (!left && !right) return undefined;
+  if (!left) return right;
+  if (!right) return left;
+
+  // Granularity ordering: dag is finest (0), maand is middle (1), jaar is coarsest (2)
+  const granularityOrder: Record<TimelineGranularity, number> = {
+    'dag': 0,
+    'maand': 1,
+    'jaar': 2,
+  };
+
+  const leftOrder = granularityOrder[left.granularity];
+  const rightOrder = granularityOrder[right.granularity];
+
+  // Return the finest granularity (lower order number)
+  if (leftOrder <= rightOrder) {
+    return { granularity: left.granularity, source: 'expression' };
+  } else {
+    return { granularity: right.granularity, source: 'expression' };
+  }
+}
 
 function resolveBinaryExpression(
   expr: BinaryExpression,
@@ -653,9 +719,18 @@ function resolveBinaryExpression(
   const logicalOps = ['&&', '||'];
   const arithmeticOps = ['+', '-', '*', '/'];
 
+  // Combine timeline info from operands
+  const combinedTimeline = combineTimelineInfo(
+    expr.left.resolved?.timeline,
+    expr.right.resolved?.timeline
+  );
+
   if (comparisonOps.includes(expr.operator) || logicalOps.includes(expr.operator)) {
+    // Comparisons produce Boolean, but may still be time-dependent
+    // if operands are time-dependent (result is Boolean timeline)
     expr.resolved = {
       resolvedType: { type: 'Boolean' },
+      timeline: combinedTimeline,
     };
   } else if (arithmeticOps.includes(expr.operator)) {
     // Type-aware arithmetic: Datum ± Numeriek → Datum
@@ -667,15 +742,18 @@ function resolveBinaryExpression(
         isDateLike(leftType) && rightType === 'Numeriek') {
       expr.resolved = {
         resolvedType: { type: leftType } as DataType,
+        timeline: combinedTimeline,
       };
     } else if (expr.operator === '-' && isDateLike(leftType) && isDateLike(rightType)) {
       // Date - Date → Numeriek (duration). Unit unknown without explicit annotation.
       expr.resolved = {
         resolvedType: { type: 'Numeriek' },
+        timeline: combinedTimeline,
       };
     } else {
       expr.resolved = {
         resolvedType: { type: 'Numeriek' },
+        timeline: combinedTimeline,
       };
     }
   }
@@ -690,13 +768,18 @@ function resolveUnaryExpression(
 ): UnaryExpression {
   resolveExpressionInternal(expr.operand, context, maps);
 
+  // Propagate timeline info from operand
+  const operandTimeline = expr.operand.resolved?.timeline;
+
   if (expr.operator === '-') {
     expr.resolved = {
       resolvedType: { type: 'Numeriek' },
+      timeline: operandTimeline,
     };
   } else if (expr.operator === '!' || expr.operator === 'niet') {
     expr.resolved = {
       resolvedType: { type: 'Boolean' },
+      timeline: operandTimeline,
     };
   }
 

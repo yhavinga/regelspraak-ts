@@ -19,7 +19,20 @@ export interface KenmerkSpecification {
   type: 'KenmerkSpecification';
   name: string;
   kenmerkType?: 'bijvoeglijk' | 'bezittelijk';
+  /**
+   * Timeline granularity from RegelSpraak §3.8.
+   * When set, the kenmerk is time-dependent with the specified granularity.
+   */
+  timelineGranularity?: TimelineGranularity;
 }
+
+/**
+ * Timeline granularity as specified in RegelSpraak §3.8
+ * - 'dag': voor elke dag
+ * - 'maand': voor elke maand
+ * - 'jaar': voor elk jaar
+ */
+export type TimelineGranularity = 'dag' | 'maand' | 'jaar';
 
 export interface AttributeSpecification {
   type: 'AttributeSpecification';
@@ -27,7 +40,11 @@ export interface AttributeSpecification {
   dataType: DataType | DomainReference;
   unit?: string;
   dimensions?: string[];
-  timeline?: boolean;
+  /**
+   * Timeline granularity from RegelSpraak §3.8.
+   * When set, the attribute is time-dependent with the specified granularity.
+   */
+  timelineGranularity?: TimelineGranularity;
 }
 
 // Numeric constraint types - derived from ANTLR grammar tokens

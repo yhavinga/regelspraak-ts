@@ -112,19 +112,47 @@ describe('Engine - Parameter Definitions', () => {
 
     test('should parse parameter with timeline', () => {
       const source = `Parameter de startdatum : Datum in dagen voor elke dag`;
-      
+
       const result = engine.parse(source);
-      
+
       if (!result.success) {
         console.log('Parse error:', result.errors);
       }
-      
+
       expect(result.success).toBe(true);
       expect(stripLocations(result.ast)).toEqual({
         type: 'ParameterDefinition',
         name: 'startdatum',
         dataType: { type: 'Datum' },
-        timeline: true
+        timelineGranularity: 'dag'
+      });
+    });
+
+    test('should parse parameter with monthly timeline', () => {
+      const source = `Parameter het uitkeringspercentage : Numeriek (geheel getal) voor elke maand`;
+
+      const result = engine.parse(source);
+
+      expect(result.success).toBe(true);
+      expect(stripLocations(result.ast)).toEqual({
+        type: 'ParameterDefinition',
+        name: 'uitkeringspercentage',
+        dataType: { type: 'Numeriek', numericSpec: { format: 'geheel getal', signConstraint: undefined, decimals: undefined } },
+        timelineGranularity: 'maand'
+      });
+    });
+
+    test('should parse parameter with yearly timeline', () => {
+      const source = `Parameter de belastingschijf : Bedrag voor elk jaar`;
+
+      const result = engine.parse(source);
+
+      expect(result.success).toBe(true);
+      expect(stripLocations(result.ast)).toEqual({
+        type: 'ParameterDefinition',
+        name: 'belastingschijf',
+        dataType: { type: 'DomainReference', domain: 'Bedrag' },
+        timelineGranularity: 'jaar'
       });
     });
 

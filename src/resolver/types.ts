@@ -8,12 +8,30 @@
  * - IDE support (hover, go-to-definition)
  */
 
-import { DataType, DomainReference } from '../ast/object-types';
+import { DataType, DomainReference, TimelineGranularity } from '../ast/object-types';
 
 /**
  * Kind of symbol a reference resolves to
  */
 export type SymbolKind = 'parameter' | 'variable' | 'attribute' | 'kenmerk' | 'feittype' | 'objecttype';
+
+/**
+ * Timeline metadata from RegelSpraak §3.8
+ * Attached to resolved expressions that reference time-dependent values
+ * or that compute time-dependent results.
+ */
+export interface TimelineInfo {
+  /** The timeline granularity: dag, maand, or jaar */
+  granularity: TimelineGranularity;
+  /**
+   * Source of the timeline:
+   * - 'attribute': from an AttributeSpecification with timelineGranularity
+   * - 'parameter': from a ParameterDefinition with timelineGranularity
+   * - 'kenmerk': from a KenmerkSpecification with timelineGranularity
+   * - 'expression': computed from time-dependent operands
+   */
+  source: 'attribute' | 'parameter' | 'kenmerk' | 'expression';
+}
 
 /**
  * A resolved symbol - what a reference points to
@@ -96,4 +114,12 @@ export interface ResolvedInfo {
    * a Numeriek without a unit cannot be added to a Datum.
    */
   unit?: string;
+
+  /**
+   * Timeline metadata from RegelSpraak §3.8.
+   * Present when this expression evaluates to a time-dependent value.
+   * The transpiler uses this to determine result granularity and validate
+   * compatibility between time-dependent operands and targets.
+   */
+  timeline?: TimelineInfo;
 }

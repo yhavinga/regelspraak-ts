@@ -72,7 +72,7 @@ import {
   FeitCreatie,
   VariableAssignment
 } from '../ast/rules';
-import { ObjectTypeDefinition, KenmerkSpecification, AttributeSpecification, DataType, DomainReference, DomainDefinition, NumericSpecification, SignConstraint, NumberFormat } from '../ast/object-types';
+import { ObjectTypeDefinition, KenmerkSpecification, AttributeSpecification, DataType, DomainReference, DomainDefinition, NumericSpecification, SignConstraint, NumberFormat, TimelineGranularity } from '../ast/object-types';
 import { ParameterDefinition } from '../ast/parameters';
 import { UnitSystemDefinition, UnitDefinition, UnitConversion } from '../ast/unit-systems';
 import { createSourceLocation } from '../ast/location';
@@ -99,6 +99,32 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     if (node && typeof node === 'object' && ctx) {
       node.location = createSourceLocation(ctx);
     }
+  }
+
+  /**
+   * Extract timeline granularity from a tijdlijn context.
+   * Maps grammar tokens to TimelineGranularity values:
+   * - VOOR_ELKE_DAG -> 'dag'
+   * - VOOR_ELKE_MAAND -> 'maand'
+   * - VOOR_ELK_JAAR -> 'jaar'
+   *
+   * Returns undefined if no timeline is specified.
+   */
+  private extractTimelineGranularity(ctx: any): TimelineGranularity | undefined {
+    if (!ctx.tijdlijn || !ctx.tijdlijn()) {
+      return undefined;
+    }
+    const tijdlijnCtx = ctx.tijdlijn();
+    const text = tijdlijnCtx.getText();
+    if (text.includes('dag')) {
+      return 'dag';
+    } else if (text.includes('maand')) {
+      return 'maand';
+    } else if (text.includes('jaar')) {
+      return 'jaar';
+    }
+    // Should never reach here if grammar is correct, but fail explicitly
+    throw new Error(`Unknown timeline granularity: ${text}`);
   }
 
   visitRegelSpraakDocument(ctx: RegelSpraakDocumentContext): DomainModel {
@@ -4042,6 +4068,12 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       result.kenmerkType = kenmerkType;
     }
 
+    // Check for timeline - extract granularity (§3.8 allows timelines on kenmerken)
+    const timelineGranularity = this.extractTimelineGranularity(ctx);
+    if (timelineGranularity) {
+      result.timelineGranularity = timelineGranularity;
+    }
+
     return result;
   }
 
@@ -4092,8 +4124,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       }
     }
 
-    // Check for timeline
-    const timeline = ctx.tijdlijn && ctx.tijdlijn() ? true : undefined;
+    // Check for timeline - extract granularity
+    const timelineGranularity = this.extractTimelineGranularity(ctx);
 
     // Build node with only defined properties
     const node: AttributeSpecification = {
@@ -4109,8 +4141,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     if (dimensions.length > 0) {
       node.dimensions = dimensions;
     }
-    if (timeline) {
-      node.timeline = timeline;
+    if (timelineGranularity) {
+      node.timelineGranularity = timelineGranularity;
     }
 
     this.setLocation(node, ctx);
@@ -4274,8 +4306,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       }
     }
 
-    // Check for timeline
-    const timeline = ctx.tijdlijn && ctx.tijdlijn() ? true : undefined;
+    // Check for timeline - extract granularity
+    const timelineGranularity = this.extractTimelineGranularity(ctx);
 
     const result: ParameterDefinition = {
       type: 'ParameterDefinition',
@@ -4290,8 +4322,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       result.unit = unit;
     }
 
-    if (timeline) {
-      result.timeline = timeline;
+    if (timelineGranularity) {
+      result.timelineGranularity = timelineGranularity;
     }
 
     return result;

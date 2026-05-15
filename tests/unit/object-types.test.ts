@@ -194,7 +194,37 @@ describe('Engine - Object Type Definitions', () => {
         type: 'AttributeSpecification',
         name: 'inkomen',
         dataType: { type: 'DomainReference', domain: 'Bedrag' },
-        timeline: true
+        timelineGranularity: 'jaar'
+      });
+    });
+
+    test('should parse attribute with monthly timeline', () => {
+      const source = `Objecttype persoon
+  salaris Bedrag voor elke maand;`;
+
+      const result = engine.parse(source);
+
+      expect(result.success).toBe(true);
+      expect(stripLocations(result.ast?.members[0])).toEqual({
+        type: 'AttributeSpecification',
+        name: 'salaris',
+        dataType: { type: 'DomainReference', domain: 'Bedrag' },
+        timelineGranularity: 'maand'
+      });
+    });
+
+    test('should parse attribute with daily timeline', () => {
+      const source = `Objecttype persoon
+  aanwezig Boolean voor elke dag;`;
+
+      const result = engine.parse(source);
+
+      expect(result.success).toBe(true);
+      expect(stripLocations(result.ast?.members[0])).toEqual({
+        type: 'AttributeSpecification',
+        name: 'aanwezig',
+        dataType: { type: 'Boolean' },
+        timelineGranularity: 'dag'
       });
     });
   });
@@ -235,7 +265,7 @@ describe('Engine - Object Type Definitions', () => {
             name: 'inkomen',
             dataType: { type: 'DomainReference', domain: 'Bedrag' },
             unit: '€',
-            timeline: true
+            timelineGranularity: 'jaar'
           }
         ]
       });
