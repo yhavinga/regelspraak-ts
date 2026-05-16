@@ -5299,10 +5299,10 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 1051;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (((((_la - 146)) & ~0x1F) === 0 && ((1 << (_la - 146)) & 21) !== 0) || _la===244) {
+				if (_la===4 || ((((_la - 146)) & ~0x1F) === 0 && ((1 << (_la - 146)) & 21) !== 0) || _la===244) {
 					{
 					this.state = 1050;
-					this.periodeDefinitie();
+					this.conditieBijExpressie();
 					}
 				}
 
@@ -5350,10 +5350,10 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 1063;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (((((_la - 146)) & ~0x1F) === 0 && ((1 << (_la - 146)) & 21) !== 0) || _la===244) {
+				if (_la===4 || ((((_la - 146)) & ~0x1F) === 0 && ((1 << (_la - 146)) & 21) !== 0) || _la===244) {
 					{
 					this.state = 1062;
-					this.periodeDefinitie();
+					this.conditieBijExpressie();
 					}
 				}
 
@@ -12277,10 +12277,10 @@ export default class RegelSpraakParser extends Parser {
 	1048,3,198,99,0,1042,1043,5,8,0,0,1043,1049,3,256,128,0,1044,1045,5,9,0,
 	0,1045,1049,3,256,128,0,1046,1047,5,10,0,0,1047,1049,3,256,128,0,1048,1042,
 	1,0,0,0,1048,1044,1,0,0,0,1048,1046,1,0,0,0,1049,1051,1,0,0,0,1050,1052,
-	3,298,149,0,1051,1050,1,0,0,0,1051,1052,1,0,0,0,1052,1077,1,0,0,0,1053,
+	3,292,146,0,1051,1050,1,0,0,0,1051,1052,1,0,0,0,1052,1077,1,0,0,0,1053,
 	1054,3,198,99,0,1054,1055,5,114,0,0,1055,1056,3,136,68,0,1056,1057,3,256,
 	128,0,1057,1077,1,0,0,0,1058,1077,3,138,69,0,1059,1060,3,186,93,0,1060,
-	1061,7,16,0,0,1061,1063,3,202,101,0,1062,1064,3,298,149,0,1063,1062,1,0,
+	1061,7,16,0,0,1061,1063,3,202,101,0,1062,1064,3,292,146,0,1063,1062,1,0,
 	0,0,1063,1064,1,0,0,0,1064,1077,1,0,0,0,1065,1066,3,186,93,0,1066,1067,
 	5,110,0,0,1067,1068,7,9,0,0,1068,1069,3,32,16,0,1069,1070,5,176,0,0,1070,
 	1071,3,200,100,0,1071,1072,7,17,0,0,1072,1073,3,256,128,0,1073,1077,1,0,
@@ -15232,8 +15232,8 @@ export class GelijkstellingResultaatContext extends ResultaatDeelContext {
 	public WORDT_GEINITIALISEERD_OP(): TerminalNode {
 		return this.getToken(RegelSpraakParser.WORDT_GEINITIALISEERD_OP, 0);
 	}
-	public periodeDefinitie(): PeriodeDefinitieContext {
-		return this.getTypedRuleContext(PeriodeDefinitieContext, 0) as PeriodeDefinitieContext;
+	public conditieBijExpressie(): ConditieBijExpressieContext {
+		return this.getTypedRuleContext(ConditieBijExpressieContext, 0) as ConditieBijExpressieContext;
 	}
 	// @Override
 	public accept<Result>(visitor: RegelSpraakVisitor<Result>): Result {
@@ -15397,8 +15397,8 @@ export class KenmerkFeitResultaatContext extends ResultaatDeelContext {
 	public HEEFT(): TerminalNode {
 		return this.getToken(RegelSpraakParser.HEEFT, 0);
 	}
-	public periodeDefinitie(): PeriodeDefinitieContext {
-		return this.getTypedRuleContext(PeriodeDefinitieContext, 0) as PeriodeDefinitieContext;
+	public conditieBijExpressie(): ConditieBijExpressieContext {
+		return this.getTypedRuleContext(ConditieBijExpressieContext, 0) as ConditieBijExpressieContext;
 	}
 	// @Override
 	public accept<Result>(visitor: RegelSpraakVisitor<Result>): Result {

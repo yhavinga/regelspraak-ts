@@ -5,6 +5,7 @@
 import { Expression, AttributeReference } from './expressions';
 import { SourceLocation } from './location';
 import { DagsoortDefinitie } from './dagsoort';
+import { PeriodDefinition } from './timelines';
 
 export interface Rule {
   type: 'Rule';
@@ -38,6 +39,7 @@ export interface Gelijkstelling {
   target: AttributeReference; // The attribute being assigned to
   expression: Expression;
   assignmentKind?: 'berekend' | 'gesteld' | 'geinitialiseerd';
+  temporalCondition?: PeriodDefinition | Expression;  // §10.3: "van dd. X tot dd. Y" or "gedurende de tijd dat ..."
 }
 
 export interface ObjectCreation {
@@ -58,6 +60,7 @@ export interface Kenmerktoekenning {
   type: 'Kenmerktoekenning';
   subject: Expression; // The object to assign the characteristic to
   characteristic: string; // The kenmerk name
+  temporalCondition?: PeriodDefinition | Expression;  // §10.3: "van dd. X tot dd. Y" or "gedurende de tijd dat ..."
 }
 
 export interface Voorwaarde {

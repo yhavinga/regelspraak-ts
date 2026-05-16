@@ -425,10 +425,10 @@ versieGeldigheid
 // §13.4.3 Resultaat Deel
 resultaatDeel
     : EEN DAG IS EEN naamwoord                                                        # DagsoortdefinitieResultaat
-    | attribuutReferentie ( WORDT_BEREKEND_ALS expressie | WORDT_GESTELD_OP expressie | WORDT_GEINITIALISEERD_OP expressie ) periodeDefinitie? # GelijkstellingResultaat
+    | attribuutReferentie ( WORDT_BEREKEND_ALS expressie | WORDT_GESTELD_OP expressie | WORDT_GEINITIALISEERD_OP expressie ) conditieBijExpressie? # GelijkstellingResultaat
     | attribuutReferentie MOET consistencyOperator expressie                          # ConsistencyCheckResultaat
     | feitCreatiePattern # FeitCreatieResultaat
-    | onderwerpReferentie (IS | HEEFT) kenmerkNaam periodeDefinitie?                  # KenmerkFeitResultaat
+    | onderwerpReferentie (IS | HEEFT) kenmerkNaam conditieBijExpressie?              # KenmerkFeitResultaat
     | onderwerpReferentie HEEFT (DE | HET) naamwoord MET attribuutMetLidwoord (GELIJK_AAN | IS_GELIJK_AAN | GELIJK_IS_AAN) expressie # RelationshipWithAttributeResultaat
     | objectCreatie                                                                    # ObjectCreatieResultaat
     | verdelingResultaat                                                               # Verdeling

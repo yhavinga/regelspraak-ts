@@ -74,6 +74,7 @@ import {
 } from '../ast/rules';
 import { ObjectTypeDefinition, KenmerkSpecification, AttributeSpecification, DataType, DomainReference, DomainDefinition, NumericSpecification, SignConstraint, NumberFormat, TimelineGranularity } from '../ast/object-types';
 import { ParameterDefinition } from '../ast/parameters';
+import { PeriodDefinition } from '../ast/timelines';
 import { UnitSystemDefinition, UnitDefinition, UnitConversion } from '../ast/unit-systems';
 import { createSourceLocation } from '../ast/location';
 import { Dimension, DimensionLabel, DimensionedAttributeReference } from '../ast/dimensions';
@@ -3660,12 +3661,23 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       throw new Error('Expected gelijkstelling operator');
     }
 
-    const result = {
+    // Extract optional temporal condition (§10.3)
+    // conditieBijExpressie: "van dd. X tot dd. Y" or "gedurende de tijd dat ..."
+    let temporalCondition: PeriodDefinition | Expression | undefined;
+    if (ctx.conditieBijExpressie && ctx.conditieBijExpressie()) {
+      temporalCondition = this.visitConditieBijExpressie(ctx.conditieBijExpressie());
+    }
+
+    const result: any = {
       type: 'Gelijkstelling',
       target,
       expression,
       assignmentKind
     };
+
+    if (temporalCondition) {
+      result.temporalCondition = temporalCondition;
+    }
 
     // Store location for this gelijkstelling
     this.setLocation(result, ctx);
@@ -5443,11 +5455,23 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       throw new Error('Could not extract characteristic from kenmerktoekenning');
     }
 
-    const node = {
+    // Extract optional temporal condition (§10.3)
+    // conditieBijExpressie: "van dd. X tot dd. Y" or "gedurende de tijd dat ..."
+    let temporalCondition: PeriodDefinition | Expression | undefined;
+    if (ctx.conditieBijExpressie && ctx.conditieBijExpressie()) {
+      temporalCondition = this.visitConditieBijExpressie(ctx.conditieBijExpressie());
+    }
+
+    const node: any = {
       type: 'Kenmerktoekenning',
       subject,
       characteristic
     };
+
+    if (temporalCondition) {
+      node.temporalCondition = temporalCondition;
+    }
+
     this.setLocation(node, ctx);
     return node;
   }
@@ -6590,14 +6614,89 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     return node;
   }
 
-  visitConditieBijExpressie(ctx: any): Expression {
-    // GEDURENDE DE TIJD DAT expressie
-    // The actual condition is the expression after DAT
+  visitConditieBijExpressie(ctx: any): Expression | PeriodDefinition {
+    // conditieBijExpressie has two alternatives:
+    // 1. GEDURENDE_DE_TIJD_DAT condition=expressie  -> returns Expression
+    // 2. periodevergelijkingEnkelvoudig              -> returns PeriodDefinition
+
+    // Check for periodevergelijkingEnkelvoudig first (explicit date period)
+    const periodCtx = ctx.periodevergelijkingEnkelvoudig && ctx.periodevergelijkingEnkelvoudig();
+    if (periodCtx) {
+      return this.visitPeriodevergelijkingEnkelvoudig(periodCtx);
+    }
+
+    // Otherwise it's GEDURENDE_DE_TIJD_DAT expressie
     const exprCtx = ctx.expressie();
     if (!exprCtx) {
-      throw new Error('Expected expression in conditieBijExpressie');
+      throw new Error('Expected expression or periodevergelijkingEnkelvoudig in conditieBijExpressie');
     }
     return this.visit(exprCtx);
+  }
+
+  visitPeriodevergelijkingEnkelvoudig(ctx: any): PeriodDefinition {
+    // periodevergelijkingEnkelvoudig:
+    //   : VANAF datumExpressie
+    //   | VAN datumExpressie TOT datumExpressie
+    //   | VAN datumExpressie TOT_EN_MET datumExpressie
+    //   | TOT datumExpressie
+    //   | TOT_EN_MET datumExpressie
+
+    const datumExprs = ctx.datumExpressie_list ? ctx.datumExpressie_list() : [];
+
+    if (ctx.VANAF && ctx.VANAF()) {
+      const node: PeriodDefinition = {
+        type: 'PeriodDefinition',
+        periodType: 'vanaf',
+        startDate: this.visit(datumExprs[0])
+      };
+      this.setLocation(node, ctx);
+      return node;
+    }
+
+    if (ctx.VAN && ctx.VAN()) {
+      if (ctx.TOT_EN_MET && ctx.TOT_EN_MET()) {
+        const node: PeriodDefinition = {
+          type: 'PeriodDefinition',
+          periodType: 'van_tot_en_met',
+          startDate: this.visit(datumExprs[0]),
+          endDate: this.visit(datumExprs[1])
+        };
+        this.setLocation(node, ctx);
+        return node;
+      }
+      if (ctx.TOT && ctx.TOT()) {
+        const node: PeriodDefinition = {
+          type: 'PeriodDefinition',
+          periodType: 'van_tot',
+          startDate: this.visit(datumExprs[0]),
+          endDate: this.visit(datumExprs[1])
+        };
+        this.setLocation(node, ctx);
+        return node;
+      }
+    }
+
+    if (ctx.TOT_EN_MET && ctx.TOT_EN_MET()) {
+      const node: PeriodDefinition = {
+        type: 'PeriodDefinition',
+        periodType: 'tot_en_met',
+        endDate: this.visit(datumExprs[0])
+      };
+      this.setLocation(node, ctx);
+      return node;
+    }
+
+    if (ctx.TOT && ctx.TOT()) {
+      const node: PeriodDefinition = {
+        type: 'PeriodDefinition',
+        periodType: 'tot',
+        endDate: this.visit(datumExprs[0])
+      };
+      this.setLocation(node, ctx);
+      return node;
+    }
+
+    throw new Error('Unknown periodevergelijkingEnkelvoudig variant');
   }
 
   visitTotaalVanExpr(ctx: any): Expression {
