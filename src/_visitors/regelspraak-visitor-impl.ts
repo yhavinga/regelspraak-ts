@@ -116,16 +116,16 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       return undefined;
     }
     const tijdlijnCtx = ctx.tijdlijn();
-    const text = tijdlijnCtx.getText();
-    if (text.includes('dag')) {
+    // Use explicit token checks instead of substring matching
+    if (tijdlijnCtx.VOOR_ELKE_DAG && tijdlijnCtx.VOOR_ELKE_DAG()) {
       return 'dag';
-    } else if (text.includes('maand')) {
+    } else if (tijdlijnCtx.VOOR_ELKE_MAAND && tijdlijnCtx.VOOR_ELKE_MAAND()) {
       return 'maand';
-    } else if (text.includes('jaar')) {
+    } else if (tijdlijnCtx.VOOR_ELK_JAAR && tijdlijnCtx.VOOR_ELK_JAAR()) {
       return 'jaar';
     }
-    // Should never reach here if grammar is correct, but fail explicitly
-    throw new Error(`Unknown timeline granularity: ${text}`);
+    // Grammar should have matched one of above; fail explicitly
+    throw new Error(`Unknown timeline granularity token in: ${tijdlijnCtx.getText()}`);
   }
 
   visitRegelSpraakDocument(ctx: RegelSpraakDocumentContext): DomainModel {
