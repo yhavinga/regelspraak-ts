@@ -6,6 +6,7 @@ import { Expression, AttributeReference } from './expressions';
 import { SourceLocation } from './location';
 import { DagsoortDefinitie } from './dagsoort';
 import { PeriodDefinition } from './timelines';
+import { DimensionedAttributeReference } from './dimensions';
 
 export interface Rule {
   type: 'Rule';
@@ -36,7 +37,7 @@ export type ResultPart = Gelijkstelling | ObjectCreation | MultipleResults | Ken
 
 export interface Gelijkstelling {
   type: 'Gelijkstelling';
-  target: AttributeReference; // The attribute being assigned to
+  target: AttributeReference | DimensionedAttributeReference; // The attribute being assigned to
   expression: Expression;
   assignmentKind?: 'berekend' | 'gesteld' | 'geinitialiseerd';
   temporalCondition?: PeriodDefinition | Expression;  // §10.3: "van dd. X tot dd. Y" or "gedurende de tijd dat ..."

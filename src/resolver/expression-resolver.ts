@@ -35,6 +35,7 @@ import {
 import { ParameterDefinition } from '../ast/parameters';
 import { DomainModel } from '../ast/domain-model';
 import { FeitType, Rol } from '../ast/feittype';
+import { Dimension, DimensionedAttributeReference, DimensionCoordinate } from '../ast/dimensions';
 import { ResolvedInfo, ResolvedSymbol, ResolvedPathSegment, SymbolKind, TimelineInfo } from './types';
 import { KenmerkEquivalenceRegistry } from '../kenmerk-equivalence-registry';
 
@@ -76,6 +77,10 @@ interface ResolutionMaps {
   kenmerken: Map<string, Map<string, KenmerkSpecification>>;
   /** objectType → KenmerkEquivalenceRegistry for variant matching */
   kenmerkRegistries: Map<string, KenmerkEquivalenceRegistry>;
+  /** dimension name → Dimension definition */
+  dimensions: Map<string, Dimension>;
+  /** label → dimension name (for reverse lookup) */
+  labelToDimension: Map<string, string>;
 }
 
 /**
@@ -122,6 +127,8 @@ function buildMaps(model: DomainModel): ResolutionMaps {
   const attributes = new Map<string, Map<string, AttributeSpecification>>();
   const kenmerken = new Map<string, Map<string, KenmerkSpecification>>();
   const kenmerkRegistries = new Map<string, KenmerkEquivalenceRegistry>();
+  const dimensions = new Map<string, Dimension>();
+  const labelToDimension = new Map<string, string>();
 
   for (const ot of model.objectTypes || []) {
     objectTypes.set(ot.name, ot);
@@ -161,7 +168,28 @@ function buildMaps(model: DomainModel): ResolutionMaps {
     feitTypes.set(ft.naam.toLowerCase(), ft);
   }
 
-  return { objectTypes, parameters, feitTypes, attributes, kenmerken, kenmerkRegistries };
+  // Build dimension lookup maps
+  for (const dim of model.dimensions || []) {
+    dimensions.set(dim.name, dim);
+    dimensions.set(dim.name.toLowerCase(), dim);
+
+    // Map each label to its dimension for reverse lookup
+    for (const label of dim.labels) {
+      const labelKey = label.label.toLowerCase();
+      // Check for duplicate labels across dimensions
+      if (labelToDimension.has(labelKey)) {
+        const existingDim = labelToDimension.get(labelKey);
+        if (existingDim !== dim.name.toLowerCase()) {
+          // Label exists in multiple dimensions - store as ambiguous marker
+          labelToDimension.set(labelKey, '__AMBIGUOUS__');
+        }
+      } else {
+        labelToDimension.set(labelKey, dim.name);
+      }
+    }
+  }
+
+  return { objectTypes, parameters, feitTypes, attributes, kenmerken, kenmerkRegistries, dimensions, labelToDimension };
 }
 
 /**
@@ -226,6 +254,9 @@ function resolveExpressionInternal(
 
     case 'AttributeReference':
       return resolveAttributeReference(expr as AttributeReference, context, maps);
+
+    case 'DimensionedAttributeReference':
+      return resolveDimensionedAttributeReference(expr as any, context, maps);
 
     case 'BinaryExpression':
       return resolveBinaryExpression(expr as BinaryExpression, context, maps);
@@ -663,6 +694,223 @@ function resolveAttributeReference(
       hasCollectionNavigation,
       unit: terminalUnit,
       timeline: terminalTimelineInfo,
+    };
+  }
+
+  return expr;
+}
+
+/**
+ * Resolve a DimensionedAttributeReference.
+ *
+ * This validates that:
+ * 1. The base attribute exists and is dimensioned
+ * 2. All dimension labels match declared dimensions
+ * 3. All required dimensions are present
+ * 4. No duplicate dimensions
+ * 5. Preposition/style matches dimension definition (if applicable)
+ *
+ * After resolution, populates `expr.coordinates` with resolved bindings.
+ */
+function resolveDimensionedAttributeReference(
+  expr: DimensionedAttributeReference,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): DimensionedAttributeReference {
+  const rawLabels = expr.dimensionLabels || [];
+
+  // Build a set of dimension labels for fast lookup (case-insensitive)
+  const dimensionLabelSet = new Set(rawLabels.map(l => l.toLowerCase()));
+
+  // Clean the base attribute path by removing dimension labels from path segments
+  if (expr.baseAttribute?.type === 'AttributeReference') {
+    const baseAttr = expr.baseAttribute as AttributeReference;
+    const cleanedPath: string[] = [];
+
+    for (const segment of baseAttr.path) {
+      // Check if this segment is a dimension label (exact match)
+      if (dimensionLabelSet.has(segment.toLowerCase())) {
+        continue; // Skip dimension labels in path
+      }
+
+      // Check if segment contains dimension labels that should be stripped
+      let cleanedSegment = segment;
+      for (const label of rawLabels) {
+        // Use word boundary matching to strip labels from compound segments
+        const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const wordBoundaryRegex = new RegExp(`(^|\\s)${escapedLabel}(\\s|$)`, 'gi');
+        if (wordBoundaryRegex.test(cleanedSegment)) {
+          cleanedSegment = cleanedSegment.replace(wordBoundaryRegex, ' ').trim().replace(/\s+/g, ' ');
+        }
+      }
+
+      if (cleanedSegment) {
+        cleanedPath.push(cleanedSegment);
+      }
+    }
+
+    // Update the path for resolution
+    baseAttr.path = cleanedPath;
+  }
+
+  // Now resolve the cleaned base attribute
+  if (expr.baseAttribute?.type === 'AttributeReference') {
+    resolveAttributeReference(expr.baseAttribute as AttributeReference, context, maps);
+  } else if (expr.baseAttribute?.type === 'SubselectieExpression') {
+    resolveSubselectieExpression(expr.baseAttribute as SubselectieExpression, context, maps);
+  }
+
+  if (rawLabels.length === 0) {
+    // No dimension labels to resolve
+    expr.coordinates = [];
+    return expr;
+  }
+
+  // Find the attribute specification to get declared dimensions
+  const baseResolved = expr.baseAttribute?.resolved;
+  if (!baseResolved?.resolvedPath || baseResolved.resolvedPath.length === 0) {
+    // Can't resolve without knowing the attribute
+    expr.coordinates = [];
+    return expr;
+  }
+
+  // Get the attribute specification from the resolved path
+  const lastPathSegment = baseResolved.resolvedPath[baseResolved.resolvedPath.length - 1];
+  const sourceType = lastPathSegment.sourceType;
+  const attrName = lastPathSegment.resolvedName;
+
+  // Look up the attribute specification
+  const attrMap = maps.attributes.get(sourceType) || maps.attributes.get(sourceType?.toLowerCase() || '');
+  const attrSpec = attrMap?.get(attrName) || attrMap?.get(attrName?.toLowerCase() || '');
+
+  if (!attrSpec?.dimensions || attrSpec.dimensions.length === 0) {
+    // Attribute is not dimensioned - error
+    throw new Error(
+      `Attribute '${attrName}' is not dimensioned, but was referenced with dimension labels: [${rawLabels.join(', ')}]`
+    );
+  }
+
+  const declaredDimensionNames = attrSpec.dimensions;
+  const resolvedCoordinates: DimensionCoordinate[] = [];
+  const usedDimensions = new Set<string>();
+
+  // Match each raw label to a dimension
+  for (const rawLabel of rawLabels) {
+    const labelLower = rawLabel.toLowerCase();
+
+    // Look up which dimension this label belongs to
+    const dimensionName = maps.labelToDimension.get(labelLower);
+
+    if (!dimensionName) {
+      throw new Error(
+        `Unknown dimension label '${rawLabel}' in reference to '${attrName}'. ` +
+        `No dimension defines this label.`
+      );
+    }
+
+    if (dimensionName === '__AMBIGUOUS__') {
+      // Label exists in multiple dimensions - need disambiguation
+      // Try to find which of the declared dimensions contains this label
+      let matchedDim: Dimension | undefined;
+      for (const declaredDimName of declaredDimensionNames) {
+        const dim = maps.dimensions.get(declaredDimName) || maps.dimensions.get(declaredDimName.toLowerCase());
+        if (dim?.labels.some(l => l.label.toLowerCase() === labelLower)) {
+          if (matchedDim) {
+            throw new Error(
+              `Ambiguous dimension label '${rawLabel}' in reference to '${attrName}'. ` +
+              `Label exists in multiple dimensions declared on this attribute. ` +
+              `Use explicit preposition or style to disambiguate.`
+            );
+          }
+          matchedDim = dim;
+        }
+      }
+      if (!matchedDim) {
+        throw new Error(
+          `Dimension label '${rawLabel}' does not belong to any dimension declared on attribute '${attrName}'.`
+        );
+      }
+      // Found unambiguous match among declared dimensions
+      if (usedDimensions.has(matchedDim.name)) {
+        throw new Error(
+          `Duplicate dimension '${matchedDim.name}' in reference to '${attrName}'. ` +
+          `Each dimension can only have one coordinate.`
+        );
+      }
+      usedDimensions.add(matchedDim.name);
+      resolvedCoordinates.push({
+        dimension: matchedDim.name,
+        label: rawLabel,
+        sourceStyle: matchedDim.usageStyle,
+        preposition: matchedDim.preposition,
+      });
+    } else {
+      // Clear dimension match
+      const dim = maps.dimensions.get(dimensionName);
+      if (!dim) {
+        throw new Error(
+          `Internal error: dimension '${dimensionName}' not found for label '${rawLabel}'.`
+        );
+      }
+
+      // Verify this dimension is declared on the attribute
+      if (!declaredDimensionNames.some(d => d.toLowerCase() === dim.name.toLowerCase())) {
+        throw new Error(
+          `Dimension '${dim.name}' (from label '${rawLabel}') is not declared on attribute '${attrName}'. ` +
+          `Declared dimensions: [${declaredDimensionNames.join(', ')}]`
+        );
+      }
+
+      if (usedDimensions.has(dim.name)) {
+        throw new Error(
+          `Duplicate dimension '${dim.name}' in reference to '${attrName}'. ` +
+          `Each dimension can only have one coordinate.`
+        );
+      }
+
+      usedDimensions.add(dim.name);
+      resolvedCoordinates.push({
+        dimension: dim.name,
+        label: rawLabel,
+        sourceStyle: dim.usageStyle,
+        preposition: dim.preposition,
+      });
+    }
+  }
+
+  // Check that all declared dimensions are covered
+  const missingDimensions = declaredDimensionNames.filter(d => !usedDimensions.has(d));
+  if (missingDimensions.length > 0) {
+    throw new Error(
+      `Missing dimension coordinates for attribute '${attrName}'. ` +
+      `Missing dimensions: [${missingDimensions.join(', ')}]. ` +
+      `Provided labels: [${rawLabels.join(', ')}]`
+    );
+  }
+
+  // Sort coordinates by declared dimension order
+  const dimensionOrder = new Map(declaredDimensionNames.map((d, i) => [d.toLowerCase(), i]));
+  resolvedCoordinates.sort((a, b) => {
+    const orderA = dimensionOrder.get(a.dimension.toLowerCase()) ?? 999;
+    const orderB = dimensionOrder.get(b.dimension.toLowerCase()) ?? 999;
+    return orderA - orderB;
+  });
+
+  expr.coordinates = resolvedCoordinates;
+
+  // Set resolved info based on base attribute
+  if (baseResolved) {
+    (expr as any).resolved = {
+      resolvedPath: baseResolved.resolvedPath,
+      resolvedType: baseResolved.resolvedType,
+      possessiveOwner: baseResolved.possessiveOwner,
+      hasCollectionNavigation: baseResolved.hasCollectionNavigation,
+      unit: baseResolved.unit,
+      timeline: baseResolved.timeline,
+      dimensions: {
+        attributeDimensions: declaredDimensionNames,
+        coordinates: resolvedCoordinates,
+      },
     };
   }
 

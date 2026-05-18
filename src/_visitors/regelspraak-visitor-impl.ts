@@ -2771,12 +2771,17 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const dimensionLabels: string[] = [];
 
     // Check if attribute contains dimension keywords (adjectival style)
+    // Use word boundary matching to avoid false positives on substrings
     let cleanAttrText = attrText;
     for (const [label, dimensionName] of this.registeredDimensionLabels) {
-      if (attrText.includes(label)) {
+      // Create regex for exact word match with word boundaries
+      // Escape special regex characters in the label
+      const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const wordBoundaryRegex = new RegExp(`(^|\\s)${escapedLabel}(\\s|$)`, 'i');
+      if (wordBoundaryRegex.test(attrText)) {
         dimensionLabels.push(label);
-        // Remove the dimension keyword from the attribute text
-        cleanAttrText = cleanAttrText.replace(label, '').trim();
+        // Remove the dimension keyword from the attribute text, preserving word boundaries
+        cleanAttrText = cleanAttrText.replace(wordBoundaryRegex, ' ').trim().replace(/\s+/g, ' ');
       }
     }
 
@@ -2788,10 +2793,20 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       const onderwerpText = this.extractTextWithSpaces(onderwerpBasisCtx);
 
       // Check if this is a registered dimension label (model-driven)
+      // Use exact match or word boundary matching to avoid false positives
       let isDimensionKeyword = false;
       let matchedKeyword = '';
       for (const [label, dimensionName] of this.registeredDimensionLabels) {
-        if (onderwerpText.includes(label)) {
+        // First try exact match (for single-word labels like "huidig jaar")
+        if (onderwerpText.toLowerCase() === label.toLowerCase()) {
+          isDimensionKeyword = true;
+          matchedKeyword = label;
+          break;
+        }
+        // Also check for label at start with word boundary (for "huidig jaar van ...")
+        const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const startBoundaryRegex = new RegExp(`^${escapedLabel}(\\s|$)`, 'i');
+        if (startBoundaryRegex.test(onderwerpText)) {
           isDimensionKeyword = true;
           matchedKeyword = label;
           break;

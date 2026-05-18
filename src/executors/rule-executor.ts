@@ -435,18 +435,18 @@ export class RuleExecutor implements IRuleExecutor {
 
     let targetPath: string[];
 
-    if ((gelijkstelling.target as any).type === 'DimensionedAttributeReference') {
+    if (gelijkstelling.target.type === 'DimensionedAttributeReference') {
       // For dimensional references, get the path from the base attribute
-      const dimRef = gelijkstelling.target as any;
+      const dimRef = gelijkstelling.target;
       if (!dimRef.baseAttribute || !dimRef.baseAttribute.path) {
         throw new Error('DimensionedAttributeReference must have baseAttribute with path');
       }
       targetPath = dimRef.baseAttribute.path;
-    } else if (gelijkstelling.target.path) {
+    } else if (gelijkstelling.target.type === 'AttributeReference' && gelijkstelling.target.path) {
       // Regular AttributeReference
       targetPath = gelijkstelling.target.path;
     } else {
-      throw new Error(`No path in gelijkstelling target. Target type: ${gelijkstelling.target.type}`);
+      throw new Error(`No path in gelijkstelling target. Target type: ${(gelijkstelling.target as any).type}`);
     }
 
     if (targetPath.length === 0) {
