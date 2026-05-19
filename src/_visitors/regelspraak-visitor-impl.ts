@@ -6290,7 +6290,14 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
   }
 
   visitVerdelingMaximum(ctx: any): any {
-    const maxExpression = this.visit(ctx._maxExpression);
+    // §9.7.7: maximum must be attribuutMetLidwoord (attribute of receiver)
+    // attribuutMetLidwoord returns a string, wrap it as AttributeReference
+    const maxAttrName = this.visit(ctx._maxExpression);
+    const maxExpression = {
+      type: 'AttributeReference',
+      path: [typeof maxAttrName === 'string' ? maxAttrName : String(maxAttrName)]
+    };
+    this.setLocation(maxExpression, ctx._maxExpression);
     const node = {
       type: 'VerdelingMaximum',
       maxExpression
@@ -6301,11 +6308,10 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
   visitVerdelingAfronding(ctx: any): any {
     const decimals = ctx._decimals ? parseInt(ctx._decimals.text) : 0;
-    const roundDirection = ctx._roundDirection?.text || 'naar beneden';
+    // §9.7.4: rounding in Verdeling is always "naar beneden"
     const node = {
       type: 'VerdelingAfronding',
-      decimals,
-      roundDirection: roundDirection as 'naar beneden' | 'naar boven'
+      decimals
     };
     this.setLocation(node, ctx);
     return node;

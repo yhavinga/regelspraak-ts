@@ -1100,8 +1100,8 @@ verdelingMethode
     | NAAR_RATO_VAN ratioExpression=expressie                                      # VerdelingNaarRato
     | OP_VOLGORDE_VAN orderDirection=(TOENEMENDE | AFNEMENDE) orderExpression=expressie  # VerdelingOpVolgorde
     | BIJ_EVEN_GROOT_CRITERIUM tieBreakMethod=verdelingMethode                     # VerdelingTieBreak
-    | MET_EEN_MAXIMUM_VAN maxExpression=expressie                                  # VerdelingMaximum
-    | AFGEROND_OP decimals=NUMBER DECIMALEN roundDirection=(NAAR_BENEDEN | NAAR_BOVEN)  # VerdelingAfronding
+    | MET_EEN_MAXIMUM_VAN maxExpression=attribuutMetLidwoord                       # VerdelingMaximum
+    | AFGEROND_OP decimals=NUMBER DECIMALEN NAAR_BENEDEN                            # VerdelingAfronding
     ;
 
 // Remainder handling

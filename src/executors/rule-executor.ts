@@ -1615,7 +1615,6 @@ export class RuleExecutor implements IRuleExecutor {
     let tieBreakMethod: VerdelingMethode | undefined;
     let maximumExpression: Expression | undefined;
     let roundingDecimals: number | undefined;
-    let roundingDirection: string | undefined;
 
     // Process methods to extract configurations
     for (const method of methods) {
@@ -1647,9 +1646,8 @@ export class RuleExecutor implements IRuleExecutor {
 
         case 'VerdelingAfronding':
           hasRounding = true;
-          const roundingMethod = method as VerdelingAfronding;
-          roundingDecimals = roundingMethod.decimals;
-          roundingDirection = roundingMethod.roundDirection;
+          // §9.7.4: rounding in Verdeling is always "naar beneden"
+          roundingDecimals = (method as VerdelingAfronding).decimals;
           break;
       }
     }
@@ -1686,12 +1684,12 @@ export class RuleExecutor implements IRuleExecutor {
       );
     }
 
-    // Apply rounding if specified
+    // Apply rounding if specified (always naar beneden per §9.7.4)
     if (hasRounding && roundingDecimals !== undefined) {
       amounts = this.applyRounding(
         amounts,
         roundingDecimals,
-        roundingDirection === 'naar beneden'
+        true  // always round down
       );
     }
 

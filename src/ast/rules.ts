@@ -109,7 +109,7 @@ export interface VerdelingMaximum extends VerdelingMethode {
 export interface VerdelingAfronding extends VerdelingMethode {
   type: 'VerdelingAfronding';
   decimals: number;
-  roundDirection: 'naar beneden' | 'naar boven';
+  // §9.7.4: "Dit kan in deze situatie alleen naar beneden"
 }
 
 export interface Verdeling {

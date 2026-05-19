@@ -10,7 +10,7 @@ export interface MultiWordData {
 }
 
 export const multiWordKeywords: MultiWordData = {
-  "generated": "2026-02-27T10:57:49.677Z",
+  "generated": "2026-05-19T12:58:47.129Z",
   "source": "grammar/RegelSpraakLexer.g4",
   "totalMultiWords": 129,
   "byFirstWord": {
