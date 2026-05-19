@@ -163,7 +163,8 @@ function buildMaps(model: DomainModel): ResolutionMaps {
     parameters.set(param.name.toLowerCase(), param);
   }
 
-  for (const ft of model.feitTypes || []) {
+  // Check both 'feitTypes' and 'feittypen' - AST uses 'feittypen', some code uses 'feitTypes'
+  for (const ft of model.feitTypes || (model as any).feittypen || []) {
     feitTypes.set(ft.naam, ft);
     feitTypes.set(ft.naam.toLowerCase(), ft);
   }
@@ -427,8 +428,15 @@ function resolveFeitTypeNavigation(
   feitTypes: Map<string, FeitType>,
   objectTypes: Map<string, ObjectTypeDefinition>
 ): ResolvedPathSegment | null {
-  const segmentLower = segment.toLowerCase();
+  let segmentLower = segment.toLowerCase();
   const sourceTypeLower = sourceType.toLowerCase();
+
+  // Handle "alle X" prefix - strip "alle " and force plural matching with N cardinality
+  let forceCollectionCardinality = false;
+  if (segmentLower.startsWith('alle ')) {
+    segmentLower = segmentLower.substring(5); // Remove "alle "
+    forceCollectionCardinality = true;
+  }
 
   // Search all FeitTypes for a matching navigation
   for (const [, feitType] of feitTypes) {
@@ -456,8 +464,8 @@ function resolveFeitTypeNavigation(
           objectTypes.get(targetRole.objectType.toLowerCase());
 
         if (targetObjectType) {
-          // Determine cardinality: plural match = N, singular match = 1
-          const cardinality: '1' | 'N' = matchesPlural ? 'N' : '1';
+          // Determine cardinality: plural match or "alle" prefix = N, singular match = 1
+          const cardinality: '1' | 'N' = (matchesPlural || forceCollectionCardinality) ? 'N' : '1';
 
           return {
             sourceName: segment,
@@ -466,6 +474,45 @@ function resolveFeitTypeNavigation(
             sourceType: sourceType,
             targetType: targetObjectType.name,
             cardinality,
+          };
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Resolve a FeitType role name to its object type.
+ * Used when the first path segment is a role name (e.g., "verdeler" → "Budgetverdeler").
+ *
+ * Returns the object type name if the segment matches a FeitType role, otherwise null.
+ */
+function resolveFeitTypeRole(
+  segment: string,
+  feitTypes: Map<string, FeitType>,
+  objectTypes: Map<string, ObjectTypeDefinition>
+): { objectType: string; roleName: string; cardinality: '1' | 'N' } | null {
+  const segmentLower = segment.toLowerCase();
+
+  for (const [, feitType] of feitTypes) {
+    for (const role of feitType.rollen) {
+      if (!role.objectType) continue;
+
+      const matchesSingular = role.naam.toLowerCase() === segmentLower;
+      const matchesPlural = role.meervoud?.toLowerCase() === segmentLower;
+
+      if (matchesSingular || matchesPlural) {
+        const targetObjectType =
+          objectTypes.get(role.objectType) ||
+          objectTypes.get(role.objectType.toLowerCase());
+
+        if (targetObjectType) {
+          return {
+            objectType: targetObjectType.name,
+            roleName: matchesPlural ? (role.meervoud || role.naam) : role.naam,
+            cardinality: matchesPlural ? 'N' : '1',
           };
         }
       }
@@ -524,21 +571,35 @@ function resolveAttributeReference(
         cardinality: '1',
       });
     } else {
-      // Check scope for variable
-      for (let i = context.scopeStack.length - 1; i >= 0; i--) {
-        const frame = context.scopeStack[i];
-        const scopeVar = frame.variables.get(path[0]) || frame.variables.get(path[0].toLowerCase());
-        if (scopeVar) {
-          currentType = scopeVar.objectType;
-          resolvedPath.push({
-            sourceName: path[0],
-            resolvedName: scopeVar.name,
-            kind: 'variable',
-            sourceType: 'context',
-            targetType: scopeVar.objectType,
-            cardinality: '1',
-          });
-          break;
+      // Check if it's a FeitType role name (e.g., "verdeler" → "Budgetverdeler")
+      const feitTypeRole = resolveFeitTypeRole(path[0], maps.feitTypes, maps.objectTypes);
+      if (feitTypeRole) {
+        currentType = feitTypeRole.objectType;
+        resolvedPath.push({
+          sourceName: path[0],
+          resolvedName: feitTypeRole.objectType,
+          kind: 'feittype',
+          sourceType: 'context',
+          targetType: feitTypeRole.objectType,
+          cardinality: feitTypeRole.cardinality,
+        });
+      } else {
+        // Check scope for variable
+        for (let i = context.scopeStack.length - 1; i >= 0; i--) {
+          const frame = context.scopeStack[i];
+          const scopeVar = frame.variables.get(path[0]) || frame.variables.get(path[0].toLowerCase());
+          if (scopeVar) {
+            currentType = scopeVar.objectType;
+            resolvedPath.push({
+              sourceName: path[0],
+              resolvedName: scopeVar.name,
+              kind: 'variable',
+              sourceType: 'context',
+              targetType: scopeVar.objectType,
+              cardinality: '1',
+            });
+            break;
+          }
         }
       }
     }
