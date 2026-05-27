@@ -38,6 +38,7 @@ import { Context } from '../context';
 import { FeitExecutor } from './feit-executor';
 import { resolveNavigationPath, isObjectScopedRule, setValueAtPath } from '../utils/navigation';
 import { TimelineValueImpl } from '../ast/timelines';
+import { FeitType } from '../ast/feittype';
 
 interface DistributionResult {
   amounts: number[];
@@ -737,6 +738,34 @@ export class RuleExecutor implements IRuleExecutor {
     // Create the object in the context
     context.createObject(objectCreation.objectType, objectId, attributes);
 
+    // Phase 3: Create the relationship fact linking subject to the new object
+    // This implements the spec requirement: "Een X heeft een Y" establishes a FeitType relationship
+    const ctx = context as Context;
+    const subjectInstance = ctx.current_instance;
+
+    if (subjectInstance && subjectInstance.type === 'object' && objectCreation.role) {
+      // Find the FeitType that defines this role
+      const feitType = this.findFeitTypeForRole(objectCreation.role, context);
+
+      if (feitType) {
+        // Get the newly created object as a Value
+        const newObject: Value = {
+          type: 'object',
+          value: attributes,
+          objectType: objectCreation.objectType,
+          objectId
+        } as any;
+
+        // Create the relationship: subject -> new object via FeitType
+        ctx.addRelationship(feitType.naam, subjectInstance, newObject);
+
+        // Add to execution trace
+        (context as any).addExecutionTrace(
+          `Created relationship: ${(subjectInstance as any).objectType} -> ${objectCreation.objectType} via ${feitType.naam}`
+        );
+      }
+    }
+
     // Add to execution trace
     (context as any).addExecutionTrace(`Created ${objectCreation.objectType} with id ${objectId}`);
 
@@ -746,6 +775,34 @@ export class RuleExecutor implements IRuleExecutor {
       objectId,
       attributes
     };
+  }
+
+  /**
+   * Find a FeitType that defines the given role name.
+   * Phase 3: Used to create relationships when executing ObjectCreation.
+   */
+  private findFeitTypeForRole(roleName: string, context: RuntimeContext): FeitType | null {
+    const ctx = context as Context;
+    const feittypen = ctx.getAllFeittypen ? ctx.getAllFeittypen() : [];
+
+    const roleNameClean = this.stripArticles(roleName).toLowerCase();
+
+    for (const feittype of feittypen) {
+      for (const rol of feittype.rollen || []) {
+        const rolNaamClean = this.stripArticles(rol.naam || '').toLowerCase();
+        const rolMeervoudClean = rol.meervoud ? this.stripArticles(rol.meervoud).toLowerCase() : '';
+
+        // Check for matches (exact or partial)
+        if (roleNameClean === rolNaamClean ||
+            roleNameClean === rolMeervoudClean ||
+            rolNaamClean.includes(roleNameClean) ||
+            roleNameClean.includes(rolNaamClean)) {
+          return feittype;
+        }
+      }
+    }
+
+    return null;
   }
 
   private executeMultipleResults(multipleResults: MultipleResults, context: RuntimeContext): RuleExecutionResult {

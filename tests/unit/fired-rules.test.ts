@@ -88,20 +88,28 @@ geldig altijd
     });
   });
 
-  // SKIPPED: Uses old ObjectCreation syntax - will be updated in Phase 3
-  describe.skip('ObjectCreation rules (PENDING: Phase 3 engine update)', () => {
+  // Phase 3: Updated to use spec-compliant ObjectCreation syntax
+  describe('ObjectCreation rules (Phase 3: iterate-then-condition)', () => {
+    // Using spec-compliant syntax: "Een X heeft een/de/het Y"
+    // FeitType defines the relationship between Persoon and Rapport
+    // NOTE: Using (mv:) syntax to work around FeitType parsing bug with greedy rolObjectType
     const objectCreationSource = `
-Objecttype de Persoon (bezield)
+Objecttype de Persoon (mv: personen) (bezield)
     de leeftijd Numeriek;
 
-Objecttype het Rapport
+Objecttype het Rapport (mv: rapporten)
     de status Tekst;
+
+Feittype rapport van persoon
+    de eigenaar Persoon
+    het rapport (mv: rapporten) Rapport
+één eigenaar heeft meerdere rapporten
 
 Regel MaakRapport
 geldig altijd
-    Er wordt een nieuw Rapport aangemaakt
+    Een Persoon heeft het rapport
     met status gelijk aan "volwassen"
-    indien de leeftijd van een Persoon groter is dan 18.
+    indien zijn leeftijd groter is dan 18.
 `;
 
     test('fires when objects are created', () => {

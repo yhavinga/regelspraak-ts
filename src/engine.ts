@@ -895,142 +895,6 @@ export class Engine implements IEngine {
   }
 
   /**
-   * Deduce the source object type for an ObjectCreation rule by scanning
-   * its expressions for capitalized object type references (e.g., "de Vlucht").
-   * This mirrors Python's _deduce_rule_target_type behavior.
-   *
-   * @deprecated Use deduceRuleTargetType() instead. This method is kept for backward compatibility.
-   */
-  private deduceObjectCreationSourceType(rule: any, context: RuntimeContext): string | undefined {
-    // Check both 'result' (parsed) and 'resultaat' (legacy) field names
-    const objectCreation = rule.result || rule.resultaat;
-    if (!objectCreation || objectCreation.type !== 'ObjectCreation') {
-      return undefined;
-    }
-
-    // For ObjectCreation WITHOUT conditions, use FeitType-based deduction
-    // (mirrors Python engine.py:529-557)
-    // Pattern: "Een X heeft het Y" - we need to iterate over X
-    if (!rule.condition && !rule.voorwaarde) {
-      const objectType = objectCreation.objectType;
-      const objectTypeLower = this.stripArticles(objectType).toLowerCase();
-      // Also normalize by removing spaces for comparison (parser may have concatenated words)
-      const objectTypeNormalized = objectTypeLower.replace(/\s+/g, '');
-
-      const feittypen = (context as any).getAllFeittypen?.() || [];
-
-      // First pass: exact matches (prefer these to avoid false positives)
-      for (const feittype of feittypen) {
-        for (const role of feittype.rollen || []) {
-          const roleNameLower = this.stripArticles(role.naam).toLowerCase();
-          const roleNameNormalized = roleNameLower.replace(/\s+/g, '');
-          const roleObjectTypeLower = role.objectType?.toLowerCase() || '';
-          const roleObjectTypeNormalized = roleObjectTypeLower.replace(/\s+/g, '');
-
-          // Exact match on role name or role objectType (with space normalization)
-          if (roleNameNormalized === objectTypeNormalized || roleObjectTypeNormalized === objectTypeNormalized) {
-            // Found matching FeitType - return the OTHER role's objectType
-            for (const otherRole of feittype.rollen || []) {
-              if (otherRole.naam !== role.naam) {
-                return otherRole.objectType;
-              }
-            }
-          }
-        }
-      }
-
-      // Second pass: substring containment (for compound names)
-      for (const feittype of feittypen) {
-        for (const role of feittype.rollen || []) {
-          const roleNameLower = this.stripArticles(role.naam).toLowerCase();
-          const roleNameNormalized = roleNameLower.replace(/\s+/g, '');
-          const roleObjectTypeLower = role.objectType?.toLowerCase() || '';
-          const roleObjectTypeNormalized = roleObjectTypeLower.replace(/\s+/g, '');
-
-          if (roleNameNormalized.includes(objectTypeNormalized) || objectTypeNormalized.includes(roleNameNormalized) ||
-            roleObjectTypeNormalized.includes(objectTypeNormalized) || objectTypeNormalized.includes(roleObjectTypeNormalized)) {
-            for (const otherRole of feittype.rollen || []) {
-              if (otherRole.naam !== role.naam) {
-                return otherRole.objectType;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // Fall back to expression scanning for VariableReference or AttributeReference
-    // with capitalized names that match object types
-    const candidates = new Set<string>();
-
-    const extractTypeReferences = (expr: any): void => {
-      if (!expr) return;
-
-      // Check VariableReference
-      if (expr.type === 'VariableReference') {
-        const name = expr.variableName;
-        // Capitalized names like "Vlucht" or "Natuurlijk persoon" are potential object types
-        if (name && /^[A-Z]/.test(name)) {
-          candidates.add(name);
-        }
-      }
-
-      // Check AttributeReference paths
-      if (expr.type === 'AttributeReference' && expr.path) {
-        for (const segment of expr.path) {
-          if (typeof segment === 'string' && /^[A-Z]/.test(segment)) {
-            candidates.add(segment);
-          }
-        }
-      }
-
-      // Recurse into sub-expressions
-      if (expr.left) extractTypeReferences(expr.left);
-      if (expr.right) extractTypeReferences(expr.right);
-      if (expr.operand) extractTypeReferences(expr.operand);
-      if (expr.arguments) {
-        for (const arg of expr.arguments) {
-          extractTypeReferences(arg);
-        }
-      }
-      if (expr.expression) extractTypeReferences(expr.expression);
-      if (expr.collection) extractTypeReferences(expr.collection);
-    };
-
-    // Scan all attribute initializations
-    for (const init of objectCreation.attributeInits || []) {
-      extractTypeReferences(init.value);
-    }
-
-    // Also check the condition's expression if present
-    if (rule.condition?.expression) {
-      extractTypeReferences(rule.condition.expression);
-    }
-
-    // Find which candidate maps to an actual object type with instances
-    for (const candidate of candidates) {
-      const instances = (context as any).getObjectsByType(candidate);
-      if (instances && instances.length > 0) {
-        return candidate;
-      }
-
-      // Try with common variations (add space before capitals)
-      const variations = [
-        candidate.replace(/([a-z])([A-Z])/g, '$1 $2'),
-        candidate.replace(/lijk(?=[A-Z])/g, 'lijk ')
-      ];
-      for (const variant of variations) {
-        const varInstances = (context as any).getObjectsByType(variant);
-        if (varInstances && varInstances.length > 0) {
-          return variant;
-        }
-      }
-    }
-
-    return undefined;
-  }
-
-  /**
    * Strip Dutch articles from the beginning of a string
    */
   private stripArticles(text: string): string {
@@ -1328,17 +1192,79 @@ export class Engine implements IEngine {
 
   /**
    * Deduce type for ObjectCreation rules.
-   * Ports Python engine.py lines 523-560.
+   * Phase 3: Uses the required `subject` field from the AST for direct type resolution.
    */
-  private deduceTypeForObjectCreation(resultaat: any, rule: any, context: RuntimeContext): string | null {
-    // For ObjectCreation with condition, deduce from condition
-    const voorwaarde = rule.voorwaarde || rule.condition;
-    if (voorwaarde) {
-      return this.deduceTypeFromCondition(voorwaarde, context);
+  private deduceTypeForObjectCreation(resultaat: any, _rule: any, context: RuntimeContext): string | null {
+    // Subject is REQUIRED in ObjectCreation AST after Phase 2
+    if (!resultaat.subject) {
+      return null;
+    }
+    return this.resolveSubjectType(resultaat.subject, context);
+  }
+
+  /**
+   * Resolve the object type from a subject expression.
+   * Phase 3: Handles VariableReference and AttributeReference subjects.
+   */
+  private resolveSubjectType(subject: any, context: RuntimeContext): string | null {
+    const ctx = context as any;
+
+    if (subject.type === 'VariableReference') {
+      // Subject is a direct type reference like "Vlucht" or "Natuurlijk persoon"
+      const typeName = subject.variableName;
+
+      // Check if this matches a known object type
+      if (ctx.domainModel?.objectTypes) {
+        for (const objType of ctx.domainModel.objectTypes) {
+          // Exact match
+          if (objType.name === typeName) {
+            return objType.name;
+          }
+          // Case-insensitive match
+          if (objType.name.toLowerCase() === typeName.toLowerCase()) {
+            return objType.name;
+          }
+          // Plural match
+          if (objType.meervoud && objType.meervoud.toLowerCase() === typeName.toLowerCase()) {
+            return objType.name;
+          }
+        }
+      }
+
+      // Check if it's a FeitType role alias
+      const roleType = this.roleAliasToObjectType(typeName, context);
+      if (roleType) {
+        return roleType;
+      }
+
+      // Return as-is if no match found (may be an implicit type)
+      return typeName;
     }
 
-    // For ObjectCreation without condition, use FeitType relationships
-    return this.deduceObjectCreationSourceType(rule, context) || null;
+    if (subject.type === 'AttributeReference') {
+      // Subject is a possessive chain like "passagier van de vlucht"
+      // The first element is typically the type we iterate over
+      if (subject.path && subject.path.length > 0) {
+        const firstElement = this.stripArticles(subject.path[0]);
+
+        // Check if this matches a known object type
+        if (ctx.domainModel?.objectTypes) {
+          for (const objType of ctx.domainModel.objectTypes) {
+            if (objType.name.toLowerCase() === firstElement.toLowerCase()) {
+              return objType.name;
+            }
+          }
+        }
+
+        // Check if it's a FeitType role alias
+        const roleType = this.roleAliasToObjectType(firstElement, context);
+        if (roleType) {
+          return roleType;
+        }
+      }
+    }
+
+    return null;
   }
 
   /**
