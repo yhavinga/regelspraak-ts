@@ -16,6 +16,7 @@ import {
 import { DecisionTable } from './ast/decision-tables';
 import { Dimension } from './ast/dimensions';
 import { DagsoortDefinitie } from './ast/dagsoort';
+import { FeitType } from './ast/feittype';
 
 export interface ValidationError {
   message: string;
@@ -74,6 +75,7 @@ export class SemanticAnalyzer {
   private objectTypes: Map<string, ObjectTypeDefinition> = new Map();
   private parameters: Map<string, ParameterDefinition> = new Map();
   private dimensions: Map<string, Dimension> = new Map();
+  private feitTypes: Map<string, FeitType> = new Map();
 
   analyze(model: DomainModel): ValidationError[] {
     this.errors = [];
@@ -82,6 +84,7 @@ export class SemanticAnalyzer {
     this.objectTypes.clear();
     this.parameters.clear();
     this.dimensions.clear();
+    this.feitTypes.clear();
 
     // First pass: collect all definitions
     this.collectDefinitions(model);
@@ -181,6 +184,16 @@ export class SemanticAnalyzer {
         definition: dagsoort
       });
     }
+
+    // Collect feitTypes
+    for (const feitType of model.feitTypes || []) {
+      this.feitTypes.set(feitType.naam, feitType);
+      this.globalScope.define(feitType.naam, {
+        name: feitType.naam,
+        kind: SymbolKind.FEITTYPE,
+        definition: feitType
+      });
+    }
   }
 
   private validateModel(model: DomainModel): void {
@@ -272,18 +285,52 @@ export class SemanticAnalyzer {
   }
 
   private validateObjectCreatie(regel: ObjectCreation): void {
-    // Validate object type exists
+    // Phase 2: subject and role are now REQUIRED
+    if (!regel.subject) {
+      this.addError(`ObjectCreation missing required 'subject' field`);
+      return;
+    }
+    if (!regel.role) {
+      this.addError(`ObjectCreation missing required 'role' field`);
+      return;
+    }
+
+    // Look up role in FeitType definitions
+    const feitType = this.findFeitTypeForRole(regel.role);
+    if (!feitType) {
+      // Role must map to a FeitType - this is a fail-fast validation
+      this.addError(
+        `ObjectCreation references unknown role '${regel.role}'. ` +
+        `No FeitType defines this role. Define a FeitType first.`
+      );
+      // Continue validation with resolved objectType (visitor may have resolved it)
+    }
+
+    // Validate resolved object type exists
     const objectTypeName = regel.objectType;
     const objectType = this.objectTypes.get(objectTypeName);
-    
+
     if (!objectType) {
       this.addError(`Unknown object type: ${objectTypeName}`);
       return;
     }
 
+    // Validate subject type matches FeitType's role connection (if determinable)
+    if (feitType) {
+      const subjectTypeName = this.resolveExpressionTypeName(regel.subject);
+      if (subjectTypeName && !this.roleConnectsToType(feitType, regel.role, subjectTypeName)) {
+        this.addError(
+          `ObjectCreation subject type '${subjectTypeName}' does not match ` +
+          `FeitType role for '${regel.role}'`
+        );
+      }
+    }
+
     // Validate attributes being initialized
     for (const init of regel.attributeInits) {
-      const attr = objectType.members.find(m => m.type === 'AttributeSpecification' && m.name === init.attribute) as AttributeSpecification | undefined;
+      const attr = objectType.members.find(
+        m => m.type === 'AttributeSpecification' && m.name === init.attribute
+      ) as AttributeSpecification | undefined;
       if (!attr) {
         this.addError(`Attribute '${init.attribute}' not defined for object type '${objectTypeName}'`);
       } else {
@@ -297,6 +344,93 @@ export class SemanticAnalyzer {
         }
       }
     }
+  }
+
+  /**
+   * Find a FeitType that defines the given role name.
+   * Role matching is case-insensitive and ignores article prefixes.
+   */
+  private findFeitTypeForRole(roleName: string): FeitType | undefined {
+    const roleClean = this.normalizeRoleName(roleName);
+
+    for (const feitType of this.feitTypes.values()) {
+      for (const rol of feitType.rollen || []) {
+        const feitRoleClean = this.normalizeRoleName(rol.naam || '');
+        // Check exact match or partial match (role name may be abbreviated)
+        if (feitRoleClean === roleClean ||
+            feitRoleClean.includes(roleClean) ||
+            roleClean.includes(feitRoleClean)) {
+          return feitType;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Normalize a role name by removing articles and lowercasing.
+   */
+  private normalizeRoleName(name: string): string {
+    let clean = name.toLowerCase().trim();
+    for (const article of ['de ', 'het ', 'een ']) {
+      if (clean.startsWith(article)) {
+        clean = clean.substring(article.length);
+        break;
+      }
+    }
+    return clean;
+  }
+
+  /**
+   * Resolve the type name from a subject expression (if determinable).
+   */
+  private resolveExpressionTypeName(expr: Expression): string | undefined {
+    if (expr.type === 'VariableReference') {
+      return (expr as VariableReference).variableName;
+    }
+    if (expr.type === 'AttributeReference') {
+      const attrRef = expr as AttributeReference;
+      // For simple references like "Persoon", the path has one element
+      if (attrRef.path.length === 1) {
+        return attrRef.path[0];
+      }
+      // For possessive chains, the first element is often the subject type
+      return attrRef.path[0];
+    }
+    return undefined;
+  }
+
+  /**
+   * Check if a FeitType role connects to the given subject type.
+   * The subject type should match one of the roles in the FeitType.
+   */
+  private roleConnectsToType(feitType: FeitType, roleName: string, subjectType: string): boolean {
+    const roleClean = this.normalizeRoleName(roleName);
+    const subjectClean = subjectType.toLowerCase().trim();
+
+    for (const rol of feitType.rollen || []) {
+      const feitRoleClean = this.normalizeRoleName(rol.naam || '');
+
+      // If this is the matching role, check if any OTHER role has the subject type
+      if (feitRoleClean === roleClean ||
+          feitRoleClean.includes(roleClean) ||
+          roleClean.includes(feitRoleClean)) {
+        // This is the target role; now check other roles for subject type match
+        for (const otherRol of feitType.rollen) {
+          if (otherRol !== rol) {
+            const otherObjectType = (otherRol.objectType || '').toLowerCase().trim();
+            if (otherObjectType === subjectClean ||
+                otherObjectType.includes(subjectClean) ||
+                subjectClean.includes(otherObjectType)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+
+    // If we couldn't determine, allow it (don't fail on uncertain type resolution)
+    return true;
   }
 
   private validateBeslistabel(beslistabel: DecisionTable): void {

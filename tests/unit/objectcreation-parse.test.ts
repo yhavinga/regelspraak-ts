@@ -1,5 +1,5 @@
 /**
- * ObjectCreation parsing tests (Phase 1)
+ * ObjectCreation parsing tests (Phase 1+2)
  *
  * These tests verify that the grammar accepts spec-compliant ObjectCreation syntax
  * and rejects the old non-compliant forms.
@@ -10,12 +10,18 @@
  *
  * Example: "Een vlucht heeft het vastgestelde contingent treinmiles."
  *
+ * Phase 2 additions:
+ *   - subject and role are now REQUIRED fields in ObjectCreation AST
+ *   - Semantic analyzer validates role exists in FeitType (when FeitType defined)
+ *
  * NOTE: Some tests use "meerdere" cardinality instead of "één...heeft één..." due to
  * a pre-existing FeitType parsing bug where rolObjectType greedily consumes tokens.
  * This is tracked separately from the ObjectCreation grammar change.
  */
 
 import { AntlrParser } from '../../src';
+import { SemanticAnalyzer } from '../../src/semantic-analyzer';
+import { ObjectCreation } from '../../src/ast/rules';
 
 describe('ObjectCreation parsing (Phase 1)', () => {
   let parser: AntlrParser;
@@ -206,6 +212,104 @@ Regel simpele objectcreatie
       expect(() => parser.parseModel(source)).not.toThrow();
       const model = parser.parseModel(source);
       expect(model.regels[0].result.type).toBe('ObjectCreation');
+    });
+  });
+
+  describe('Phase 2: subject and role in AST', () => {
+    it('includes subject and role in ObjectCreation AST', () => {
+      const source = `
+Objecttype de Vlucht (mv: vluchten)
+    de naam Tekst;
+
+Objecttype het Contingent (mv: contingenten)
+    het totaal Numeriek;
+
+Regel maak contingent
+    geldig altijd
+        Een vlucht heeft het contingent.
+`;
+      const model = parser.parseModel(source);
+      const creation = model.regels[0].result as ObjectCreation;
+
+      expect(creation.type).toBe('ObjectCreation');
+      expect(creation.subject).toBeDefined();
+      expect(creation.role).toBeDefined();
+      expect(creation.role).toBe('contingent');
+    });
+
+    it('extracts subject path from possessive chain', () => {
+      const source = `
+Regel boardingpass voor passagier
+    geldig altijd
+        Een passagier van de vlucht heeft een boardingpass.
+`;
+      const model = parser.parseModel(source);
+      const creation = model.regels[0].result as ObjectCreation;
+
+      expect(creation.subject).toBeDefined();
+      // Subject should be an AttributeReference with the possessive chain
+      expect(creation.subject.type).toBe('AttributeReference');
+      expect(creation.role).toBe('boardingpass');
+    });
+
+    it('includes role with attribute initializations', () => {
+      const source = `
+Regel badge met type
+    geldig altijd
+        Een persoon heeft een badge
+        met type gelijk aan "senior".
+`;
+      const model = parser.parseModel(source);
+      const creation = model.regels[0].result as ObjectCreation;
+
+      expect(creation.role).toBe('badge');
+      expect(creation.attributeInits).toHaveLength(1);
+    });
+  });
+
+  describe('Phase 2: Semantic analyzer FeitType validation', () => {
+    it('warns when role not found in any FeitType', () => {
+      const source = `
+Objecttype de Vlucht (mv: vluchten)
+    de naam Tekst;
+
+Regel MaakOnbekendeRol
+    geldig altijd
+        Een vlucht heeft het onbekendeRol.
+`;
+      const model = parser.parseModel(source);
+      const analyzer = new SemanticAnalyzer();
+      const errors = analyzer.analyze(model);
+
+      // Should have an error about unknown role
+      const roleError = errors.find(e => e.message.includes('unknown role'));
+      expect(roleError).toBeDefined();
+    });
+
+    it('accepts role when FeitType is defined', () => {
+      const source = `
+Objecttype de Vlucht (mv: vluchten)
+    de naam Tekst;
+
+Objecttype het Contingent (mv: contingenten)
+    het totaal Numeriek;
+
+Feittype reis met contingent
+    de reis Vlucht
+    het contingent Contingent
+één reis heeft meerdere contingenten
+
+Regel maak contingent
+    geldig altijd
+        Een vlucht heeft het contingent.
+`;
+      const model = parser.parseModel(source);
+      const analyzer = new SemanticAnalyzer();
+      const errors = analyzer.analyze(model);
+
+      // Should NOT have an error about unknown role
+      const roleError = errors.find(e => e.message.includes('unknown role'));
+      expect(roleError).toBeUndefined();
     });
   });
 

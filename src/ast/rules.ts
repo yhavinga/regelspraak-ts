@@ -45,7 +45,9 @@ export interface Gelijkstelling {
 
 export interface ObjectCreation {
   type: 'ObjectCreation';
-  objectType: string;
+  subject: Expression;          // REQUIRED: The onderwerpketen (e.g., "Persoon")
+  role: string;                 // REQUIRED: The rolnaam (e.g., "badge")
+  objectType: string;           // Resolved from FeitType via role lookup
   attributeInits: Array<{
     attribute: string;
     value: Expression;

@@ -3881,10 +3881,11 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       }
     }
 
-    // NOTE: subject and role are extracted but not yet stored in AST (Phase 2 will update the interface)
-    // For Phase 1, we maintain backward compatibility with the existing ObjectCreation interface
+    // Phase 2: subject and role are now REQUIRED fields in ObjectCreation
     const node: ObjectCreation = {
       type: 'ObjectCreation',
+      subject,
+      role,
       objectType,
       attributeInits
     };
@@ -6407,9 +6408,20 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       throw new Error('Failed to parse value expression in relationship creation');
     }
 
+    // Build subject from onderwerpPath
+    const subject: AttributeReference = {
+      type: 'AttributeReference',
+      path: onderwerpPath.length > 0 ? onderwerpPath : ['unknown']
+    };
+
+    // Role is the relationship target
+    const role = this.extractRoleName(relTarget);
+
     // Create an ObjectCreation node with the attribute initialization
     const node: ObjectCreation = {
       type: 'ObjectCreation',
+      subject,
+      role,
       objectType: relTarget, // The relationship target becomes the object type
       attributeInits: [{
         attribute: attrName,
