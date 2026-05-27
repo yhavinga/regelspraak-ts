@@ -1,0 +1,48 @@
+# ObjectCreation Acceptance Corpus
+# Source: RegelSpraak-specificatie v2.1.0.md §9.3 and TOKA Casus
+#
+# Syntax per spec §13.4.6 (lines 3677-3686):
+#   <objectcreatie> ::= "Een" <onderwerpketen> "heeft een" <rolnaam>
+#                       [ "met" <waardetoekenning> [("," <waardetoekenning>)* "en" <waardetoekenning>] ]
+
+# Example 1: From spec §9.3 - Basic ObjectCreation with attribute initialization
+# FeitType: reis met contingent treinmiles
+#   de reis met treinmiles  Vlucht
+#   het vastgestelde contingent treinmiles  Contingent treinmiles
+INPUT: Een vlucht heeft het vastgestelde contingent treinmiles.
+EXPECT: subject=vlucht, role=vastgestelde contingent treinmiles
+
+# Example 2: From spec §9.3 - ObjectCreation with attribute value
+# Same FeitType as above
+INPUT: Een vlucht heeft het vastgestelde contingent treinmiles met aantal treinmiles op basis van aantal passagiers gelijk aan 1000.
+EXPECT: subject=vlucht, role=vastgestelde contingent treinmiles, attrs=[aantal treinmiles op basis van aantal passagiers=1000]
+
+# Example 3: From TOKA Casus §3.9 - Full rule context
+# This is the complete rule from the TOKA case study
+INPUT: Een vlucht heeft het vastgestelde contingent treinmiles met aantal treinmiles op basis van aantal passagiers gelijk aan het aantal passagiers van de Vlucht maal het aantal treinmiles per passagier voor contingent.
+EXPECT: subject=vlucht, role=vastgestelde contingent treinmiles, attrs=[aantal treinmiles op basis van aantal passagiers=<expression>]
+
+# Example 4: Possessive chain subject (synthetic, based on spec pattern)
+# Subject can be an onderwerpketen with possessive chains
+INPUT: Een passagier van de vlucht heeft een boarding pass.
+EXPECT: subject=passagier van de vlucht (chain), role=boarding pass
+
+# Example 5: Multiple attribute initializations (synthetic, based on spec EBNF)
+# Spec allows: "met" attr1 "gelijk aan" expr1 "," attr2 "gelijk aan" expr2 "en" attr3 "gelijk aan" expr3
+INPUT: Een persoon heeft een badge met type gelijk aan "senior" en kleur gelijk aan "goud".
+EXPECT: subject=persoon, role=badge, attrs=[type="senior", kleur="goud"]
+
+# Example 6: Article variations ("een" vs "het")
+# The role may have different articles based on the FeitType definition
+INPUT: Een reis heeft een ticket met prijs gelijk aan 100.
+EXPECT: subject=reis, role=ticket, attrs=[prijs=100]
+
+# OLD FORM - These should be REJECTED as parse errors:
+
+# Old form 1: "Er wordt een nieuw X aangemaakt"
+OLD_FORM: Er wordt een nieuw Persoon aangemaakt.
+EXPECT_ERROR: parse error
+
+# Old form 2: "Creëer een nieuwe X"
+OLD_FORM: Creëer een nieuwe Badge.
+EXPECT_ERROR: parse error

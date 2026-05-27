@@ -74,9 +74,9 @@ import { DagsoortdefinitieResultaatContext } from "./RegelSpraakParser";
 import { GelijkstellingResultaatContext } from "./RegelSpraakParser";
 import { ConsistencyCheckResultaatContext } from "./RegelSpraakParser";
 import { FeitCreatieResultaatContext } from "./RegelSpraakParser";
-import { KenmerkFeitResultaatContext } from "./RegelSpraakParser";
-import { RelationshipWithAttributeResultaatContext } from "./RegelSpraakParser";
 import { ObjectCreatieResultaatContext } from "./RegelSpraakParser";
+import { RelationshipWithAttributeResultaatContext } from "./RegelSpraakParser";
+import { KenmerkFeitResultaatContext } from "./RegelSpraakParser";
 import { VerdelingContext } from "./RegelSpraakParser";
 import { ConsistencyOperatorContext } from "./RegelSpraakParser";
 import { FeitCreatiePatternContext } from "./RegelSpraakParser";
@@ -703,12 +703,12 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitFeitCreatieResultaat?: (ctx: FeitCreatieResultaatContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `KenmerkFeitResultaat`
+	 * Visit a parse tree produced by the `ObjectCreatieResultaat`
 	 * labeled alternative in `RegelSpraakParser.resultaatDeel`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitKenmerkFeitResultaat?: (ctx: KenmerkFeitResultaatContext) => Result;
+	visitObjectCreatieResultaat?: (ctx: ObjectCreatieResultaatContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `RelationshipWithAttributeResultaat`
 	 * labeled alternative in `RegelSpraakParser.resultaatDeel`.
@@ -717,12 +717,12 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitRelationshipWithAttributeResultaat?: (ctx: RelationshipWithAttributeResultaatContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `ObjectCreatieResultaat`
+	 * Visit a parse tree produced by the `KenmerkFeitResultaat`
 	 * labeled alternative in `RegelSpraakParser.resultaatDeel`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitObjectCreatieResultaat?: (ctx: ObjectCreatieResultaatContext) => Result;
+	visitKenmerkFeitResultaat?: (ctx: KenmerkFeitResultaatContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `Verdeling`
 	 * labeled alternative in `RegelSpraakParser.resultaatDeel`.

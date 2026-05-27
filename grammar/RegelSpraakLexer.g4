@@ -53,12 +53,9 @@ GROTER_IS_DAN: 'groter is dan';
 KLEINER_IS_DAN: 'kleiner is dan';
 WORDT_VOLDAAN: 'wordt voldaan';
 
-// Object creation tokens
-ER_WORDT_EEN_NIEUW: [Ee]'r wordt een nieuw';
-WORDT_EEN_NIEUW: 'wordt een nieuw';
-AANGEMAAKT: 'aangemaakt';
-CREEER: 'Creëer';
-NIEUWE: 'nieuwe';
+// Object creation tokens (old syntax removed - spec uses "Een X heeft een Y" form)
+// ER_WORDT_EEN_NIEUW, WORDT_EEN_NIEUW, AANGEMAAKT, CREEER removed per spec §9.3
+NIEUWE: 'nieuwe';  // Still used in naamPhrase for rule names
 ER_AAN: [Ee]'r aan';
 
 // --- Comparison Phrase Tokens ---

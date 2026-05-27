@@ -3810,39 +3810,41 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     // Get the objectCreatie context
     const objectCreatieCtx = ctx.objectCreatie();
 
-    // Get the object type name
-    const objectTypeCtx = objectCreatieCtx.objectType ? objectCreatieCtx.objectType() : objectCreatieCtx._objectType;
-    if (!objectTypeCtx) {
-      throw new Error('Expected object type in object creation');
-    }
-    let objectType = this.extractObjectTypeName(objectTypeCtx.getText());
+    // NEW GRAMMAR (spec §9.3): "Een" <onderwerpketen> "heeft" ("een"|"de"|"het") <rolnaam>
+    // subject = onderwerpReferentie (the onderwerpketen including its article)
+    // role = naamwoord (the role name)
 
-    // Resolve role name to actual object type if needed
-    // e.g., "vastgestelde contingent treinmiles" -> "Contingent treinmiles"
+    // Extract subject (the onderwerpketen) - use getter method or _subject property
+    const subjectCtx = objectCreatieCtx.onderwerpReferentie?.() ?? objectCreatieCtx._subject;
+    if (!subjectCtx) {
+      throw new Error('Expected subject (onderwerpketen) in object creation');
+    }
+    const subject = this.visit(subjectCtx);
+
+    // Extract role name - use getter method or _role property
+    const roleCtx = objectCreatieCtx.naamwoord?.() ?? objectCreatieCtx._role;
+    if (!roleCtx) {
+      throw new Error('Expected role (rolnaam) in object creation');
+    }
+    const role = this.extractRoleName(roleCtx.getText());
+
+    // Resolve role name to actual object type via FeitType lookup
+    // The semantic analyzer (Phase 2) will do proper validation; this is a best-effort resolution
+    let objectType = role; // Default: use role name as object type
     for (const [feitTypeName, feitType] of this.feitTypes) {
       for (const rol of feitType.rollen || []) {
         // Clean role name by removing articles
-        let roleNameClean = (rol.naam || '').toLowerCase();
-        for (const article of ['de', 'het', 'een']) {
+        let roleNameClean = (rol.naam || '').toLowerCase().trim();
+        for (const article of ['de ', 'het ', 'een ']) {
           if (roleNameClean.startsWith(article)) {
             roleNameClean = roleNameClean.substring(article.length);
             break;
           }
         }
 
-        // Clean object type by removing articles
-        let objectTypeClean = objectType.toLowerCase();
-        for (const article of ['de', 'het', 'een']) {
-          if (objectTypeClean.startsWith(article)) {
-            objectTypeClean = objectTypeClean.substring(article.length);
-            break;
-          }
-        }
-
-        // Check if object type matches or contains the role name
-        if (roleNameClean === objectTypeClean ||
-          roleNameClean.includes(objectTypeClean) ||
-          objectTypeClean.includes(roleNameClean)) {
+        // Check if role matches
+        const roleClean = role.toLowerCase().trim();
+        if (roleNameClean === roleClean || roleNameClean.includes(roleClean) || roleClean.includes(roleNameClean)) {
           // Found matching role - use the actual object type
           objectType = rol.objectType || rol.object_type || objectType;
           break;
@@ -3851,7 +3853,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     }
 
     // Parse attribute initializations if present
-    const attributeInits = [];
+    const attributeInits: Array<{attribute: string; value: any}> = [];
     const objectAttrInitCtx = objectCreatieCtx.objectAttributeInit();
 
     if (objectAttrInitCtx) {
@@ -3879,13 +3881,23 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       }
     }
 
-    const node = {
+    // NOTE: subject and role are extracted but not yet stored in AST (Phase 2 will update the interface)
+    // For Phase 1, we maintain backward compatibility with the existing ObjectCreation interface
+    const node: ObjectCreation = {
       type: 'ObjectCreation',
       objectType,
       attributeInits
     };
     this.setLocation(node, ctx);
     return node;
+  }
+
+  extractRoleName(text: string): string {
+    // Clean up role name, removing articles if present at the start
+    const trimmed = text.trim();
+    const words = trimmed.split(/\s+/);
+    const cleaned = words.filter((w, i) => i > 0 || !['de', 'het', 'een'].includes(w.toLowerCase()));
+    return cleaned.join(' ');
   }
 
   extractObjectTypeName(text: string): string {

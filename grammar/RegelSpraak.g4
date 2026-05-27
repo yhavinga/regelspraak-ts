@@ -423,14 +423,17 @@ versieGeldigheid
     ;
 
 // §13.4.3 Resultaat Deel
+// NOTE: Order matters! objectCreatie has mandatory article after HEEFT, so it must come BEFORE
+// KenmerkFeitResultaat which has optional article in kenmerkNaam. This ensures "Een X heeft het Y"
+// matches ObjectCreation rather than Kenmerktoekenning with kenmerk "het Y".
 resultaatDeel
     : EEN DAG IS EEN naamwoord                                                        # DagsoortdefinitieResultaat
     | attribuutReferentie ( WORDT_BEREKEND_ALS expressie | WORDT_GESTELD_OP expressie | WORDT_GEINITIALISEERD_OP expressie ) conditieBijExpressie? # GelijkstellingResultaat
     | attribuutReferentie MOET consistencyOperator expressie                          # ConsistencyCheckResultaat
     | feitCreatiePattern # FeitCreatieResultaat
-    | onderwerpReferentie (IS | HEEFT) kenmerkNaam conditieBijExpressie?              # KenmerkFeitResultaat
-    | onderwerpReferentie HEEFT (DE | HET) naamwoord MET attribuutMetLidwoord (GELIJK_AAN | IS_GELIJK_AAN | GELIJK_IS_AAN) expressie # RelationshipWithAttributeResultaat
     | objectCreatie                                                                    # ObjectCreatieResultaat
+    | onderwerpReferentie HEEFT (DE | HET) naamwoord MET attribuutMetLidwoord (GELIJK_AAN | IS_GELIJK_AAN | GELIJK_IS_AAN) expressie # RelationshipWithAttributeResultaat
+    | onderwerpReferentie (IS | HEEFT) kenmerkNaam conditieBijExpressie?              # KenmerkFeitResultaat
     | verdelingResultaat                                                               # Verdeling
     ;
 
@@ -480,10 +483,13 @@ voorzetselNietVan
     : IN | VOOR | OVER | OP | BIJ | UIT | TOT | EN | MET
     ;
 
-// Object creation rule based on 13.4.6 in reference
+// Object creation rule based on spec §13.4.6 (§9.3 in prose)
+// Syntax: "Een" <onderwerpketen> "heeft" ("een"|"de"|"het") <rolnaam> ["met" <attribuut> "gelijk aan" <expressie> ...]
+// Example: "Een vlucht heeft het vastgestelde contingent treinmiles met aantal gelijk aan 1000."
+// The subject (onderwerpketen) already includes its article via onderwerpReferentie.
+// The role article varies based on the FeitType definition (een/de/het).
 objectCreatie
-    : ER_WORDT_EEN_NIEUW objectType=naamwoord AANGEMAAKT objectAttributeInit? DOT?
-    | CREEER EEN NIEUWE objectType=naamwoord objectAttributeInit? DOT?
+    : subject=onderwerpReferentie HEEFT roleArticle=(EEN|DE|HET) role=naamwoord objectAttributeInit? DOT?
     ;
 
 // Attribute initialization during object creation
