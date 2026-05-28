@@ -3826,7 +3826,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     if (!roleCtx) {
       throw new Error('Expected role (rolnaam) in object creation');
     }
-    const role = this.extractRoleName(roleCtx.getText());
+    // Use extractTextWithSpaces to preserve multi-word role names like "vastgestelde contingent treinmiles"
+    const role = this.extractRoleName(this.extractTextWithSpaces(roleCtx));
 
     // Resolve role name to actual object type via FeitType lookup
     // The semantic analyzer (Phase 2) will do proper validation; this is a best-effort resolution
@@ -3862,7 +3863,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       const firstValueCtx = objectAttrInitCtx.waarde ? objectAttrInitCtx.waarde() : objectAttrInitCtx._waarde;
 
       if (firstAttrCtx && firstValueCtx) {
-        const firstAttr = this.extractAttributeName(firstAttrCtx.getText());
+        // Use extractTextWithSpaces to preserve multi-word attribute names
+        const firstAttr = this.extractAttributeName(this.extractTextWithSpaces(firstAttrCtx));
         const firstValue = this.visit(firstValueCtx);
         attributeInits.push({ attribute: firstAttr, value: firstValue });
       }
@@ -3874,7 +3876,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         const valueCtx = vervolg.waarde ? vervolg.waarde() : vervolg._waarde;
 
         if (attrCtx && valueCtx) {
-          const attr = this.extractAttributeName(attrCtx.getText());
+          // Use extractTextWithSpaces to preserve multi-word attribute names
+          const attr = this.extractAttributeName(this.extractTextWithSpaces(attrCtx));
           const value = this.visit(valueCtx);
           attributeInits.push({ attribute: attr, value });
         }
@@ -6383,14 +6386,16 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     }
 
     // Get the relationship target (het/de naamwoord after HEEFT)
+    // Use extractTextWithSpaces to preserve multi-word role names like "vastgestelde contingent treinmiles"
     const naamwoordCtx = ctx.naamwoord ? ctx.naamwoord() : null;
-    const relTarget = naamwoordCtx ? this.extractText(naamwoordCtx) : '';
+    const relTarget = naamwoordCtx ? this.extractTextWithSpaces(naamwoordCtx) : '';
 
     // Get the attribute to set
+    // Use extractTextWithSpaces to preserve multi-word attribute names
     const attrCtx = ctx.attribuutMetLidwoord ? ctx.attribuutMetLidwoord() : null;
     let attrName = '';
     if (attrCtx) {
-      attrName = this.extractText(attrCtx);
+      attrName = this.extractTextWithSpaces(attrCtx);
       // Clean up Dutch articles from the beginning if present
       if (attrName.startsWith('het ')) {
         attrName = attrName.substring(4);
@@ -6414,15 +6419,39 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       path: onderwerpPath.length > 0 ? onderwerpPath : ['unknown']
     };
 
-    // Role is the relationship target
+    // Role is the relationship target - use extractRoleName to clean articles
     const role = this.extractRoleName(relTarget);
+
+    // Resolve role name to actual object type via FeitType lookup
+    // This is best-effort; semantic analyzer will validate fully
+    let objectType = role; // Default: use role name as object type
+    for (const [feitTypeName, feitType] of this.feitTypes) {
+      for (const rol of feitType.rollen || []) {
+        // Clean role name by removing articles
+        let roleNameClean = (rol.naam || '').toLowerCase().trim();
+        for (const article of ['de ', 'het ', 'een ']) {
+          if (roleNameClean.startsWith(article)) {
+            roleNameClean = roleNameClean.substring(article.length);
+            break;
+          }
+        }
+
+        // Check if role matches
+        const roleClean = role.toLowerCase().trim();
+        if (roleNameClean === roleClean || roleNameClean.includes(roleClean) || roleClean.includes(roleNameClean)) {
+          // Found matching role - use the actual object type
+          objectType = rol.objectType || rol.object_type || objectType;
+          break;
+        }
+      }
+    }
 
     // Create an ObjectCreation node with the attribute initialization
     const node: ObjectCreation = {
       type: 'ObjectCreation',
       subject,
       role,
-      objectType: relTarget, // The relationship target becomes the object type
+      objectType, // Resolved from FeitType via role lookup
       attributeInits: [{
         attribute: attrName,
         value: valueExpr
