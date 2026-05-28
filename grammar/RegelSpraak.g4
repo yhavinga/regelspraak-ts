@@ -493,14 +493,14 @@ objectCreatie
     ;
 
 // Attribute initialization during object creation
-// Per specification: "met <attribuut> gelijk aan <expressie>"
+// Per specification §9.3: "met <waardetoekenning> [("," <waardetoekenning>)* "en" <waardetoekenning>]"
 // Use simpleExpressie to avoid EN/OF ambiguity with attribute separators
 objectAttributeInit
-    : MET attribuut=simpleNaamwoord GELIJK_AAN waarde=simpleExpressie attributeInitVervolg*
+    : MET waardetoekenning (COMMA waardetoekenning)* (EN waardetoekenning)?
     ;
 
-attributeInitVervolg
-    : EN attribuut=simpleNaamwoord GELIJK_AAN waarde=simpleExpressie
+waardetoekenning
+    : attribuut=simpleNaamwoord GELIJK_AAN waarde=simpleExpressie
     ;
 
 // Simple naamwoord without prepositions for unambiguous attribute names

@@ -3858,22 +3858,12 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const objectAttrInitCtx = objectCreatieCtx.objectAttributeInit();
 
     if (objectAttrInitCtx) {
-      // Get the first attribute
-      const firstAttrCtx = objectAttrInitCtx.attribuut ? objectAttrInitCtx.attribuut() : objectAttrInitCtx._attribuut;
-      const firstValueCtx = objectAttrInitCtx.waarde ? objectAttrInitCtx.waarde() : objectAttrInitCtx._waarde;
-
-      if (firstAttrCtx && firstValueCtx) {
-        // Use extractTextWithSpaces to preserve multi-word attribute names
-        const firstAttr = this.extractAttributeName(this.extractTextWithSpaces(firstAttrCtx));
-        const firstValue = this.visit(firstValueCtx);
-        attributeInits.push({ attribute: firstAttr, value: firstValue });
-      }
-
-      // Get additional attributes (EN syntax)
-      const vervolgList = objectAttrInitCtx.attributeInitVervolg_list();
-      for (const vervolg of vervolgList) {
-        const attrCtx = vervolg.attribuut ? vervolg.attribuut() : vervolg._attribuut;
-        const valueCtx = vervolg.waarde ? vervolg.waarde() : vervolg._waarde;
+      // Spec §9.3: "met <waardetoekenning> [("," <waardetoekenning>)* "en" <waardetoekenning>]"
+      // All waardetoekenning nodes are in waardetoekenning_list() regardless of comma or en separator
+      const waardetoekenningList = objectAttrInitCtx.waardetoekenning_list();
+      for (const wt of waardetoekenningList) {
+        const attrCtx = wt.attribuut ? wt.attribuut() : wt._attribuut;
+        const valueCtx = wt.waarde ? wt.waarde() : wt._waarde;
 
         if (attrCtx && valueCtx) {
           // Use extractTextWithSpaces to preserve multi-word attribute names

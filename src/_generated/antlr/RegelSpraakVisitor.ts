@@ -87,7 +87,7 @@ import { FeitCreatieWordContext } from "./RegelSpraakParser";
 import { VoorzetselNietVanContext } from "./RegelSpraakParser";
 import { ObjectCreatieContext } from "./RegelSpraakParser";
 import { ObjectAttributeInitContext } from "./RegelSpraakParser";
-import { AttributeInitVervolgContext } from "./RegelSpraakParser";
+import { WaardetoekenningContext } from "./RegelSpraakParser";
 import { SimpleNaamwoordContext } from "./RegelSpraakParser";
 import { ConsistentieregelContext } from "./RegelSpraakParser";
 import { UniekzijnResultaatContext } from "./RegelSpraakParser";
@@ -785,11 +785,11 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitObjectAttributeInit?: (ctx: ObjectAttributeInitContext) => Result;
 	/**
-	 * Visit a parse tree produced by `RegelSpraakParser.attributeInitVervolg`.
+	 * Visit a parse tree produced by `RegelSpraakParser.waardetoekenning`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitAttributeInitVervolg?: (ctx: AttributeInitVervolgContext) => Result;
+	visitWaardetoekenning?: (ctx: WaardetoekenningContext) => Result;
 	/**
 	 * Visit a parse tree produced by `RegelSpraakParser.simpleNaamwoord`.
 	 * @param ctx the parse tree
