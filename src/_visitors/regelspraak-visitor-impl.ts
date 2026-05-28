@@ -3830,28 +3830,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const role = this.extractRoleName(this.extractTextWithSpaces(roleCtx));
 
     // Resolve role name to actual object type via FeitType lookup
-    // The semantic analyzer (Phase 2) will do proper validation; this is a best-effort resolution
-    let objectType = role; // Default: use role name as object type
-    for (const [feitTypeName, feitType] of this.feitTypes) {
-      for (const rol of feitType.rollen || []) {
-        // Clean role name by removing articles
-        let roleNameClean = (rol.naam || '').toLowerCase().trim();
-        for (const article of ['de ', 'het ', 'een ']) {
-          if (roleNameClean.startsWith(article)) {
-            roleNameClean = roleNameClean.substring(article.length);
-            break;
-          }
-        }
-
-        // Check if role matches
-        const roleClean = role.toLowerCase().trim();
-        if (roleNameClean === roleClean || roleNameClean.includes(roleClean) || roleClean.includes(roleNameClean)) {
-          // Found matching role - use the actual object type
-          objectType = rol.objectType || rol.object_type || objectType;
-          break;
-        }
-      }
-    }
+    const objectType = this.resolveObjectTypeFromRole(role);
 
     // Parse attribute initializations if present
     const attributeInits: Array<{attribute: string; value: any}> = [];
@@ -3906,6 +3885,29 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const words = text.split(/\s+/);
     const cleaned = words.filter(w => !['de', 'het', 'een'].includes(w.toLowerCase()));
     return cleaned.join(' ');
+  }
+
+  /**
+   * Look up the object type for a role from FeitTypes.
+   * Uses exact match after normalization (no substring heuristics).
+   *
+   * Previous implementation used substring matching which caused false positives:
+   * "onderdeel".includes("deel") would incorrectly match.
+   */
+  private resolveObjectTypeFromRole(role: string): string {
+    const normalizedRole = this.extractRoleName(role).toLowerCase();
+
+    for (const [, feitType] of this.feitTypes) {
+      for (const rol of feitType.rollen || []) {
+        const normalizedRolName = this.extractRoleName(rol.naam || '').toLowerCase();
+        if (normalizedRolName === normalizedRole) {
+          return rol.objectType || rol.object_type || role;
+        }
+      }
+    }
+
+    // Default: use role name as object type
+    return role;
   }
 
   // Helper to extract target attribute name from full reference
@@ -6413,28 +6415,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const role = this.extractRoleName(relTarget);
 
     // Resolve role name to actual object type via FeitType lookup
-    // This is best-effort; semantic analyzer will validate fully
-    let objectType = role; // Default: use role name as object type
-    for (const [feitTypeName, feitType] of this.feitTypes) {
-      for (const rol of feitType.rollen || []) {
-        // Clean role name by removing articles
-        let roleNameClean = (rol.naam || '').toLowerCase().trim();
-        for (const article of ['de ', 'het ', 'een ']) {
-          if (roleNameClean.startsWith(article)) {
-            roleNameClean = roleNameClean.substring(article.length);
-            break;
-          }
-        }
-
-        // Check if role matches
-        const roleClean = role.toLowerCase().trim();
-        if (roleNameClean === roleClean || roleNameClean.includes(roleClean) || roleClean.includes(roleNameClean)) {
-          // Found matching role - use the actual object type
-          objectType = rol.objectType || rol.object_type || objectType;
-          break;
-        }
-      }
-    }
+    const objectType = this.resolveObjectTypeFromRole(role);
 
     // Create an ObjectCreation node with the attribute initialization
     const node: ObjectCreation = {

@@ -354,4 +354,84 @@ Regel MaakKlant
       expect(() => parser.parseModel(source)).toThrow();
     });
   });
+
+  describe('FeitType role lookup (regression tests)', () => {
+    it('resolves correct objectType when role names overlap (onderdeel vs deel)', () => {
+      // Regression test for substring matching bug:
+      // "onderdeel".includes("deel") === true caused wrong FeitType to be selected
+      const source = `
+Objecttype de Auto (mv: autos)
+    de merk Tekst;
+
+Objecttype de Motor (mv: motoren)
+    de merk Tekst;
+
+Objecttype de Uitlaat (mv: uitlaten)
+    de materiaal Tekst;
+
+Objecttype de Knalpijp (mv: knalpijpen)
+    de diameter Numeriek;
+
+Feittype uitlaat van auto
+    de eigenaar Auto
+    het onderdeel (mv: onderdelen) Uitlaat
+één eigenaar heeft meerdere onderdelen
+
+Feittype knalpijp van motor
+    de eigenaar Motor
+    het deel (mv: delen) Knalpijp
+één eigenaar heeft meerdere delen
+
+Regel MaakUitlaat
+    geldig altijd
+        Een auto heeft het onderdeel
+        met materiaal gelijk aan "rvs".
+`;
+      const model = parser.parseModel(source);
+      const creation = model.regels[0].result as ObjectCreation;
+
+      // Should resolve to Uitlaat, not Knalpijp
+      expect(creation.objectType).toBe('Uitlaat');
+      expect(creation.role).toBe('onderdeel');
+    });
+
+    it('resolves correct objectType with similar role prefixes (reis vs reisbagage)', () => {
+      // Another test for substring matching: "reisbagage".includes("reis") === true
+      // Use distinct objectType names to clearly show correct matching
+      const source = `
+Objecttype de Persoon (mv: personen) (bezield)
+    de naam Tekst;
+
+Objecttype de Vliegtuig (mv: vliegtuigen)
+    de type Tekst;
+
+Objecttype de Vlucht (mv: vluchten)
+    de nummer Tekst;
+
+Objecttype de Koffer (mv: koffers)
+    de gewicht Numeriek;
+
+Feittype reis van persoon
+    de reiziger Persoon
+    de reis (mv: reizen) Vlucht
+één reiziger heeft meerdere reizen
+
+Feittype bagage van vliegtuig
+    het vliegtuig Vliegtuig
+    de reisbagage (mv: reisbagages) Koffer
+één vliegtuig heeft meerdere reisbagages
+
+Regel MaakReis
+    geldig altijd
+        Een persoon heeft de reis
+        met nummer gelijk aan "KL123".
+`;
+      const model = parser.parseModel(source);
+      const creation = model.regels[0].result as ObjectCreation;
+
+      // Should resolve to Vlucht (from "reis" role), not Koffer (from "reisbagage" role)
+      expect(creation.objectType).toBe('Vlucht');
+      expect(creation.role).toBe('reis');
+    });
+  });
 });
