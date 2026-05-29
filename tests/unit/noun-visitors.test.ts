@@ -387,23 +387,15 @@ geldig altijd
       });
     });
 
-    test.skip('should handle zijn/haar/hun articles', () => {
-      // Note: Grammar only supports de/het in parameterNamePhrase, not possessives
-      // This would require grammar changes to support
+    test('should reject possessive articles in parameter definitions', () => {
+      // Per spec §13.3.8: parameters use <bepaaldlidwoord> ::= "de" | "het" only.
+      // Possessives (zijn/haar/hun) are used in bezieldeReferentie, not parameters.
       const source = `Parameter zijn leeftijd : Numeriek`;
 
       const result = engine.parse(source);
 
-      if (!result.success) {
-        console.error('Parse error:', result.errors);
-      }
-
-      expect(result.success).toBe(true);
-      expect(stripLocations(result.ast)).toEqual({
-        type: 'ParameterDefinition',
-        name: 'leeftijd',  // Possessive article stripped
-        dataType: { type: 'Numeriek' }
-      });
+      // Should fail - possessives not allowed in parameter definitions
+      expect(result.success).toBe(false);
     });
   });
 });
