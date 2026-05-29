@@ -1,5 +1,9 @@
 import { Engine, Context } from '../../src';
 
+/**
+ * Tests for "alle X" pattern handling in the engine.
+ * The "alle" keyword is used to reference collections of objects.
+ */
 describe('Engine - "alle X" pattern handling', () => {
   let engine: Engine;
 
@@ -59,17 +63,24 @@ describe('Engine - "alle X" pattern handling', () => {
     });
   });
 
-  // SKIPPED: Uses old ObjectCreation syntax - will be updated in Phase 3
-  test.skip('should parse "alle X" in conditional expressions (PENDING: Phase 3 engine update)', () => {
+  test('should parse "alle X" in conditional expressions', () => {
     const model = `
-Objecttype Counter
-  de waarde Numeriek;
+Objecttype de Counter (mv: counters)
+    de waarde Numeriek;
+
+Objecttype de Container (mv: containers)
+    de naam Tekst;
+
+Feittype counters van container
+    de container	Container
+    de counter (mv: counters)	Counter
+één container heeft meerdere counters
 
 Regelgroep Test groep
 Regel maak counter
-  geldig altijd
-  Er wordt een nieuw Counter aangemaakt met de waarde gelijk aan 1
-  indien het aantal alle Counter kleiner is dan 3.
+    geldig altijd
+        Een container heeft een counter met waarde gelijk aan 1
+        indien het aantal alle Counter kleiner is dan 3.
 `;
 
     const result = engine.parse(model);
@@ -97,11 +108,11 @@ Regel maak counter
 
   test('should handle uniqueness check with "alle X" pattern', () => {
     const source = `
-Objecttype de Persoon
-  het burgerservicenummer Tekst;
-  
+Objecttype de Persoon (mv: personen)
+    het burgerservicenummer Tekst;
+
 Consistentieregel BSN uniekheid
-  De burgerservicenummers van alle Personen moeten uniek zijn.
+    De burgerservicenummers van alle Personen moeten uniek zijn.
 `;
 
     const result = engine.parse(source);

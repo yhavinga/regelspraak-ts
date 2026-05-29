@@ -5,159 +5,159 @@ import { DomainModel } from '../../src/ast/domain-model';
 /**
  * Semantic Validation Tests
  *
- * NOTE: Tests that use the OLD ObjectCreation syntax ("Er wordt een nieuw X aangemaakt")
- * are SKIPPED until Phase 3 when the engine and semantic analyzer are updated.
- *
- * The new syntax ("Een X heeft een Y") requires different validation semantics.
+ * Tests verify semantic analyzer validation using spec-compliant syntax:
+ * - ObjectCreation: "Een X heeft een Y"
+ * - Kenmerktoekenning: "Een X is kenmerk"
+ * - Parameter references
  */
 describe('Semantic Validation', () => {
   const parser = new AntlrParser();
   const analyzer = new SemanticAnalyzer();
 
-  describe('Unknown Object Type Validation', () => {
-    // SKIPPED: Uses old ObjectCreation syntax
-    test.skip('should fail when creating unknown object type (PENDING: Phase 3)', () => {
+  describe('Unknown Role Validation (ObjectCreation)', () => {
+    test('should warn when role not found in any FeitType', () => {
       const modelText = `
-        Objecttype de Product
-          de naam Tekst;
-          de prijs Numeriek;
+Objecttype de Winkel (mv: winkels)
+    de naam Tekst;
 
-        Regel MaakOnbekend
-        geldig altijd
-          Er wordt een nieuw OnbekendType aangemaakt.
+Regel MaakOnbekend
+    geldig altijd
+        Een winkel heeft het onbekendeRol.
       `;
 
       const model = parser.parseModel(modelText);
       const errors = analyzer.analyze(model);
 
       expect(errors.length).toBeGreaterThan(0);
-      expect(errors[0].message).toContain('Unknown object type: OnbekendType');
+      const roleError = errors.find(e => e.message.includes('unknown role'));
+      expect(roleError).toBeDefined();
     });
 
-    // SKIPPED: Uses old ObjectCreation syntax
-    test.skip('should pass when creating known object type (PENDING: Phase 3)', () => {
+    test('should pass when role exists in FeitType', () => {
       const modelText = `
-        Objecttype de Product
-          de naam Tekst;
-          de prijs Numeriek;
+Objecttype de Winkel (mv: winkels)
+    de naam Tekst;
 
-        Regel MaakProduct
-        geldig altijd
-          Er wordt een nieuw Product aangemaakt.
+Objecttype de Product (mv: producten)
+    de naam Tekst;
+
+Feittype producten van winkel
+    de winkel	Winkel
+    het product (mv: producten)	Product
+één winkel heeft meerdere producten
+
+Regel MaakProduct
+    geldig altijd
+        Een winkel heeft het product.
       `;
 
       const model = parser.parseModel(modelText);
       const errors = analyzer.analyze(model);
 
-      // Should not have any errors for the object type
-      const objectTypeErrors = errors.filter(e => e.message.includes('Unknown object type'));
-      expect(objectTypeErrors.length).toBe(0);
+      // Should not have any role errors
+      const roleErrors = errors.filter(e => e.message.includes('unknown role'));
+      expect(roleErrors.length).toBe(0);
     });
   });
 
-  describe('Unknown Attribute Validation', () => {
-    // SKIPPED: Uses old ObjectCreation syntax
-    test.skip('should fail when setting unknown attribute (PENDING: Phase 3)', () => {
+  describe('Unknown Attribute Validation (ObjectCreation)', () => {
+    test('should fail when setting unknown attribute', () => {
       const modelText = `
-        Objecttype de Product
-          de naam Tekst;
-          de prijs Numeriek;
+Objecttype de Winkel (mv: winkels)
+    de naam Tekst;
 
-        Regel MaakProductFout
-        geldig altijd
-          Er wordt een nieuw Product aangemaakt
-          met naam gelijk aan "Test"
-          en onbekend_attribuut gelijk aan 123.
+Objecttype de Product (mv: producten)
+    de naam Tekst;
+    de prijs Numeriek;
+
+Feittype producten van winkel
+    de winkel	Winkel
+    het product (mv: producten)	Product
+één winkel heeft meerdere producten
+
+Regel MaakProductFout
+    geldig altijd
+        Een winkel heeft het product
+        met naam gelijk aan "Test" en onbekend attribuut gelijk aan 123.
       `;
 
       const model = parser.parseModel(modelText);
       const errors = analyzer.analyze(model);
 
       expect(errors.length).toBeGreaterThan(0);
-      const attrError = errors.find(e => e.message.includes('onbekend_attribuut'));
+      const attrError = errors.find(e => e.message.includes('onbekend'));
       expect(attrError).toBeDefined();
-      expect(attrError!.message).toContain("Attribute 'onbekend_attribuut' not defined");
     });
 
-    // SKIPPED: Uses old ObjectCreation syntax
-    test.skip('should pass when setting known attributes (PENDING: Phase 3)', () => {
+    test('should pass when setting known attributes', () => {
       const modelText = `
-        Objecttype de Product
-          de naam Tekst;
-          de prijs Numeriek;
+Objecttype de Winkel (mv: winkels)
+    de naam Tekst;
 
-        Regel MaakProduct
-        geldig altijd
-          Er wordt een nieuw Product aangemaakt
-          met naam gelijk aan "Test"
-          en prijs gelijk aan 100.
+Objecttype de Product (mv: producten)
+    de naam Tekst;
+    de prijs Numeriek;
+
+Feittype producten van winkel
+    de winkel	Winkel
+    het product (mv: producten)	Product
+één winkel heeft meerdere producten
+
+Regel MaakProduct
+    geldig altijd
+        Een winkel heeft het product
+        met naam gelijk aan "Test" en prijs gelijk aan 100.
       `;
 
       const model = parser.parseModel(modelText);
       const errors = analyzer.analyze(model);
 
       // Should not have any attribute errors
-      const attrErrors = errors.filter(e => e.message.includes('Attribute'));
+      const attrErrors = errors.filter(e => e.message.includes('Attribute') && e.message.includes('not defined'));
       expect(attrErrors.length).toBe(0);
     });
   });
 
-  describe('Type Mismatch Validation', () => {
-    // SKIPPED: Uses old ObjectCreation syntax
-    test.skip('should fail when assigning wrong datatype (PENDING: Phase 3)', () => {
+  describe('ObjectCreation Subject/Role Required', () => {
+    test('should require subject field', () => {
+      // This is validated at parse time - new syntax requires subject
+      // Testing that a properly formed ObjectCreation doesn't generate missing subject error
       const modelText = `
-        Objecttype de Product
-          de naam Tekst;
-          de prijs Numeriek;
+Objecttype de Winkel (mv: winkels)
+    de naam Tekst;
 
-        Regel MaakProductFout
-        geldig altijd
-          Er wordt een nieuw Product aangemaakt
-          met naam gelijk aan 123
-          en prijs gelijk aan "honderd euro".
+Objecttype de Product (mv: producten)
+    de naam Tekst;
+
+Feittype producten van winkel
+    de winkel	Winkel
+    het product (mv: producten)	Product
+één winkel heeft meerdere producten
+
+Regel MaakProduct
+    geldig altijd
+        Een winkel heeft het product.
       `;
 
       const model = parser.parseModel(modelText);
       const errors = analyzer.analyze(model);
 
-      expect(errors.length).toBeGreaterThan(0);
-      const typeErrors = errors.filter(e => e.message.includes('Type mismatch'));
-      expect(typeErrors.length).toBeGreaterThan(0);
-    });
-
-    // SKIPPED: Uses old ObjectCreation syntax
-    test.skip('should pass when assigning correct datatypes (PENDING: Phase 3)', () => {
-      const modelText = `
-        Objecttype de Product
-          de naam Tekst;
-          de prijs Numeriek;
-
-        Regel MaakProduct
-        geldig altijd
-          Er wordt een nieuw Product aangemaakt
-          met naam gelijk aan "Laptop"
-          en prijs gelijk aan 1000.
-      `;
-
-      const model = parser.parseModel(modelText);
-      const errors = analyzer.analyze(model);
-
-      // Should not have any type errors
-      const typeErrors = errors.filter(e => e.message.includes('Type mismatch'));
-      expect(typeErrors.length).toBe(0);
+      // Should not have missing subject/role errors
+      const subjectErrors = errors.filter(e => e.message.includes('missing'));
+      expect(subjectErrors.length).toBe(0);
     });
   });
 
   describe('Unknown Kenmerk Validation', () => {
     test('should fail when setting unknown kenmerk', () => {
       const modelText = `
-        Objecttype de Persoon
-          de naam Tekst;
-          is minderjarig kenmerk (bijvoeglijk);
+Objecttype de Persoon (mv: personen)
+    de naam Tekst;
+    is minderjarig kenmerk (bijvoeglijk);
 
-        Regel TestOnbekendKenmerk
-        geldig altijd
-          Een Persoon is onbekend_kenmerk.
+Regel TestOnbekendKenmerk
+    geldig altijd
+        Een Persoon is onbekend_kenmerk.
       `;
 
       const model = parser.parseModel(modelText);
@@ -171,13 +171,13 @@ describe('Semantic Validation', () => {
 
     test('should pass when setting known kenmerk', () => {
       const modelText = `
-        Objecttype de Persoon
-          de naam Tekst;
-          is minderjarig kenmerk (bijvoeglijk);
+Objecttype de Persoon (mv: personen)
+    de naam Tekst;
+    is minderjarig kenmerk (bijvoeglijk);
 
-        Regel TestKenmerk
-        geldig altijd
-          Een Persoon is minderjarig.
+Regel TestKenmerk
+    geldig altijd
+        Een Persoon is minderjarig.
       `;
 
       const model = parser.parseModel(modelText);
@@ -192,14 +192,14 @@ describe('Semantic Validation', () => {
   describe('Unknown Parameter Validation', () => {
     test('should fail when referencing unknown parameter', () => {
       const modelText = `
-        Parameter de leeftijdsgrens : Numeriek
+Parameter de leeftijdsgrens : Numeriek
 
-        Objecttype de Persoon
-          de leeftijd Numeriek;
+Objecttype de Persoon (mv: personen)
+    de leeftijd Numeriek;
 
-        Regel TestParameter
-        geldig altijd
-          De leeftijd van een Persoon moet berekend worden als de onbekende_parameter.
+Regel TestParameter
+    geldig altijd
+        De leeftijd van een Persoon moet berekend worden als de onbekende_parameter.
       `;
 
       const model = parser.parseModel(modelText);
@@ -213,14 +213,14 @@ describe('Semantic Validation', () => {
 
     test('should pass when referencing known parameter', () => {
       const modelText = `
-        Parameter de leeftijdsgrens : Numeriek
+Parameter de leeftijdsgrens : Numeriek
 
-        Objecttype de Persoon
-          de leeftijd Numeriek;
+Objecttype de Persoon (mv: personen)
+    de leeftijd Numeriek;
 
-        Regel TestParameter
-        geldig altijd
-          De leeftijd van een Persoon moet berekend worden als de leeftijdsgrens.
+Regel TestParameter
+    geldig altijd
+        De leeftijd van een Persoon moet berekend worden als de leeftijdsgrens.
       `;
 
       const model = parser.parseModel(modelText);

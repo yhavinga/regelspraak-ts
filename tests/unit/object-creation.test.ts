@@ -3,18 +3,13 @@ import { Engine, Context } from '../../src';
 /**
  * Object Creation Engine Tests
  *
- * NOTE: These tests use the OLD ObjectCreation syntax ("Er wordt een nieuw X aangemaakt")
- * which has been replaced by the spec-compliant syntax ("Een X heeft een Y") in Phase 1.
+ * Tests verify execution of spec-compliant ObjectCreation syntax:
+ *   "Een <subject> heeft <artikel> <rolnaam> [met <attribuut> gelijk aan <expressie>]"
  *
- * The new syntax requires:
- * 1. A subject (onderwerpketen) that specifies which existing object gets the new object
- * 2. A role (rolnaam) that maps to a FeitType definition
- * 3. Iteration semantics: for each matching subject, create the object
- *
- * These tests are SKIPPED until Phase 3 when the engine is updated to support the new
- * ObjectCreation semantics with iterate-then-condition execution.
- *
- * See tests/unit/objectcreation-parse.test.ts for parser tests using the new syntax.
+ * The relational syntax requires:
+ * 1. A subject (onderwerpketen) - the existing object that owns the new object
+ * 2. A role (rolnaam) - maps to a FeitType definition
+ * 3. A FeitType establishing the relationship
  */
 describe('Object Creation', () => {
     let engine: Engine;
@@ -23,119 +18,191 @@ describe('Object Creation', () => {
         engine = new Engine();
     });
 
-    test.skip('should create a simple object without attributes (PENDING: Phase 3 engine update)', () => {
-        // OLD SYNTAX - no longer supported
-        // New syntax requires: Een X heeft een Y (with FeitType definition)
+    test('should create a simple object without attributes', () => {
         const modelText = `
-            Objecttype de Persoon
-                de naam Tekst;
-                is actief kenmerk;
+Objecttype de Organisatie (mv: organisaties)
+    de naam Tekst;
 
-            Regel MaakNieuwePersoon
-            geldig altijd
-                Er wordt een nieuw Persoon aangemaakt.
+Objecttype de Persoon (mv: personen)
+    de naam Tekst;
+    is actief kenmerk;
+
+Feittype medewerkers van organisatie
+    de werkgever	Organisatie
+    de medewerker (mv: medewerkers)	Persoon
+één werkgever heeft meerdere medewerkers
+
+Regel MaakNieuwePersoon
+    geldig altijd
+        Een organisatie heeft een medewerker.
         `;
 
-        const context = new Context();
-        const result = engine.run(modelText, context);
+        const parseResult = engine.parseModel(modelText);
+        expect(parseResult.success).toBe(true);
+
+        const context = new Context(parseResult.model);
+        context.createObject('Organisatie', 'org_1', {
+            'naam': { type: 'string', value: 'ACME Corp' }
+        });
+
+        const result = engine.execute(parseResult.model, context);
         expect(result.success).toBe(true);
     });
 
-    test.skip('should create an object with attributes (PENDING: Phase 3 engine update)', () => {
-        // OLD SYNTAX - no longer supported
+    test('should create an object with attributes', () => {
         const modelText = `
-            Objecttype de Klant
-                de naam Tekst;
-                de leeftijd Numeriek;
-                de email Tekst;
+Objecttype de Bedrijf (mv: bedrijven)
+    de naam Tekst;
 
-            Regel MaakVasteKlant
-            geldig altijd
-                Er wordt een nieuw Klant aangemaakt
-                met naam gelijk aan "Jan Jansen"
-                en leeftijd gelijk aan 35
-                en email gelijk aan "jan@example.com".
+Objecttype de Klant (mv: klanten)
+    de naam Tekst;
+    de leeftijd Numeriek;
+    de email Tekst;
+
+Feittype klanten van bedrijf
+    het bedrijf	Bedrijf
+    de klant (mv: klanten)	Klant
+één bedrijf heeft meerdere klanten
+
+Regel MaakVasteKlant
+    geldig altijd
+        Een bedrijf heeft een klant
+        met naam gelijk aan "Jan Jansen", leeftijd gelijk aan 35 en email gelijk aan "jan@example.com".
         `;
 
-        const context = new Context();
-        const result = engine.run(modelText, context);
+        const parseResult = engine.parseModel(modelText);
+        expect(parseResult.success).toBe(true);
+
+        const context = new Context(parseResult.model);
+        context.createObject('Bedrijf', 'bedrijf_1', {
+            'naam': { type: 'string', value: 'WebShop BV' }
+        });
+
+        const result = engine.execute(parseResult.model, context);
         expect(result.success).toBe(true);
+
+        // Verify object was created with correct attributes
+        const klanten = context.getObjectsByType('Klant');
+        expect(klanten.length).toBe(1);
+        expect((klanten[0] as any).value['naam']?.value).toBe('Jan Jansen');
+        expect((klanten[0] as any).value['leeftijd']?.value).toBe(35);
     });
 
-    test.skip('should create object with computed attribute values (PENDING: Phase 3 engine update)', () => {
-        // OLD SYNTAX - no longer supported
+    test('should create object with computed attribute values', () => {
         const modelText = `
-            Objecttype de Product
-                de naam Tekst;
-                de prijs Numeriek met eenheid EUR;
-                de btw Numeriek met eenheid EUR;
+Objecttype de Winkel (mv: winkels)
+    de naam Tekst;
 
-            Parameter de btw_percentage : Numeriek
+Objecttype de Product (mv: producten)
+    de naam Tekst;
+    de prijs Numeriek;
+    de btw Numeriek;
 
-            Regel MaakProduct
-            geldig altijd
-                Er wordt een nieuw Product aangemaakt
-                met naam gelijk aan "Laptop"
-                en prijs gelijk aan 1000
-                en btw gelijk aan (de prijs maal de btw_percentage gedeeld door 100).
+Parameter het btw percentage : Numeriek
+
+Feittype producten van winkel
+    de winkel	Winkel
+    het product (mv: producten)	Product
+één winkel heeft meerdere producten
+
+Regel MaakProduct
+    geldig altijd
+        Een winkel heeft een product
+        met naam gelijk aan "Laptop", prijs gelijk aan 1000 en btw gelijk aan het btw percentage.
         `;
 
-        const context = new Context();
-        context.setVariable('btw_percentage', { type: 'number', value: 21 });
+        const parseResult = engine.parseModel(modelText);
+        expect(parseResult.success).toBe(true);
 
-        const result = engine.run(modelText, context);
+        const context = new Context(parseResult.model);
+        context.setVariable('btw percentage', { type: 'number', value: 21 });
+        context.createObject('Winkel', 'winkel_1', {
+            'naam': { type: 'string', value: 'TechStore' }
+        });
+
+        const result = engine.execute(parseResult.model, context);
         expect(result.success).toBe(true);
+
+        const producten = context.getObjectsByType('Product');
+        expect(producten.length).toBe(1);
+        expect((producten[0] as any).value['btw']?.value).toBe(21);
     });
 
-    test.skip('should create object with conditional rule (PENDING: Phase 3 engine update)', () => {
-        // OLD SYNTAX - no longer supported
+    test('should create object with conditional rule', () => {
         const modelText = `
-            Objecttype de Werknemer
-                de naam Tekst;
-                de salaris Numeriek met eenheid EUR;
+Objecttype de Afdeling (mv: afdelingen)
+    de naam Tekst;
+    de actief Boolean;
 
-            Parameter de minimum_leeftijd : Numeriek
+Objecttype de Werknemer (mv: werknemers)
+    de naam Tekst;
+    de salaris Numeriek;
 
-            Regel MaakWerknemer
-            geldig altijd
-                Er wordt een nieuw Werknemer aangemaakt
-                met naam gelijk aan "Peter"
-                en salaris gelijk aan 3000
-                indien de leeftijd groter is dan de minimum_leeftijd.
+Feittype werknemers van afdeling
+    de afdeling	Afdeling
+    de werknemer (mv: werknemers)	Werknemer
+één afdeling heeft meerdere werknemers
+
+Regel MaakWerknemer
+    geldig altijd
+        Een afdeling heeft een werknemer
+        met naam gelijk aan "Peter"
+        en salaris gelijk aan 3000
+        indien de actief van de afdeling gelijk is aan waar.
         `;
 
-        const context = new Context();
-        context.setVariable('minimum_leeftijd', { type: 'number', value: 18 });
-        context.setVariable('leeftijd', { type: 'number', value: 25 });
+        const parseResult = engine.parseModel(modelText);
+        expect(parseResult.success).toBe(true);
 
-        const result = engine.run(modelText, context);
+        const context = new Context(parseResult.model);
+        context.createObject('Afdeling', 'afd_1', {
+            'naam': { type: 'string', value: 'IT' },
+            'actief': { type: 'boolean', value: true }
+        });
+
+        const result = engine.execute(parseResult.model, context);
         expect(result.success).toBe(true);
+
+        // Condition is true, so werknemer should be created
+        const werknemers = context.getObjectsByType('Werknemer');
+        expect(werknemers.length).toBe(1);
     });
 
-    test.skip('should handle multiple object creation in one rule - not supported by grammar', () => {
-        // This was already skipped - multiple object creation in one rule is not supported
+    test('should not create object when condition is false', () => {
         const modelText = `
-            Objecttype de Order
-                de ordernummer Numeriek;
-                de status Tekst;
+Objecttype de Afdeling (mv: afdelingen)
+    de naam Tekst;
+    de actief Boolean;
 
-            Objecttype de Factuur
-                de factuurnummer Numeriek;
-                de ordernummer Numeriek;
+Objecttype de Werknemer (mv: werknemers)
+    de naam Tekst;
 
-            Regel MaakOrderEnFactuur
-            geldig altijd
-                Er wordt een nieuw Order aangemaakt
-                met ordernummer 12345
-                en status "nieuw".
+Feittype werknemers van afdeling
+    de afdeling	Afdeling
+    de werknemer (mv: werknemers)	Werknemer
+één afdeling heeft meerdere werknemers
 
-                Er wordt een nieuw Factuur aangemaakt
-                met factuurnummer 67890
-                en ordernummer 12345.
+Regel MaakWerknemer
+    geldig altijd
+        Een afdeling heeft een werknemer
+        met naam gelijk aan "Peter"
+        indien de actief van de afdeling gelijk is aan waar.
         `;
 
-        const context = new Context();
-        const result = engine.run(modelText, context);
+        const parseResult = engine.parseModel(modelText);
+        expect(parseResult.success).toBe(true);
+
+        const context = new Context(parseResult.model);
+        context.createObject('Afdeling', 'afd_1', {
+            'naam': { type: 'string', value: 'HR' },
+            'actief': { type: 'boolean', value: false }
+        });
+
+        const result = engine.execute(parseResult.model, context);
         expect(result.success).toBe(true);
+
+        // Condition is false, so no werknemer should be created
+        const werknemers = context.getObjectsByType('Werknemer');
+        expect(werknemers.length).toBe(0);
     });
 });
