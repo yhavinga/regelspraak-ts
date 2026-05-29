@@ -28,24 +28,24 @@ Objecttype de Bonus
   het bedrag Numeriek;
 
 Feittype werkzaam bij afdeling
-  de medewerker Persoon
-  de afdeling Afdeling
-  meerdere medewerkers werken bij één afdeling
+  de medewerker	Persoon
+  de afdeling	Afdeling
+meerdere medewerkers werken bij één afdeling
 
 Feittype afdeling van bedrijf
-  de afdeling Afdeling
-  het bedrijf Bedrijf
-  één afdeling hoort bij één bedrijf
+  de afdeling	Afdeling
+  het bedrijf	Bedrijf
+één afdeling hoort bij één bedrijf
 
 Feittype bonus van bedrijf
-  de bonus Bonus
-  de bonusgever Bedrijf
-  één bonus wordt gegeven door één bedrijf
+  de bonus	Bonus
+  de bonusgever	Bedrijf
+één bonus wordt gegeven door één bedrijf
 
 Feittype toegekende bonus
-  de ontvanger Persoon
-  de toegekende bonus Bonus
-  één persoon kan meerdere bonussen ontvangen
+  de ontvanger	Persoon
+  de toegekende bonus	Bonus
+één persoon kan meerdere bonussen ontvangen
 
 Regel bonus toekenning
   geldig altijd
@@ -142,13 +142,12 @@ Objecttype de Persoon
   de naam Tekst;
 
 Wederkerig feittype partnerschap
-  de partner1 Persoon
-  de partner2 Persoon
-  één partner1 heeft één partner2
+  de partner	Persoon
+één partner heeft één partner
 
 Regel maak partners
   geldig altijd
-    Een partner1 van een partnerschap is een partner2 van het partnerschap.`;
+    Een partner van een partnerschap is een persoon van het partnerschap.`;
 
       // Register FeitType with wederkerig flag
       const partnerschap: FeitType = {
@@ -156,17 +155,14 @@ Regel maak partners
         naam: 'partnerschap',
         wederkerig: true,
         rollen: [
-          { type: 'Rol', naam: 'partner1', objectType: 'Persoon' },
-          { type: 'Rol', naam: 'partner2', objectType: 'Persoon' }
+          { type: 'Rol', naam: 'partner', objectType: 'Persoon' }
         ]
       };
       context.registerFeittype(partnerschap);
-      
+
       const jan = { type: 'object', value: { object_type_naam: 'Persoon', instance_id: 'p1', naam: 'Jan' } };
-      const marie = { type: 'object', value: { object_type_naam: 'Persoon', instance_id: 'p2', naam: 'Marie' } };
-      
-      context.setVariable('partner1vaneenpartnerschap', jan);
-      context.setVariable('partner2vanhetpartnerschap', marie);
+
+      context.setVariable('partnervaneenpartnerschap', jan);
       context.setVariable('partnerschap', { type: 'object', value: { object_type_naam: 'Partnerschap', instance_id: 'ps1' } });
       
       const parseResult = engine.parse(code);

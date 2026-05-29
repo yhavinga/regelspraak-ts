@@ -11,12 +11,13 @@ describe('Feittype Relationship Navigation', () => {
 
   describe('navigation through Feittype relationships', () => {
     test('should navigate through single Feittype relationship', () => {
-      // Based on TOKA example: "vluchtdatum van zijn reis" navigates from 
+      // Based on TOKA example: "vluchtdatum van zijn reis" navigates from
       // Natuurlijk persoon to Vlucht through the Feittype relationship
       const code = `
 Feittype vlucht van natuurlijke personen
   de reis	Vlucht
   de passagier	Natuurlijk persoon
+één reis vervoert één passagier
 
 Objecttype de Natuurlijk persoon
   de naam Tekst;
@@ -83,10 +84,12 @@ geldig altijd
 Feittype eigendom relatie
   de eigenaar	Persoon
   het gebouw	Gebouw
+één eigenaar heeft één gebouw
 
-Feittype werkrelatie  
+Feittype werkrelatie
   de werkgever	Bedrijf
   de werknemer	Persoon
+één werkgever heeft één werknemer
 
 Objecttype de Persoon
   de naam Tekst;
@@ -99,7 +102,7 @@ Objecttype het Bedrijf
 
 Regel stel_bedrijfsnaam_in
 geldig altijd
-  De bedrijfsnaam van de werkgever van de eigenaar van een Gebouw 
+  De bedrijfsnaam van de werkgever van de eigenaar van een Gebouw
   moet gesteld worden op "Acme Corp".
 `;
 
@@ -155,6 +158,7 @@ geldig altijd
 Feittype eigendom relatie
   de eigenaar	Persoon
   het gebouw	Gebouw
+één eigenaar heeft één gebouw
 
 Objecttype de Persoon
   de naam Tekst;
@@ -192,6 +196,7 @@ geldig altijd
 Feittype vlucht van natuurlijke personen
   de reis	Vlucht
   de passagier	Natuurlijk persoon
+één reis vervoert meerdere passagiers
 
 Objecttype de Natuurlijk persoon
   de naam Tekst;
@@ -202,7 +207,7 @@ Objecttype de Vlucht
 
 Regel tel_passagiers
 geldig altijd
-  Het aantal passagiers van een Vlucht moet berekend worden als 
+  Het aantal passagiers van een Vlucht moet berekend worden als
   het aantal van alle passagiers van de vlucht.
 `;
 

@@ -229,4 +229,52 @@ describe('Feittype', () => {
     expect(relatedEigenaren).toHaveLength(1);
     expect(relatedEigenaren[0]).toEqual(eigenaarObj);
   });
+
+  test('should parse feittype with één cardinality (regression test)', () => {
+    // This test verifies that cardinality lines starting with "één" are parsed correctly.
+    // Previously, "één" was consumed into the preceding role definition because tabs
+    // were on the HIDDEN channel and the grammar couldn't determine where the role ended.
+    const code = `
+      Feittype clubvanvereniging
+        de club	Club
+        de vereniging	Vereniging
+      één club hoort bij één vereniging
+    `;
+
+    const parseResult = engine.parse(code);
+    expect(parseResult.success).toBe(true);
+
+    const feittype = parseResult.ast;
+    expect(feittype.type).toBe('FeitType');
+    expect(feittype.naam).toBe('clubvanvereniging');
+    expect(feittype.rollen).toHaveLength(2);
+
+    // Verify roles are parsed correctly with TAB delimiter
+    expect(feittype.rollen[0].naam).toBe('club');
+    expect(feittype.rollen[0].objectType).toBe('Club');
+
+    expect(feittype.rollen[1].naam).toBe('vereniging');
+    expect(feittype.rollen[1].objectType).toBe('Vereniging');
+
+    // Verify cardinality description
+    expect(feittype.cardinalityDescription).toBe('één club hoort bij één vereniging');
+  });
+
+  test('should parse feittype with meerdere cardinality', () => {
+    const code = `
+      Feittype clubvanvereniging
+        de club (mv: clubs)	Club
+        de vereniging	Vereniging
+      meerdere clubs horen bij één vereniging
+    `;
+
+    const parseResult = engine.parse(code);
+    expect(parseResult.success).toBe(true);
+
+    const feittype = parseResult.ast;
+    expect(feittype.rollen[0].naam).toBe('club');
+    expect(feittype.rollen[0].meervoud).toBe('clubs');
+    expect(feittype.rollen[0].objectType).toBe('Club');
+    expect(feittype.cardinalityDescription).toBe('meerdere clubs horen bij één vereniging');
+  });
 });

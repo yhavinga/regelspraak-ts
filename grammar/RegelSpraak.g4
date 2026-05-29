@@ -359,18 +359,16 @@ feitTypeDefinition
       cardinalityLine
     ;
 
-// Role definition - parse all content after article and split in builder
+// Role definition - TAB-delimited per spec §3.11
+// Format: article roleName [(mv: plural)] TAB objectTypeName
+// Object type uses IDENTIFIER+ (not naamwoordNoIs) to avoid consuming cardinality keywords like "één"
 rolDefinition
-    : article=(DE | HET) content=rolContentWords (MV_START meervoud=naamwoord RPAREN)? objecttype=rolObjectType?
+    : article=(DE | HET) rolNameWords (MV_START meervoud=naamwoord RPAREN)? TAB objectTypeName+=IDENTIFIER+
     ;
 
-// Object type that comes after optional plural - just identifiers
-rolObjectType
-    : identifierOrKeyword+
-    ;
-
-// All words in role definition after the article
-rolContentWords
+// Role name words - everything between article and TAB (or plural marker)
+// Includes prepositions like MET, VAN for complex role names
+rolNameWords
     : ( identifierOrKeyword | voorzetsel )+
     ;
 

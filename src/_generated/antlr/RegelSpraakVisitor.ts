@@ -60,8 +60,7 @@ import { ParameterNamePartContext } from "./RegelSpraakParser";
 import { ParameterMetLidwoordContext } from "./RegelSpraakParser";
 import { FeitTypeDefinitionContext } from "./RegelSpraakParser";
 import { RolDefinitionContext } from "./RegelSpraakParser";
-import { RolObjectTypeContext } from "./RegelSpraakParser";
-import { RolContentWordsContext } from "./RegelSpraakParser";
+import { RolNameWordsContext } from "./RegelSpraakParser";
 import { CardinalityLineContext } from "./RegelSpraakParser";
 import { CardinalityWordContext } from "./RegelSpraakParser";
 import { RegelContext } from "./RegelSpraakParser";
@@ -615,17 +614,11 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitRolDefinition?: (ctx: RolDefinitionContext) => Result;
 	/**
-	 * Visit a parse tree produced by `RegelSpraakParser.rolObjectType`.
+	 * Visit a parse tree produced by `RegelSpraakParser.rolNameWords`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitRolObjectType?: (ctx: RolObjectTypeContext) => Result;
-	/**
-	 * Visit a parse tree produced by `RegelSpraakParser.rolContentWords`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitRolContentWords?: (ctx: RolContentWordsContext) => Result;
+	visitRolNameWords?: (ctx: RolNameWordsContext) => Result;
 	/**
 	 * Visit a parse tree produced by `RegelSpraakParser.cardinalityLine`.
 	 * @param ctx the parse tree

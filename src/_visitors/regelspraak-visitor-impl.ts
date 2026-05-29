@@ -4589,141 +4589,30 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
   }
 
   visitRolDefinition(ctx: any): Rol | null {
-    // The format is: article roleName\tObjectType
-    // or: article roleName (mv: plural)\tObjectType
-    // Tabs are on HIDDEN channel, so we need to access raw input stream
+    // The format is: article roleName [(mv: plural)] TAB objectTypeName
+    // TAB is now a visible token, so the grammar has already parsed the structure correctly.
 
-    // Access the raw input stream to get the full text including tabs
-    let fullText = '';
-    try {
-      const startToken = ctx.start;
-      const stopToken = ctx.stop || startToken;
-      if (startToken && startToken.getInputStream) {
-        const inputStream = startToken.getInputStream();
-        const startIdx = startToken.start;
-        const fullInput = inputStream.getText(0, inputStream.size);
+    // Extract role name from rolNameWords
+    const rolNameWordsCtx = ctx.rolNameWords();
+    const roleName = rolNameWordsCtx ? this.extractTextWithSpaces(rolNameWordsCtx) : '';
 
-        // Find end of line from start position
-        let endIdx = fullInput.indexOf('\n', startIdx);
-        if (endIdx === -1) endIdx = fullInput.length;
-
-        fullText = fullInput.substring(startIdx, endIdx).trim();
-      }
-    } catch {
-      // Fall back to getText if input stream access fails
-      fullText = ctx.getText();
-    }
-
-    // Remove leading article (de/het)
-    let textWithoutArticle = fullText;
-    if (fullText.toLowerCase().startsWith('de ')) {
-      textWithoutArticle = fullText.substring(3).trim();
-    } else if (fullText.toLowerCase().startsWith('het ')) {
-      textWithoutArticle = fullText.substring(4).trim();
-    }
-
-    // Check for tab separator - this is the reliable way to split role from objectType
-    let roleName = '';
+    // Extract object type - IDENTIFIER+ allows multi-word names like "Natuurlijk persoon"
+    const objectTypeTokens = ctx._objectTypeName;
     let objectType = '';
+    if (objectTypeTokens && Array.isArray(objectTypeTokens)) {
+      objectType = objectTypeTokens.map((t: any) => t.text).join(' ');
+    } else if (objectTypeTokens) {
+      objectType = objectTypeTokens.text;
+    }
+
+    // Extract plural form if present
     let meervoud: string | undefined;
+    if (ctx._meervoud) {
+      meervoud = this.extractTextWithSpaces(ctx._meervoud);
+    }
 
-    if (textWithoutArticle.includes('\t')) {
-      // Tab-separated format: "role name\tObject Type"
-      const tabParts = textWithoutArticle.split('\t');
-      let roleNamePart = tabParts[0].trim();
-      objectType = tabParts.slice(1).join(' ').trim();
-
-      // Handle cardinality text that might be in object type
-      for (const indicator of ['één', 'meerdere', 'Eén', 'Een', 'Één', 'Meerdere']) {
-        const idx = objectType.toLowerCase().indexOf(indicator.toLowerCase());
-        if (idx !== -1) {
-          objectType = objectType.substring(0, idx).trim();
-          break;
-        }
-      }
-
-      // Check for plural form in role name: "name (mv: plural)"
-      const pluralMatch = roleNamePart.match(/^(.+?)\s*\(mv:\s*([^)]+)\)$/);
-      if (pluralMatch) {
-        roleNamePart = pluralMatch[1].trim();
-        meervoud = pluralMatch[2].trim();
-      }
-
-      roleName = roleNamePart;
-    } else {
-      // No tab - fall back to heuristic parsing
-      // Extract role name from _content field
-      const contentCtx = ctx._content;
-      if (!contentCtx) {
-        return null;
-      }
-
-      // Parse the content more carefully - it contains multiple words
-      const words: string[] = [];
-      if (contentCtx.children) {
-        for (const child of contentCtx.children) {
-          if (child.getText) {
-            words.push(child.getText());
-          }
-        }
-      }
-
-      // Get object type - it's labeled as _objecttype
-      if (ctx._objecttype) {
-        // rolObjectType is defined as identifierOrKeyword+ so we need to extract all words
-        const objectTypeWords: string[] = [];
-        if (ctx._objecttype.children) {
-          for (const child of ctx._objecttype.children) {
-            if (child.getText) {
-              const text = child.getText();
-              objectTypeWords.push(text);
-            }
-          }
-        }
-        objectType = objectTypeWords.join(' ');
-
-        // The grammar may have greedily consumed cardinality text into the objectType.
-        // Truncate at cardinality indicators: "één", "meerdere", "Een", etc.
-        // These words start the cardinality description, not the objectType.
-        const cardinalityIndicators = ['één', 'meerdere', 'een ', 'Één', 'Een', 'Meerdere'];
-        for (const indicator of cardinalityIndicators) {
-          const idx = objectType.toLowerCase().indexOf(indicator.toLowerCase());
-          if (idx > 0) {
-            objectType = objectType.substring(0, idx).trim();
-            break;
-          }
-        }
-      }
-
-      // Determine role name based on the words
-      if (!objectType && words.length > 0) {
-        // No explicit object type - use heuristics
-        if (words[words.length - 1] === 'Natuurlijk') {
-          objectType = 'Natuurlijk persoon';
-          roleName = words.slice(0, -1).join(' ');
-        } else if (words[words.length - 1] === 'Bedrijf' ||
-          words[words.length - 1] === 'Persoon' ||
-          words[words.length - 1] === 'Vlucht' ||
-          words[words.length - 1] === 'Gebouw') {
-          objectType = words[words.length - 1];
-          roleName = words.slice(0, -1).join(' ');
-        } else if (words.length >= 2 && words[words.length - 2] === 'Natuurlijk') {
-          objectType = 'Natuurlijk persoon';
-          roleName = words.slice(0, -2).join(' ');
-        } else {
-          // Default: last word is the object type
-          objectType = words[words.length - 1];
-          roleName = words.slice(0, -1).join(' ');
-        }
-      } else {
-        // Object type is explicit, so all words are the role name
-        roleName = words.join(' ');
-      }
-
-      // Check for plural form - it's labeled as _meervoud
-      if (ctx._meervoud) {
-        meervoud = this.extractTextWithSpaces(ctx._meervoud);
-      }
+    if (!roleName || !objectType) {
+      return null;
     }
 
     const node: Rol = {

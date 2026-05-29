@@ -12,9 +12,9 @@ describe('FeitCreatie (Relationship Creation)', () => {
     it('should parse FeitCreatie rule correctly', () => {
       const code = `
 Feittype verdeling contingent treinmiles over passagiers
-  het te verdelen contingent treinmiles Contingent Treinmiles
-  de passagier met recht op treinmiles Natuurlijk persoon
-  één te verdelen contingent treinmiles wordt verdeeld over meerdere passagiers met recht op treinmiles
+  het te verdelen contingent treinmiles	Contingent Treinmiles
+  de passagier met recht op treinmiles	Natuurlijk persoon
+één te verdelen contingent treinmiles wordt verdeeld over meerdere passagiers met recht op treinmiles
 
 Regel passagier met recht op treinmiles
   geldig altijd
@@ -46,9 +46,9 @@ Objecttype de Club
   de naam Tekst;
 
 Feittype lidmaatschap
-  het lid Persoon
-  de club Club
-  één lid kan lid zijn van meerdere clubs
+  het lid	Persoon
+  de club	Club
+één lid kan lid zijn van meerdere clubs
 
 Regel maak lidmaatschap
   geldig altijd
@@ -108,19 +108,19 @@ Objecttype het Contingent
   het aantal miles Numeriek (positief geheel getal);
 
 Feittype vlucht van personen
-  de vlucht Vlucht
-  de passagier Persoon
-  één vlucht heeft meerdere passagiers
+  de vlucht	Vlucht
+  de passagier	Persoon
+één vlucht heeft meerdere passagiers
 
 Feittype reis met contingent
-  de reis Vlucht
-  het contingent Contingent
-  één reis heeft één contingent
+  de reis	Vlucht
+  het contingent	Contingent
+één reis heeft één contingent
 
 Feittype verdeling contingent over passagiers
-  het te verdelen contingent Contingent
-  de passagier met recht op miles Persoon
-  één contingent wordt verdeeld over meerdere passagiers
+  het te verdelen contingent	Contingent
+  de passagier met recht op miles	Persoon
+één contingent wordt verdeeld over meerdere passagiers
 
 Regel verdeel miles
   geldig altijd
@@ -208,9 +208,9 @@ Objecttype de Activiteit
   de minimum leeftijd Numeriek (positief geheel getal);
 
 Feittype deelname
-  de deelnemer Persoon
-  de activiteit Activiteit
-  meerdere deelnemers kunnen deelnemen aan één activiteit
+  de deelnemer	Persoon
+  de activiteit	Activiteit
+meerdere deelnemers kunnen deelnemen aan één activiteit
 
 Regel alleen volwassenen
   geldig altijd
@@ -296,17 +296,13 @@ Regel malformed
 Objecttype de Persoon
   de naam Tekst;
 
-Objecttype de Partner
-  de naam Tekst;
-
 Wederkerig feittype huwelijk
-  de echtgenoot Persoon  
-  de echtgenote Partner
-  één echtgenoot heeft één echtgenote
+  de partner	Persoon
+één partner heeft één partner
 
 Regel maak huwelijk
   geldig altijd
-    Een echtgenote van een huwelijk is een partner van het huwelijk.`;
+    Een partner van een huwelijk is een persoon van het huwelijk.`;
 
       const context = {
         'persoon': {
@@ -315,14 +311,6 @@ Regel maak huwelijk
             object_type_naam: 'Persoon',
             instance_id: 'p1',
             naam: 'Jan'
-          }
-        },
-        'partner': {
-          type: 'object',
-          value: {
-            object_type_naam: 'Partner',
-            instance_id: 'pa1',
-            naam: 'Marie'
           }
         }
       };
@@ -334,7 +322,7 @@ Regel maak huwelijk
       }
 
       expect(result.success).toBe(true);
-      // Should create reciprocal relationship due to "Wederkerig"
+      // Should create symmetric relationship due to "Wederkerig"
     });
   });
 });

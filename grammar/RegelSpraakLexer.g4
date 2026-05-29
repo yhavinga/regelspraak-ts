@@ -342,7 +342,9 @@ L_ANGLE_QUOTE: '«';
 R_ANGLE_QUOTE: '»';
 CARET: '^';
 DOUBLE_DOT: '..';
-WS: [ \t\r\n]+ -> channel(HIDDEN);
+// TAB is a visible token for FeitType role definitions (spec §3.11)
+TAB: '\t';
+WS: [ \r\n]+ -> channel(HIDDEN);
 LINE_COMMENT: '//' ~[\r\n]* -> skip;
 MINUS: '-';
 PIPE: '|';

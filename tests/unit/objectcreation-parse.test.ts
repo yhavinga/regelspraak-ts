@@ -41,8 +41,8 @@ Objecttype het Contingent (mv: contingenten)
     het totaal Numeriek;
 
 Feittype reis met contingent
-    de reis Vlucht
-    het contingent Contingent
+    de reis	Vlucht
+    het contingent	Contingent
 één reis heeft meerdere contingenten
 
 Regel maak contingent
@@ -65,8 +65,8 @@ Objecttype het Contingent (mv: contingenten)
     het totaal Numeriek;
 
 Feittype reis met contingent
-    de reis Vlucht
-    het contingent Contingent
+    de reis	Vlucht
+    het contingent	Contingent
 één reis heeft meerdere contingenten
 
 Regel maak contingent met waarde
@@ -91,8 +91,8 @@ Objecttype de Badge (mv: badges)
     de kleur Tekst;
 
 Feittype badge van personen
-    de houder Persoon
-    de badge Badge
+    de houder	Persoon
+    de badge	Badge
 één houder heeft meerdere badges
 
 Regel maak badge
@@ -116,8 +116,8 @@ Objecttype de Reis (mv: reizen)
     de bestemming Tekst;
 
 Feittype reis van personen
-    de reiziger Persoon
-    de reis Reis
+    de reiziger	Persoon
+    de reis	Reis
 één reiziger heeft meerdere reizen
 
 Regel maak reis
@@ -136,8 +136,8 @@ Objecttype het Ticket (mv: tickets)
     de prijs Numeriek;
 
 Feittype ticket van vluchten
-    de vlucht Vlucht
-    het ticket Ticket
+    de vlucht	Vlucht
+    het ticket	Ticket
 één vlucht heeft meerdere tickets
 
 Regel maak ticket
@@ -159,13 +159,13 @@ Objecttype de Boardingpass (mv: boardingpassen)
     de gate Tekst;
 
 Feittype passagiers van vlucht
-    de reis Vlucht
-    de passagier Passagier
+    de reis	Vlucht
+    de passagier	Passagier
 één reis heeft meerdere passagiers
 
 Feittype boardingpass van passagier
-    de reiziger Passagier
-    de boardingpass Boardingpass
+    de reiziger	Passagier
+    de boardingpass	Boardingpass
 één reiziger heeft meerdere boardingpassen
 
 Regel maak boardingpass
@@ -187,8 +187,8 @@ Objecttype het Contingent (mv: contingenten)
 Parameter de treinmiles per passagier : Numeriek
 
 Feittype reis met contingent
-    de reis Vlucht
-    het contingent Contingent
+    de reis	Vlucht
+    het contingent	Contingent
 één reis heeft meerdere contingenten
 
 Regel maak contingent treinmiles
@@ -295,8 +295,8 @@ Objecttype het Contingent (mv: contingenten)
     het totaal Numeriek;
 
 Feittype reis met contingent
-    de reis Vlucht
-    het contingent Contingent
+    de reis	Vlucht
+    het contingent	Contingent
 één reis heeft meerdere contingenten
 
 Regel maak contingent
@@ -373,13 +373,13 @@ Objecttype de Knalpijp (mv: knalpijpen)
     de diameter Numeriek;
 
 Feittype uitlaat van auto
-    de eigenaar Auto
-    het onderdeel (mv: onderdelen) Uitlaat
+    de eigenaar	Auto
+    het onderdeel (mv: onderdelen)	Uitlaat
 één eigenaar heeft meerdere onderdelen
 
 Feittype knalpijp van motor
-    de eigenaar Motor
-    het deel (mv: delen) Knalpijp
+    de eigenaar	Motor
+    het deel (mv: delen)	Knalpijp
 één eigenaar heeft meerdere delen
 
 Regel MaakUitlaat
@@ -412,13 +412,13 @@ Objecttype de Koffer (mv: koffers)
     de gewicht Numeriek;
 
 Feittype reis van persoon
-    de reiziger Persoon
-    de reis (mv: reizen) Vlucht
+    de reiziger	Persoon
+    de reis (mv: reizen)	Vlucht
 één reiziger heeft meerdere reizen
 
 Feittype bagage van vliegtuig
-    het vliegtuig Vliegtuig
-    de reisbagage (mv: reisbagages) Koffer
+    het vliegtuig	Vliegtuig
+    de reisbagage (mv: reisbagages)	Koffer
 één vliegtuig heeft meerdere reisbagages
 
 Regel MaakReis

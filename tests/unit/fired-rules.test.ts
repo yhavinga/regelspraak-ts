@@ -101,8 +101,8 @@ Objecttype het Rapport (mv: rapporten)
     de status Tekst;
 
 Feittype rapport van persoon
-    de eigenaar Persoon
-    het rapport (mv: rapporten) Rapport
+    de eigenaar	Persoon
+    het rapport (mv: rapporten)	Rapport
 één eigenaar heeft meerdere rapporten
 
 Regel MaakRapport
