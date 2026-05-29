@@ -81,9 +81,9 @@ Objecttype het Scenario (mv: Scenarios)
 // ============================================================================
 
 Feittype scenario van persoon
-    het scenario Scenario
-    de persoon Persoon
-    een scenario betreft de berekening voor een persoon
+    het scenario	Scenario
+    de persoon	Persoon
+één scenario betreft één persoon
 
 // ============================================================================
 // PARAMETERS (2024 waarden - EK Nota)
