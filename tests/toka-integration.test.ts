@@ -15,7 +15,7 @@ describe('TOKA Integration', () => {
 
     beforeEach(() => {
         engine = new Engine();
-        tokaDir = path.resolve(__dirname, '../../examples/toka');
+        tokaDir = path.resolve(__dirname, '../examples/toka');
     });
 
     function loadTokaRules(): string {
@@ -29,13 +29,12 @@ describe('TOKA Integration', () => {
     }
 
     describe('Parse complete TOKA files', () => {
-        it.skip('should parse combined gegevens.rs and regels.rs successfully', () => {
+        it('should parse combined gegevens.rs and regels.rs successfully', () => {
             const completeToka = loadTokaRules();
             const result = engine.parseModel(completeToka);
 
             expect(result.success).toBe(true);
             expect(result.model).toBeDefined();
-
         });
     });
 
@@ -76,15 +75,15 @@ describe('TOKA Integration', () => {
             expect(easter.getDate()).toBe(20);
         });
 
-        // Skip: eerste_van grammar pattern needs work
-        it.skip('should select eerste_van correctly', () => {
+        it('should select eerste_van correctly', () => {
             const context = new Context();
             context.setVariable('a', { type: 'null', value: null });
             context.setVariable('b', { type: 'number', value: 42 });
             context.setVariable('c', { type: 'number', value: 100 });
 
+            // Grammar expects: de eerste van a, b en c (no parentheses, 'en' before last)
             const result = engine.run(
-                'de eerste van (a, b, c)',
+                'de eerste van a, b en c',
                 context
             );
 
@@ -92,15 +91,15 @@ describe('TOKA Integration', () => {
             expect(result.value?.value).toBe(42);
         });
 
-        // Skip: laatste_van grammar pattern needs work
-        it.skip('should select laatste_van correctly', () => {
+        it('should select laatste_van correctly', () => {
             const context = new Context();
             context.setVariable('a', { type: 'number', value: 10 });
             context.setVariable('b', { type: 'number', value: 42 });
             context.setVariable('c', { type: 'null', value: null });
 
+            // Grammar expects: de laatste van a, b en c (no parentheses, 'en' before last)
             const result = engine.run(
-                'de laatste van (a, b, c)',
+                'de laatste van a, b en c',
                 context
             );
 
@@ -123,8 +122,7 @@ describe('TOKA Integration', () => {
             expect(result.value?.value).toBe(0);
         });
 
-        // Skip: afronding expression grammar needs work
-        it.skip('should apply rounding down correctly', () => {
+        it('should apply rounding down correctly', () => {
             const context = new Context();
             context.setVariable('waarde', { type: 'number', value: 42.7 });
 
@@ -137,8 +135,7 @@ describe('TOKA Integration', () => {
             expect(result.value?.value).toBe(42);
         });
 
-        // Skip combined test - parsing might not be complete yet
-        it.skip('should apply combined begrenzing and afronding', () => {
+        it('should apply combined begrenzing and afronding', () => {
             const context = new Context();
             context.setVariable('waarde', { type: 'number', value: -50.7 });
 
