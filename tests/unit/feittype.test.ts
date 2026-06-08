@@ -56,6 +56,54 @@ describe('Feittype', () => {
     expect(feittype.rollen[1].objectType).toBe('Passagier');
   });
 
+  test('should parse cardinality from cardinality line, not plural role alias', () => {
+    const code = `
+      Feittype badge van persoon
+        de eigenaar	Persoon
+        de badge (mv: badges)	Badge
+      één eigenaar heeft één badge
+    `;
+
+    const parseResult = engine.parse(code);
+    expect(parseResult.success).toBe(true);
+
+    const feittype = parseResult.ast;
+    expect(feittype.rollen[0].naam).toBe('eigenaar');
+    expect(feittype.rollen[0].cardinality).toBe('one');
+    expect(feittype.rollen[1].naam).toBe('badge');
+    expect(feittype.rollen[1].meervoud).toBe('badges');
+    expect(feittype.rollen[1].cardinality).toBe('one');
+  });
+
+  test('should parse many cardinality only from meerdere endpoint', () => {
+    const code = `
+      Feittype vlucht van passagiers
+        de reis	Vlucht
+        de passagier (mv: passagiers)	Passagier
+      één reis vervoert meerdere passagiers
+    `;
+
+    const parseResult = engine.parse(code);
+    expect(parseResult.success).toBe(true);
+
+    const feittype = parseResult.ast;
+    expect(feittype.rollen[0].cardinality).toBe('one');
+    expect(feittype.rollen[1].cardinality).toBe('many');
+  });
+
+  test('should fail on spec-like cardinality with unknown endpoint role', () => {
+    const code = `
+      Feittype badge van persoon
+        de eigenaar	Persoon
+        de badge (mv: badges)	Badge
+      één eigenaar heeft meerdere onbekenden
+    `;
+
+    const parseResult = engine.parse(code);
+    expect(parseResult.success).toBe(false);
+    expect(parseResult.errors?.[0].message).toMatch(/Invalid cardinality line.*badge van persoon/);
+  });
+
   test('should parse wederkerig feittype', () => {
     const code = `
       Wederkerig feittype partnerrelatie
@@ -258,6 +306,8 @@ describe('Feittype', () => {
 
     // Verify cardinality description
     expect(feittype.cardinalityDescription).toBe('één club hoort bij één vereniging');
+    expect(feittype.rollen[0].cardinality).toBe('one');
+    expect(feittype.rollen[1].cardinality).toBe('one');
   });
 
   test('should parse feittype with meerdere cardinality', () => {
@@ -276,5 +326,7 @@ describe('Feittype', () => {
     expect(feittype.rollen[0].meervoud).toBe('clubs');
     expect(feittype.rollen[0].objectType).toBe('Club');
     expect(feittype.cardinalityDescription).toBe('meerdere clubs horen bij één vereniging');
+    expect(feittype.rollen[0].cardinality).toBe('many');
+    expect(feittype.rollen[1].cardinality).toBe('one');
   });
 });

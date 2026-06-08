@@ -431,7 +431,7 @@ function resolveFeitTypeNavigation(
   let segmentLower = segment.toLowerCase();
   const sourceTypeLower = sourceType.toLowerCase();
 
-  // Handle "alle X" prefix - strip "alle " and force plural matching with N cardinality
+  // Handle "alle X" prefix - strip "alle " but keep semantic cardinality from FeitType.
   let forceCollectionCardinality = false;
   if (segmentLower.startsWith('alle ')) {
     segmentLower = segmentLower.substring(5); // Remove "alle "
@@ -464,8 +464,13 @@ function resolveFeitTypeNavigation(
           objectTypes.get(targetRole.objectType.toLowerCase());
 
         if (targetObjectType) {
-          // Determine cardinality: plural match or "alle" prefix = N, singular match = 1
-          const cardinality: '1' | 'N' = (matchesPlural || forceCollectionCardinality) ? 'N' : '1';
+          const cardinality = resolveRoleCardinality(targetRole, feitType.naam);
+          if (forceCollectionCardinality && cardinality !== 'N') {
+            throw new Error(
+              `Collection navigation 'alle ${segment}' conflicts with one-cardinality role ` +
+              `'${targetRole.naam}' in FeitType '${feitType.naam}'`
+            );
+          }
 
           return {
             sourceName: segment,
@@ -512,7 +517,7 @@ function resolveFeitTypeRole(
           return {
             objectType: targetObjectType.name,
             roleName: matchesPlural ? (role.meervoud || role.naam) : role.naam,
-            cardinality: matchesPlural ? 'N' : '1',
+            cardinality: resolveRoleCardinality(role, feitType.naam),
           };
         }
       }
@@ -520,6 +525,19 @@ function resolveFeitTypeRole(
   }
 
   return null;
+}
+
+function resolveRoleCardinality(role: Rol, feitTypeName: string): '1' | 'N' {
+  if (role.cardinality === 'one') {
+    return '1';
+  }
+  if (role.cardinality === 'many') {
+    return 'N';
+  }
+  throw new Error(
+    `Missing cardinality for role '${role.naam}' in FeitType '${feitTypeName}'. ` +
+    `Cardinality must come from the FeitType cardinality line, not from plural aliases.`
+  );
 }
 
 function resolveAttributeReference(

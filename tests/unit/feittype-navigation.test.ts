@@ -16,7 +16,7 @@ describe('Feittype Relationship Navigation', () => {
       const code = `
 Feittype vlucht van natuurlijke personen
   de reis	Vlucht
-  de passagier	Natuurlijk persoon
+  de passagier (mv: passagiers)	Natuurlijk persoon
 één reis vervoert één passagier
 
 Objecttype de Natuurlijk persoon
@@ -195,7 +195,7 @@ geldig altijd
       const code = `
 Feittype vlucht van natuurlijke personen
   de reis	Vlucht
-  de passagier	Natuurlijk persoon
+  de passagier (mv: passagiers)	Natuurlijk persoon
 één reis vervoert meerdere passagiers
 
 Objecttype de Natuurlijk persoon

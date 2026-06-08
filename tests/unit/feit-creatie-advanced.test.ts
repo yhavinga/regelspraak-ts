@@ -28,7 +28,7 @@ Objecttype de Bonus
   het bedrag Numeriek;
 
 Feittype werkzaam bij afdeling
-  de medewerker	Persoon
+  de medewerker (mv: medewerkers)	Persoon
   de afdeling	Afdeling
 meerdere medewerkers werken bij één afdeling
 
@@ -40,12 +40,12 @@ Feittype afdeling van bedrijf
 Feittype bonus van bedrijf
   de bonus	Bonus
   de bonusgever	Bedrijf
-één bonus wordt gegeven door één bedrijf
+één bonus wordt gegeven door één bonusgever
 
 Feittype toegekende bonus
   de ontvanger	Persoon
-  de toegekende bonus	Bonus
-één persoon kan meerdere bonussen ontvangen
+  de toegekende bonus (mv: bonussen)	Bonus
+één ontvanger ontvangt meerdere bonussen
 
 Regel bonus toekenning
   geldig altijd

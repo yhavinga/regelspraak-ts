@@ -572,8 +572,8 @@ describe('Expression Resolver', () => {
             naam: 'vlucht van natuurlijke personen',
             wederkerig: false,
             rollen: [
-              { naam: 'reis', objectType: 'Vlucht' },
-              { naam: 'passagier', meervoud: 'passagiers', objectType: 'Natuurlijk persoon' },
+              { naam: 'reis', objectType: 'Vlucht', cardinality: 'one' },
+              { naam: 'passagier', meervoud: 'passagiers', objectType: 'Natuurlijk persoon', cardinality: 'many' },
             ],
           },
         ],
@@ -637,7 +637,7 @@ describe('Expression Resolver', () => {
       expect(expr.resolved?.hasCollectionNavigation).toBe(true);
     });
 
-    it('resolves reverse FeitType navigation with singular: Vlucht -> passagier -> Natuurlijk persoon (cardinality 1)', () => {
+    it('resolves reverse FeitType navigation with singular role spelling using semantic cardinality', () => {
       const model = createFlightModel();
       const context = createResolutionContext(model, 'Vlucht', 'vlucht');
 
@@ -653,8 +653,35 @@ describe('Expression Resolver', () => {
 
       expect(feitNav.kind).toBe('feittype');
       expect(feitNav.resolvedName).toBe('passagier');
-      expect(feitNav.cardinality).toBe('1');
+      expect(feitNav.cardinality).toBe('N');
+    });
 
+    it('uses FeitType cardinality, not plural alias spelling, for navigation cardinality', () => {
+      const model = createFlightModel();
+      model.feitTypes = [
+        {
+          type: 'FeitType',
+          naam: 'badge van persoon',
+          wederkerig: false,
+          rollen: [
+            { naam: 'eigenaar', objectType: 'Natuurlijk persoon', cardinality: 'one' },
+            { naam: 'badge', meervoud: 'badges', objectType: 'Vlucht', cardinality: 'one' },
+          ],
+        },
+      ];
+      const context = createResolutionContext(model, 'Natuurlijk persoon', 'persoon');
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['zijn', 'badges'],
+      };
+
+      resolveExpression(expr, context);
+
+      const [, feitNav] = expr.resolved!.resolvedPath!;
+      expect(feitNav.kind).toBe('feittype');
+      expect(feitNav.resolvedName).toBe('badges');
+      expect(feitNav.cardinality).toBe('1');
       expect(expr.resolved?.hasCollectionNavigation).toBeFalsy();
     });
   });

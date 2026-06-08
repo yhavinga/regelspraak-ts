@@ -5,12 +5,16 @@
 /**
  * Represents a role in a feittype relationship
  */
+export type RoleCardinality = 'one' | 'many';
+
 export interface Rol {
   type: 'Rol';
   /** Role name (e.g., "passagier", "reis") */
   naam: string;
   /** Plural form of role name (e.g., "passagiers") */
   meervoud?: string;
+  /** Semantic cardinality from the FeitType cardinality line */
+  cardinality?: RoleCardinality;
   /** Object type that fulfills this role (e.g., "Natuurlijk persoon", "Vlucht") */
   objectType: string;
 }

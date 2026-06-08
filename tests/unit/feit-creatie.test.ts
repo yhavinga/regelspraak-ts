@@ -13,7 +13,7 @@ describe('FeitCreatie (Relationship Creation)', () => {
       const code = `
 Feittype verdeling contingent treinmiles over passagiers
   het te verdelen contingent treinmiles	Contingent Treinmiles
-  de passagier met recht op treinmiles	Natuurlijk persoon
+  de passagier met recht op treinmiles (mv: passagiers met recht op treinmiles)	Natuurlijk persoon
 één te verdelen contingent treinmiles wordt verdeeld over meerdere passagiers met recht op treinmiles
 
 Regel passagier met recht op treinmiles
@@ -47,7 +47,7 @@ Objecttype de Club
 
 Feittype lidmaatschap
   het lid	Persoon
-  de club	Club
+  de club (mv: clubs)	Club
 één lid kan lid zijn van meerdere clubs
 
 Regel maak lidmaatschap
@@ -109,7 +109,7 @@ Objecttype het Contingent
 
 Feittype vlucht van personen
   de vlucht	Vlucht
-  de passagier	Persoon
+  de passagier (mv: passagiers)	Persoon
 één vlucht heeft meerdere passagiers
 
 Feittype reis met contingent
@@ -119,8 +119,8 @@ Feittype reis met contingent
 
 Feittype verdeling contingent over passagiers
   het te verdelen contingent	Contingent
-  de passagier met recht op miles	Persoon
-één contingent wordt verdeeld over meerdere passagiers
+  de passagier met recht op miles (mv: passagiers met recht op miles)	Persoon
+één te verdelen contingent wordt verdeeld over meerdere passagiers met recht op miles
 
 Regel verdeel miles
   geldig altijd
@@ -208,7 +208,7 @@ Objecttype de Activiteit
   de minimum leeftijd Numeriek (positief geheel getal);
 
 Feittype deelname
-  de deelnemer	Persoon
+  de deelnemer (mv: deelnemers)	Persoon
   de activiteit	Activiteit
 meerdere deelnemers kunnen deelnemen aan één activiteit
 

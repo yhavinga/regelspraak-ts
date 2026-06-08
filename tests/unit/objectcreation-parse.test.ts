@@ -42,7 +42,7 @@ Objecttype het Contingent (mv: contingenten)
 
 Feittype reis met contingent
     de reis	Vlucht
-    het contingent	Contingent
+    het contingent (mv: contingenten)	Contingent
 één reis heeft meerdere contingenten
 
 Regel maak contingent
@@ -66,7 +66,7 @@ Objecttype het Contingent (mv: contingenten)
 
 Feittype reis met contingent
     de reis	Vlucht
-    het contingent	Contingent
+    het contingent (mv: contingenten)	Contingent
 één reis heeft meerdere contingenten
 
 Regel maak contingent met waarde
@@ -92,7 +92,7 @@ Objecttype de Badge (mv: badges)
 
 Feittype badge van personen
     de houder	Persoon
-    de badge	Badge
+    de badge (mv: badges)	Badge
 één houder heeft meerdere badges
 
 Regel maak badge
@@ -117,7 +117,7 @@ Objecttype de Reis (mv: reizen)
 
 Feittype reis van personen
     de reiziger	Persoon
-    de reis	Reis
+    de reis (mv: reizen)	Reis
 één reiziger heeft meerdere reizen
 
 Regel maak reis
@@ -137,7 +137,7 @@ Objecttype het Ticket (mv: tickets)
 
 Feittype ticket van vluchten
     de vlucht	Vlucht
-    het ticket	Ticket
+    het ticket (mv: tickets)	Ticket
 één vlucht heeft meerdere tickets
 
 Regel maak ticket
@@ -160,12 +160,12 @@ Objecttype de Boardingpass (mv: boardingpassen)
 
 Feittype passagiers van vlucht
     de reis	Vlucht
-    de passagier	Passagier
+    de passagier (mv: passagiers)	Passagier
 één reis heeft meerdere passagiers
 
 Feittype boardingpass van passagier
     de reiziger	Passagier
-    de boardingpass	Boardingpass
+    de boardingpass (mv: boardingpassen)	Boardingpass
 één reiziger heeft meerdere boardingpassen
 
 Regel maak boardingpass
@@ -188,7 +188,7 @@ Parameter de treinmiles per passagier : Numeriek
 
 Feittype reis met contingent
     de reis	Vlucht
-    het contingent	Contingent
+    het contingent (mv: contingenten)	Contingent
 één reis heeft meerdere contingenten
 
 Regel maak contingent treinmiles
@@ -296,7 +296,7 @@ Objecttype het Contingent (mv: contingenten)
 
 Feittype reis met contingent
     de reis	Vlucht
-    het contingent	Contingent
+    het contingent (mv: contingenten)	Contingent
 één reis heeft meerdere contingenten
 
 Regel maak contingent

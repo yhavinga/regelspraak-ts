@@ -78,7 +78,7 @@ import { PeriodDefinition } from '../ast/timelines';
 import { UnitSystemDefinition, UnitDefinition, UnitConversion } from '../ast/unit-systems';
 import { createSourceLocation } from '../ast/location';
 import { Dimension, DimensionLabel, DimensionedAttributeReference } from '../ast/dimensions';
-import { FeitType, Rol } from '../ast/feittype';
+import { FeitType, Rol, RoleCardinality } from '../ast/feittype';
 import { DomainModel } from '../ast/domain-model';
 
 /**
@@ -4497,6 +4497,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const cardinalityLineCtx = ctx.cardinalityLine();
     if (cardinalityLineCtx) {
       cardinalityDescription = this.extractCardinalityLine(cardinalityLineCtx);
+      this.applyFeitTypeCardinalities(naam, rollen, cardinalityDescription);
     }
 
     // Store FeitType for role resolution during object creation
@@ -4642,6 +4643,106 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     }
 
     return tokens.join(' ');
+  }
+
+  private applyFeitTypeCardinalities(
+    feitTypeName: string,
+    rollen: Rol[],
+    cardinalityDescription: string
+  ): void {
+    const line = this.normalizeCardinalityText(
+      this.trimCardinalityLineAtDefinitionBoundary(cardinalityDescription)
+    );
+    const startsLikeSpec = line.startsWith('één ') || line.startsWith('meerdere ');
+    const left = this.matchCardinalityEndpoint(line, rollen, 'start');
+    const right = this.matchCardinalityEndpoint(line, rollen, 'end');
+
+    if (!startsLikeSpec) {
+      return;
+    }
+
+    if (!left || !right) {
+      throw new Error(
+        `Invalid cardinality line for FeitType '${feitTypeName}': '${cardinalityDescription}'. ` +
+        `Expected endpoints like 'één <rolnaam>' or 'meerdere <meervoudrolnaam>'. ` +
+        `Known roles: ${this.describeKnownRoles(rollen)}`
+      );
+    }
+
+    const assignments = new Map<Rol, RoleCardinality>();
+    for (const endpoint of [left, right]) {
+      const existing = assignments.get(endpoint.role);
+      if (existing && existing !== endpoint.cardinality) {
+        throw new Error(
+          `Conflicting cardinality for role '${endpoint.role.naam}' in FeitType '${feitTypeName}': ` +
+          `${existing} and ${endpoint.cardinality}`
+        );
+      }
+      assignments.set(endpoint.role, endpoint.cardinality);
+    }
+
+    if (rollen.some(rol => !assignments.has(rol))) {
+      const missing = rollen.filter(rol => !assignments.has(rol)).map(rol => rol.naam).join(', ');
+      throw new Error(
+        `Incomplete cardinality line for FeitType '${feitTypeName}': missing role cardinality for ${missing}`
+      );
+    }
+
+    for (const [rol, cardinality] of assignments) {
+      rol.cardinality = cardinality;
+    }
+  }
+
+  private matchCardinalityEndpoint(
+    line: string,
+    rollen: Rol[],
+    position: 'start' | 'end'
+  ): { role: Rol; cardinality: RoleCardinality } | null {
+    const matches: Array<{ role: Rol; cardinality: RoleCardinality }> = [];
+
+    for (const rol of rollen) {
+      const singular = `één ${this.normalizeCardinalityText(rol.naam)}`;
+      if (this.endpointMatches(line, singular, position)) {
+        matches.push({ role: rol, cardinality: 'one' });
+      }
+
+      if (rol.meervoud) {
+        const plural = `meerdere ${this.normalizeCardinalityText(rol.meervoud)}`;
+        if (this.endpointMatches(line, plural, position)) {
+          matches.push({ role: rol, cardinality: 'many' });
+        }
+      }
+    }
+
+    if (matches.length > 1) {
+      const roleNames = matches.map(m => m.role.naam).join(', ');
+      throw new Error(`Ambiguous FeitType cardinality endpoint '${line}' matches roles: ${roleNames}`);
+    }
+
+    return matches[0] ?? null;
+  }
+
+  private endpointMatches(line: string, endpoint: string, position: 'start' | 'end'): boolean {
+    if (position === 'start') {
+      return line === endpoint || line.startsWith(`${endpoint} `);
+    }
+    return line === endpoint || line.endsWith(` ${endpoint}`);
+  }
+
+  private normalizeCardinalityText(text: string): string {
+    return text.toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+
+  private trimCardinalityLineAtDefinitionBoundary(text: string): string {
+    const boundary = /\s+(Objecttype|Parameter|Regelgroep|Regel|Feittype|Wederkerig feittype|Dimensie|Domein|Beslistabel|Consistentieregel|Eenheidsysteem|Dagsoort)\b/u;
+    const match = boundary.exec(text);
+    return match ? text.slice(0, match.index) : text;
+  }
+
+  private describeKnownRoles(rollen: Rol[]): string {
+    return rollen
+      .map(rol => rol.meervoud ? `${rol.naam} (mv: ${rol.meervoud})` : rol.naam)
+      .join(', ');
   }
 
   // Helper to extract parameter name from full reference with article
@@ -6720,4 +6821,3 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
   }
 
 }
-

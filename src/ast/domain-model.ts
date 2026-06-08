@@ -10,6 +10,7 @@ import { Dimension } from './dimensions';
 import { DagsoortDefinitie } from './dagsoort';
 import { DomainReference, DomainDefinition } from './object-types';
 import { UnitSystemDefinition } from './unit-systems';
+import { FeitType } from './feittype';
 
 export interface DomainModel {
   objectTypes: ObjectTypeDefinition[];
@@ -20,6 +21,6 @@ export interface DomainModel {
   dimensions: Dimension[];
   dagsoortDefinities: DagsoortDefinitie[];
   domains: DomainDefinition[];
-  feitTypes: any[]; // TODO: Define FeitType interface when implemented
+  feitTypes: FeitType[];
   unitSystems: UnitSystemDefinition[];
 }
