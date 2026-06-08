@@ -1704,15 +1704,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         collectionPath = pathParts.length > 0 ? pathParts.reverse() : [];
       }
 
-      // Fallback: use regex extraction if path extraction failed
       if (collectionPath.length === 0) {
-        let fallbackName = aantalMatch[1].trim();
-        // Remove "die..." suffix
-        const dieIdx = fallbackName.indexOf('die');
-        const datIdx = fallbackName.indexOf('dat');
-        if (dieIdx > 0) fallbackName = fallbackName.substring(0, dieIdx).trim();
-        else if (datIdx > 0) fallbackName = fallbackName.substring(0, datIdx).trim();
-        collectionPath = [fallbackName];
+        throw new Error(`Could not construct collection path from '${this.extractTextWithSpaces(ctx)}'`);
       }
 
       // Build the base expression
@@ -1789,11 +1782,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       variableName = pathParts.length > 0 ? pathParts.join(' ') : '';
     }
 
-    // Fallback: extract text without article
     if (!variableName) {
-      const text = ctxText;
-      const match = text.match(/^(?:de|het|een|zijn|alle)?\s*(.+)$/i);
-      variableName = match ? match[1] : text;
+      throw new Error(`Could not construct subject reference from '${this.extractTextWithSpaces(ctx)}'`);
     }
 
     const ref = {
@@ -2947,7 +2937,9 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       if (wordBoundaryRegex.test(attrText)) {
         dimensionLabels.push(label);
         // Remove the dimension keyword from the attribute text, preserving word boundaries
-        cleanAttrText = cleanAttrText.replace(wordBoundaryRegex, ' ').trim().replace(/\s+/g, ' ');
+        cleanAttrText = this.stripDanglingDimensionPreposition(
+          cleanAttrText.replace(wordBoundaryRegex, ' ').trim().replace(/\s+/g, ' ')
+        );
       }
     }
 
@@ -3005,77 +2997,18 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       }
     }
 
-    // Check if this is actually a nested navigation that was parsed incorrectly
-    // Due to grammar ambiguity, "de straat van het adres" might be parsed as a single naamwoord
-    if (attrText.includes(' van ') || attrText.includes(' op ') || attrText.includes(' bij ')) {
-      // First check if this is a known compound attribute name
-      let isCompoundAttribute = false;
-
-      // Normalize by removing articles for comparison (matches Python builder.py:1136)
-      const normalizedAttrText = this.extractParameterName(attrText);
-
-      // Check against all known object types
-      for (const [objectType, attributes] of this.objectTypeAttributes) {
-        if (attributes.has(normalizedAttrText)) {
-          isCompoundAttribute = true;
-          break;
-        }
-      }
-
-      // If it's a known compound attribute, don't split it
-      if (!isCompoundAttribute && attrText.includes(' van ')) {
-        // This is a nested navigation expression
-        // Split it and build the path properly
-        const parts = attrText.split(' van ');
-        const actualAttr = this.extractParameterName(parts[0]);
-
-        // Get the object path
-        const objectPath = this.visitOnderwerpReferentieToPath(onderwerpCtx);
-
-        // Build the complete path including the nested attributes
-        // For "de straat van het adres", parts = ["de straat", "het adres"]
-        // Process from right to left (Dutch navigation order)
-        const pathElements: string[] = [...objectPath];
-
-        // Add the middle parts in reverse order
-        for (let i = parts.length - 1; i >= 1; i--) {
-          pathElements.push(this.extractParameterName(parts[i]));
-        }
-
-        // Add the outermost attribute
-        pathElements.push(actualAttr);
-
-        const attrRef = {
-          type: 'AttributeReference',
-          path: pathElements
-        } as AttributeReference;
-
-        // If we have dimension labels, wrap in DimensionedAttributeReference
-        if (dimensionLabels.length > 0) {
-          const node = {
-            type: 'DimensionedAttributeReference',
-            baseAttribute: attrRef,
-            dimensionLabels
-          } as DimensionedAttributeReference;
-          this.setLocation(node, ctx);
-          return node;
-        }
-
-        this.setLocation(attrRef, ctx);
-        return attrRef;
-      }
-    }
-
-    // Simple case: no nested navigation in attribute
-    const attrName = this.extractParameterName(cleanAttrText);
-
     // Get the object path
     const objectPath = this.visitOnderwerpReferentieToPath(onderwerpCtx);
+    const attrNaamwoordCtx = attrCtx.naamwoordNoIs ? attrCtx.naamwoordNoIs() : attrCtx;
+    const attrPath = this.parseNounContextToNavigationPath(attrNaamwoordCtx, 'NaamPhraseNoIsContext');
+    const normalizedAttrPath = attrPath.length === 1
+      ? [this.extractParameterName(cleanAttrText)]
+      : attrPath.map(part => this.extractParameterName(part));
 
     // Build the full path for AttributeReference
     // Dutch right-to-left navigation per specification
     // For "de naam van de Manager", this becomes ["Manager", "naam"]
-    const fullPath = [...objectPath, attrName];
+    const fullPath = [...objectPath, ...normalizedAttrPath];
 
     // Create AttributeReference with the full path
     const baseAttrRef = {
@@ -3242,15 +3175,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const path = this.onderwerpBasisToPath(ctx);
 
     if (path.length === 0) {
-      // Fallback: extract text without articles
-      const fallback = ctx.getText().replace(/^(de|het|een|zijn|alle)\s*/i, '').trim();
-      // Even for fallback, use AttributeReference to maintain consistency
-      const ref: AttributeReference = {
-        type: 'AttributeReference',
-        path: [fallback]
-      } as AttributeReference;
-      this.setLocation(ref, ctx);
-      return ref;
+      throw new Error(`Could not construct subject path from '${this.extractTextWithSpaces(ctx)}'`);
     }
 
     if (path.length === 1 && path[0] === 'self') {
@@ -3316,10 +3241,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const identifierList = Array.isArray(identifiers) ? identifiers : (identifiers ? [identifiers] : []);
 
     if (identifierList.length === 0) {
-      // No identifiers, try fallback with text extraction
-      const text = this.extractTextWithSpaces(ctx);
-      // Remove common articles but preserve possessives
-      return text.replace(/^(de|het|een|alle)\s+/i, '').trim();
+      throw new Error(`Could not extract subject segment from '${this.extractTextWithSpaces(ctx)}'`);
     }
 
     // Build identifier text with proper spacing
@@ -3328,12 +3250,6 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     // Handle possessive pronoun "zijn" - must be preserved for FeitType navigation
     if (ctx.ZIJN && ctx.ZIJN()) {
       text = `zijn ${text}`.trim();
-    }
-
-    // Split on "van" if present to avoid duplicate navigation segments
-    // e.g., "burgemeester van de hoofdstad" -> "burgemeester"
-    if (text.includes(' van ')) {
-      text = text.split(' van ')[0].trim();
     }
 
     return text;
@@ -5742,50 +5658,31 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     return allParts.length > 0 ? allParts.join(' ') : this.extractTextWithSpaces(ctx);
   }
 
-  /**
-   * Parse a naamwoord context into a navigation path array.
-   * Handles patterns like "passagiers van de reis" and returns ["reis", "passagiers"]
-   * for proper navigation through relationships.
-   * 
-   * Key distinction:
-   * - "passagiers van de reis" = navigation (only "van") → split to ["reis", "passagiers"]
-   * - "belasting op basis van afstand" = compound attr (has "op" + "van") → keep as single element
-   * 
-   * Port of Python builder.py:935-986 (_parse_naamwoord_to_navigation_path)
-   */
-  private _parseNaamwoordToNavigationPath(ctx: any): string[] {
+  private parseNounContextToNavigationPath(ctx: any, phraseContextName: string): string[] {
     if (!ctx) {
       return [];
     }
 
-    // Collect all parts from the naamwoord structure
-    // Grammar: naamwoord : naamPhrase ( voorzetsel naamPhrase )*
     const parts: string[] = [];
     const prepositions: string[] = [];
-    const prepositionIndices: number[] = []; // Track which parts are preceded by specific prepositions
+    const startsWithArticle: boolean[] = [];
 
     const childCount = ctx.getChildCount ? ctx.getChildCount() : 0;
-    let lastPreposition = '';
 
     for (let i = 0; i < childCount; i++) {
       const child = ctx.getChild(i);
 
-      if (child.constructor.name === 'NaamPhraseContext') {
-        // Extract text from naamPhrase
+      if (child.constructor.name === phraseContextName) {
         const phraseText: string[] = [];
         const phraseChildCount = child.getChildCount ? child.getChildCount() : 0;
-        let startsWithArticle = false;
+        let firstToken: string | undefined;
 
         for (let j = 0; j < phraseChildCount; j++) {
           const subchild = child.getChild(j);
           if (subchild.getText) {
             const tokenText = subchild.getText().toLowerCase();
-            // Track if phrase starts with article (navigation indicator)
-            if (j === 0 && ['de', 'het', 'een', 'De', 'Het', 'Een', 'alle'].includes(tokenText)) {
-              startsWithArticle = true;
-            }
-            // Skip articles in output
-            if (!['de', 'het', 'een', 'De', 'Het', 'Een'].includes(tokenText)) {
+            firstToken ??= tokenText;
+            if (!['de', 'het', 'een'].includes(tokenText)) {
               phraseText.push(subchild.getText());
             }
           }
@@ -5793,57 +5690,138 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
         if (phraseText.length > 0) {
           parts.push(phraseText.join(' '));
-          // Track if this part is preceded by "van" + article (navigation pattern)
-          if (lastPreposition === 'van' && startsWithArticle) {
-            prepositionIndices.push(parts.length - 1);
-          }
+          startsWithArticle.push(['de', 'het', 'een', 'alle'].includes(firstToken ?? ''));
         }
-        lastPreposition = '';
       } else if (child.constructor.name === 'VoorzetselContext') {
-        const text = this.extractText(child);
-        prepositions.push(text);
-        lastPreposition = text;
+        prepositions.push(this.extractText(child));
       }
     }
 
-    // Find navigation split point: rightmost "van" followed by article+noun
-    // Pattern: compound attributes with "op" or internal "van" stay together,
-    // but "van de/het/alle X" at the end is navigation
-    if (parts.length >= 2 && prepositionIndices.length > 0) {
-      // Split at the first navigation indicator
-      const navIdx = prepositionIndices[0];
-
-      // Everything before navIdx is the compound attribute
-      const compoundAttribute = this.visitNaamwoord({
-        getChildCount: () => {
-          // Reconstruct partial context - just return full text for parts before nav
-          return 0;
-        },
-        getText: () => parts.slice(0, navIdx).join(' ')
-      });
-
-      // Parts from navIdx onward are navigation elements
-      const navParts = parts.slice(navIdx);
-
-      // Reverse navigation parts (Dutch right-to-left)
-      // and prepend compound attribute
-      return [...navParts.reverse(), parts.slice(0, navIdx).join(' ')];
+    if (parts.length === 0) {
+      throw new Error(`Could not construct navigation path from '${this.extractTextWithSpaces(ctx)}'`);
     }
 
-    // Simple case: only "van" preposition(s) without article pattern
-    // This handles "passagiers van de reis" → ["reis", "passagiers"]
-    const isSimpleNavigation = parts.length >= 2 &&
-      prepositions.length >= 1 &&
-      prepositions.every(p => p === 'van');
-
-    if (isSimpleNavigation) {
-      // Reverse for Dutch navigation: "passagiers van de reis" -> ["reis", "passagiers"]
-      return parts.reverse();
+    if (prepositions.length === 0 && parts.length === 1) {
+      const collapsedPath = this.parseCollapsedNounPath(ctx);
+      if (collapsedPath) {
+        return collapsedPath;
+      }
     }
 
-    // Not navigation - return as single compound element
-    // Preserves compound attribute names like "belasting op basis van afstand"
-    return parts.length > 0 ? [this.visitNaamwoord(ctx)] : [this.extractTextWithSpaces(ctx)];
+    const navigationParts: string[] = [];
+    let attributeEnd = parts.length;
+    for (let i = prepositions.length - 1; i >= 0; i--) {
+      const subject = this.reconstructNounPart(parts, prepositions, i + 1, attributeEnd);
+      if (
+        prepositions[i] === 'van' &&
+        (startsWithArticle[i + 1] || this.isKnownNavigationSubject(subject))
+      ) {
+        navigationParts.push(subject);
+        attributeEnd = i + 1;
+      }
+    }
+
+    if (navigationParts.length > 0) {
+      return [
+        ...navigationParts,
+        this.reconstructNounPart(parts, prepositions, 0, attributeEnd)
+      ];
+    }
+
+    return [this.reconstructNounPart(parts, prepositions, 0, parts.length)];
+  }
+
+  private stripDanglingDimensionPreposition(text: string): string {
+    return text.replace(/\s+(van|op|bij|in|met|voor)$/i, '').trim();
+  }
+
+  private parseCollapsedNounPath(ctx: any): string[] | null {
+    const tokens = this.collectTerminalTexts(ctx);
+    for (let i = tokens.length - 1; i >= 0; i--) {
+      if (tokens[i].toLowerCase() !== 'van') {
+        continue;
+      }
+
+      const left = this.normalizeNounTokens(tokens.slice(0, i));
+      const right = this.normalizeNounTokens(tokens.slice(i + 1));
+      if (left && this.isKnownNavigationSubject(right)) {
+        return [right, left];
+      }
+    }
+    return null;
+  }
+
+  private collectTerminalTexts(ctx: any): string[] {
+    if (!ctx) {
+      return [];
+    }
+
+    const childCount = ctx.getChildCount ? ctx.getChildCount() : 0;
+    if (childCount === 0) {
+      const text = ctx.getText ? ctx.getText() : '';
+      return text ? [text] : [];
+    }
+
+    const tokens: string[] = [];
+    for (let i = 0; i < childCount; i++) {
+      tokens.push(...this.collectTerminalTexts(ctx.getChild(i)));
+    }
+    return tokens;
+  }
+
+  private normalizeNounTokens(tokens: string[]): string {
+    return tokens
+      .filter(token => !['de', 'het', 'een'].includes(token.toLowerCase()))
+      .join(' ')
+      .trim();
+  }
+
+  private isKnownNavigationSubject(text: string | undefined): boolean {
+    if (!text) {
+      return false;
+    }
+
+    const normalized = this.extractParameterName(text).toLowerCase();
+    for (const objectType of this.objectTypeAttributes.keys()) {
+      if (objectType.toLowerCase() === normalized) {
+        return true;
+      }
+    }
+
+    for (const [, feitType] of this.feitTypes) {
+      for (const role of feitType.rollen || []) {
+        if (role.naam?.toLowerCase() === normalized) {
+          return true;
+        }
+        if (role.meervoud?.toLowerCase() === normalized) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  private reconstructNounPart(
+    parts: string[],
+    prepositions: string[],
+    start: number,
+    end: number
+  ): string {
+    let text = parts[start] ?? '';
+    for (let i = start; i < end - 1; i++) {
+      text = `${text} ${prepositions[i]} ${parts[i + 1]}`.trim();
+    }
+    return text;
+  }
+
+  /**
+   * Parse a naamwoord context into a navigation path array.
+   * Handles patterns like "passagiers van de reis" and returns ["reis", "passagiers"]
+   * for proper navigation through relationships.
+   */
+  private _parseNaamwoordToNavigationPath(ctx: any): string[] {
+    return this.parseNounContextToNavigationPath(ctx, 'NaamPhraseContext');
   }
 
 
@@ -5894,7 +5872,6 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
   }
 
   visitNaamwoordNoIs(ctx: any): string {
-    // First, get the complete text without articles to check if it's a known attribute
     const completeTextParts: string[] = [];
     const childCount = ctx.getChildCount ? ctx.getChildCount() : 0;
 
@@ -5923,101 +5900,10 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     }
 
     const completeText = completeTextParts.join(' ');
-
-    // For now, skip the domain model check and proceed with truncation logic
-    // This can be enhanced later when domain model is properly integrated
-
-    // Process with truncation logic for navigation
-    const allParts: string[] = [];
-    const navigationIndicators = ['de', 'het', 'alle', 'een', 'zijn', 'haar', 'hun'];
-    let stopAtNavigation = false;
-
-    // Process the complete structure
-    for (let i = 0; i < childCount; i++) {
-      const child = ctx.getChild(i);
-
-      if (child.constructor.name === 'NaamPhraseNoIsContext') {
-        // Check if this phrase starts with a navigation indicator
-        let hasNavIndicator = false;
-        let firstToken: string | null = null;
-
-        const phraseChildCount = child.getChildCount ? child.getChildCount() : 0;
-        for (let j = 0; j < phraseChildCount; j++) {
-          const subchild = child.getChild(j);
-          if (subchild.getText) {
-            const tokenText = subchild.getText().toLowerCase();
-            if (firstToken === null) {
-              firstToken = tokenText;
-            }
-            if (navigationIndicators.includes(tokenText)) {
-              hasNavIndicator = true;
-              break;
-            }
-          } else if (subchild.constructor.name === 'IdentifierOrKeywordNoIsContext' && firstToken === null) {
-            firstToken = this.extractText(subchild).toLowerCase();
-          }
-        }
-
-        // If we've seen a voorzetsel and this phrase starts with navigation indicator, stop
-        if (i > 0 && hasNavIndicator) {
-          stopAtNavigation = true;
-          break;
-        }
-
-        // Process naam phrase - extract text without articles
-        const phraseParts: string[] = [];
-        for (let j = 0; j < phraseChildCount; j++) {
-          const subchild = child.getChild(j);
-          if (subchild.getText) {
-            const text = subchild.getText();
-            // Skip articles
-            if (!['de', 'het', 'een', 'De', 'Het', 'Een'].includes(text)) {
-              phraseParts.push(text);
-            }
-          } else if (subchild.constructor.name === 'IdentifierOrKeywordNoIsContext') {
-            const text = this.extractText(subchild);
-            // Skip capitalized articles that were parsed as identifiers
-            if (!['de', 'het', 'een'].includes(text.toLowerCase())) {
-              phraseParts.push(text);
-            }
-          }
-        }
-
-        if (phraseParts.length > 0) {
-          allParts.push(phraseParts.join(' '));
-        }
-      } else if (child.constructor.name === 'VoorzetselContext') {
-        // Check if the next naamPhrase starts with navigation indicator
-        if (i + 1 < childCount) {
-          const nextChild = ctx.getChild(i + 1);
-          if (nextChild.constructor.name === 'NaamPhraseNoIsContext') {
-            // Check if it starts with navigation indicator
-            const nextChildCount = nextChild.getChildCount ? nextChild.getChildCount() : 0;
-            for (let j = 0; j < nextChildCount; j++) {
-              const subchild = nextChild.getChild(j);
-              if (subchild.getText) {
-                const tokenText = subchild.getText().toLowerCase();
-                if (navigationIndicators.includes(tokenText)) {
-                  stopAtNavigation = true;
-                  break;
-                }
-              }
-              break; // Only check first token
-            }
-          }
-        }
-
-        if (stopAtNavigation) {
-          break;
-        }
-
-        // Add the preposition
-        allParts.push(this.extractText(child));
-      }
+    if (!completeText) {
+      throw new Error(`Could not extract naamwoord from '${this.extractTextWithSpaces(ctx)}'`);
     }
-
-    // Join all parts with spaces
-    return allParts.length > 0 ? allParts.join(' ') : this.extractTextWithSpaces(ctx);
+    return completeText;
   }
 
   visitSimpleNaamwoord(ctx: any): string {

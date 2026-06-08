@@ -283,6 +283,46 @@ describe('Expression Resolver', () => {
       expect(attrSegment.targetType).toBe('Numeriek');
     });
 
+    it('rejects an unknown root segment', () => {
+      const model = createPersonModel();
+      const context = createResolutionContext(model);
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['Onbekend', 'leeftijd'],
+      };
+
+      expect(() => resolveExpression(expr, context)).toThrow(/Unknown navigation root 'Onbekend'/);
+    });
+
+    it('rejects an unknown terminal attribute instead of partially resolving the path', () => {
+      const model = createPersonModel();
+      const context = createResolutionContext(model);
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['Persoon', 'onbekend attribuut'],
+      };
+
+      expect(() => resolveExpression(expr, context)).toThrow(
+        /Cannot resolve navigation segment 'onbekend attribuut' from 'Persoon'/
+      );
+    });
+
+    it('rejects navigation through a scalar terminal', () => {
+      const model = createPersonModel();
+      const context = createResolutionContext(model);
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['Persoon', 'leeftijd', 'waarde'],
+      };
+
+      expect(() => resolveExpression(expr, context)).toThrow(
+        /Cannot navigate through scalar segment 'leeftijd'/
+      );
+    });
+
     it('detects collection navigation (1:N)', () => {
       const model: DomainModel = {
         objectTypes: [{
@@ -323,6 +363,40 @@ describe('Expression Resolver', () => {
 
       expect(expr.resolved?.hasCollectionNavigation).toBe(true);
       expect(expr.resolved?.resolvedPath![1].cardinality).toBe('N');
+    });
+
+    it('keeps a declared compound attribute with prepositions as one segment', () => {
+      const model: DomainModel = {
+        objectTypes: [{
+          type: 'ObjectTypeDefinition',
+          name: 'Passagier',
+          members: [{
+            type: 'AttributeSpecification',
+            name: 'belasting op basis van afstand',
+            dataType: { type: 'Numeriek' },
+          }],
+        }],
+        parameters: [],
+        regels: [],
+        regelGroepen: [],
+        beslistabels: [],
+        dimensions: [],
+        dagsoortDefinities: [],
+        domains: [],
+        feitTypes: [],
+        unitSystems: [],
+      };
+      const context = createResolutionContext(model);
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['Passagier', 'belasting op basis van afstand'],
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.resolvedPath).toHaveLength(2);
+      expect(expr.resolved?.resolvedPath![1].resolvedName).toBe('belasting op basis van afstand');
     });
   });
 
@@ -584,7 +658,7 @@ describe('Expression Resolver', () => {
       expect(kenmerkSegment.targetType).toBe('Boolean');
     });
 
-    it('does NOT resolve ["self", "heeft minderjarig"] for bijvoeglijk kenmerk', () => {
+    it('rejects ["self", "heeft minderjarig"] for bijvoeglijk kenmerk', () => {
       const model = createKenmerkModel();
       const context = createResolutionContext(model, 'Natuurlijk persoon', 'persoon');
 
@@ -593,12 +667,9 @@ describe('Expression Resolver', () => {
         path: ['self', 'heeft minderjarig'],
       };
 
-      resolveExpression(expr, context);
-
-      // Should only have possessive segment, kenmerk should NOT resolve
-      // because "heeft" is not valid for bijvoeglijk kenmerken
-      expect(expr.resolved?.resolvedPath).toHaveLength(1);
-      expect(expr.resolved?.resolvedPath![0].kind).toBe('possessive');
+      expect(() => resolveExpression(expr, context)).toThrow(
+        /Cannot resolve navigation segment 'heeft minderjarig'/
+      );
     });
 
     it('resolves direct kenmerk name without prefix', () => {
@@ -766,6 +837,72 @@ describe('Expression Resolver', () => {
       expect(feitNav.resolvedName).toBe('badges');
       expect(feitNav.cardinality).toBe('1');
       expect(expr.resolved?.hasCollectionNavigation).toBeFalsy();
+    });
+
+    it('rejects FeitType navigation back through the source role', () => {
+      const model = createFlightModel();
+
+      const selfTripFromFlight: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['Vlucht', 'reis'],
+      };
+      expect(() => resolveExpression(selfTripFromFlight, createResolutionContext(model))).toThrow(
+        /Cannot resolve navigation segment 'reis' from 'Vlucht'/
+      );
+
+      const selfTripFromPerson: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['Natuurlijk persoon', 'passagier'],
+      };
+      expect(() => resolveExpression(selfTripFromPerson, createResolutionContext(model))).toThrow(
+        /Cannot resolve navigation segment 'passagier' from 'Natuurlijk persoon'/
+      );
+    });
+
+    it('rejects ambiguous FeitType navigation from the same source type', () => {
+      const model = createFlightModel();
+      model.objectTypes.push(
+        {
+          type: 'ObjectTypeDefinition',
+          name: 'Hotel',
+          members: [],
+        },
+        {
+          type: 'ObjectTypeDefinition',
+          name: 'Trein',
+          members: [],
+        }
+      );
+      model.feitTypes = [
+        {
+          type: 'FeitType',
+          naam: 'vlucht hotel relatie',
+          wederkerig: false,
+          rollen: [
+            { naam: 'reis', objectType: 'Vlucht', cardinality: 'one' },
+            { naam: 'bestemming', objectType: 'Hotel', cardinality: 'one' },
+          ],
+        },
+        {
+          type: 'FeitType',
+          naam: 'vlucht trein relatie',
+          wederkerig: false,
+          rollen: [
+            { naam: 'reis', objectType: 'Vlucht', cardinality: 'one' },
+            { naam: 'bestemming', objectType: 'Trein', cardinality: 'one' },
+          ],
+        },
+      ];
+      const context = createResolutionContext(model);
+
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['Vlucht', 'bestemming'],
+      };
+
+      expect(() => resolveExpression(expr, context)).toThrow(
+        /Ambiguous navigation segment 'bestemming' from 'Vlucht'/
+      );
     });
   });
 

@@ -498,35 +498,39 @@ function resolveParameterReference(
  * via the same FeitType → role "passagier" (meervoud: "passagiers") → "Natuurlijk persoon"
  * with cardinality 'N'.
  */
+interface NavigationCandidate {
+  segment: ResolvedPathSegment;
+  nextType?: string;
+  unit?: string;
+  timeline?: TimelineInfo;
+  description: string;
+}
+
 function resolveFeitTypeNavigation(
   segment: string,
   sourceType: string,
   feitTypes: Map<string, FeitType>,
   objectTypes: Map<string, ObjectTypeDefinition>
-): ResolvedPathSegment | null {
+): NavigationCandidate[] {
   let segmentLower = segment.toLowerCase();
   const sourceTypeLower = sourceType.toLowerCase();
+  const candidates: NavigationCandidate[] = [];
 
-  // Handle "alle X" prefix - strip "alle " but keep semantic cardinality from FeitType.
   let forceCollectionCardinality = false;
   if (segmentLower.startsWith('alle ')) {
-    segmentLower = segmentLower.substring(5); // Remove "alle "
+    segmentLower = segmentLower.substring(5);
     forceCollectionCardinality = true;
   }
 
-  // Search all FeitTypes for a matching navigation
   for (const [, feitType] of feitTypes) {
-    // Find which roles involve sourceType
     const sourceRoles = feitType.rollen.filter(
       (r) => r.objectType?.toLowerCase() === sourceTypeLower
     );
 
     if (sourceRoles.length === 0) {
-      continue; // This FeitType doesn't involve our sourceType
+      continue;
     }
 
-    // Find a role that matches the segment name (this is the navigation target)
-    // Check both singular (naam) and plural (meervoud) forms
     for (const targetRole of feitType.rollen) {
       if (!targetRole.objectType) continue;
 
@@ -534,6 +538,11 @@ function resolveFeitTypeNavigation(
       const matchesPlural = targetRole.meervoud?.toLowerCase() === segmentLower;
 
       if (matchesSingular || matchesPlural) {
+        const viableSourceRoles = sourceRoles.filter(sourceRole => sourceRole !== targetRole);
+        if (viableSourceRoles.length === 0) {
+          continue;
+        }
+
         // Verify the target objectType exists
         const targetObjectType =
           objectTypes.get(targetRole.objectType) ||
@@ -548,34 +557,40 @@ function resolveFeitTypeNavigation(
             );
           }
 
-          return {
-            sourceName: segment,
-            resolvedName: matchesPlural ? (targetRole.meervoud || targetRole.naam) : targetRole.naam,
-            kind: 'feittype',
-            sourceType: sourceType,
-            targetType: targetObjectType.name,
-            cardinality,
-          };
+          const resolvedName = matchesPlural ? (targetRole.meervoud || targetRole.naam) : targetRole.naam;
+          candidates.push({
+            segment: {
+              sourceName: segment,
+              resolvedName,
+              kind: 'feittype',
+              sourceType,
+              targetType: targetObjectType.name,
+              cardinality,
+            },
+            nextType: targetObjectType.name,
+            description: `FeitType '${feitType.naam}' role '${resolvedName}' -> '${targetObjectType.name}'`,
+          });
         }
       }
     }
   }
 
-  return null;
+  return candidates;
 }
 
 /**
  * Resolve a FeitType role name to its object type.
  * Used when the first path segment is a role name (e.g., "verdeler" → "Budgetverdeler").
  *
- * Returns the object type name if the segment matches a FeitType role, otherwise null.
+ * Returns all role matches so the caller can reject ambiguous roots.
  */
 function resolveFeitTypeRole(
   segment: string,
   feitTypes: Map<string, FeitType>,
   objectTypes: Map<string, ObjectTypeDefinition>
-): { objectType: string; roleName: string; cardinality: '1' | 'N' } | null {
+): NavigationCandidate[] {
   const segmentLower = segment.toLowerCase();
+  const candidates: NavigationCandidate[] = [];
 
   for (const [, feitType] of feitTypes) {
     for (const role of feitType.rollen) {
@@ -590,17 +605,25 @@ function resolveFeitTypeRole(
           objectTypes.get(role.objectType.toLowerCase());
 
         if (targetObjectType) {
-          return {
-            objectType: targetObjectType.name,
-            roleName: matchesPlural ? (role.meervoud || role.naam) : role.naam,
-            cardinality: resolveRoleCardinality(role, feitType.naam),
-          };
+          candidates.push({
+            segment: {
+              sourceName: segment,
+              resolvedName: targetObjectType.name,
+              kind: 'feittype',
+              sourceType: 'context',
+              targetType: targetObjectType.name,
+              cardinality: resolveRoleCardinality(role, feitType.naam),
+            },
+            nextType: targetObjectType.name,
+            description: `FeitType '${feitType.naam}' root role ` +
+              `'${matchesPlural ? (role.meervoud || role.naam) : role.naam}' -> '${targetObjectType.name}'`,
+          });
         }
       }
     }
   }
 
-  return null;
+  return candidates;
 }
 
 function resolveRoleCardinality(role: Rol, feitTypeName: string): '1' | 'N' {
@@ -616,12 +639,211 @@ function resolveRoleCardinality(role: Rol, feitTypeName: string): '1' | 'N' {
   );
 }
 
+function formatPath(path: string[]): string {
+  return path.join(' -> ');
+}
+
+function lookupObjectType(
+  name: string,
+  maps: ResolutionMaps
+): ObjectTypeDefinition | undefined {
+  return maps.objectTypes.get(name) || maps.objectTypes.get(name.toLowerCase());
+}
+
+function lookupScopeVariable(
+  name: string,
+  context: ResolutionContext
+): { name: string; objectType: string } | undefined {
+  for (let i = context.scopeStack.length - 1; i >= 0; i--) {
+    const frame = context.scopeStack[i];
+    const variable = frame.variables.get(name) || frame.variables.get(name.toLowerCase());
+    if (variable) {
+      return variable;
+    }
+  }
+  return undefined;
+}
+
+function resolveAttributeTarget(
+  attr: AttributeSpecification
+): { targetType: string; cardinality: '1' | 'N' } {
+  if ('domain' in attr.dataType) {
+    return { targetType: attr.dataType.domain, cardinality: '1' };
+  }
+  if (attr.dataType.type === 'Lijst') {
+    return {
+      targetType: attr.dataType.specification || 'unknown',
+      cardinality: 'N',
+    };
+  }
+  return { targetType: attr.dataType.type, cardinality: '1' };
+}
+
+function resolveTimelineFromAttribute(
+  attr: AttributeSpecification
+): TimelineInfo | undefined {
+  if (!attr.timelineGranularity) {
+    return undefined;
+  }
+  return {
+    granularity: attr.timelineGranularity,
+    source: 'attribute',
+  };
+}
+
+function resolveTimelineFromKenmerk(
+  kenmerk: KenmerkSpecification
+): TimelineInfo | undefined {
+  if (!kenmerk.timelineGranularity) {
+    return undefined;
+  }
+  return {
+    granularity: kenmerk.timelineGranularity,
+    source: 'kenmerk',
+  };
+}
+
+function selectSingleCandidate(
+  candidates: NavigationCandidate[],
+  errorPrefix: string
+): NavigationCandidate {
+  if (candidates.length === 0) {
+    throw new Error(errorPrefix);
+  }
+  if (candidates.length > 1) {
+    const descriptions = candidates.map(candidate => candidate.description).join('; ');
+    throw new Error(`${errorPrefix}. Candidates: ${descriptions}`);
+  }
+  return candidates[0];
+}
+
+function resolveRootCandidates(
+  segment: string,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): NavigationCandidate[] {
+  const candidates: NavigationCandidate[] = [];
+  const objectType = lookupObjectType(segment, maps);
+  if (objectType) {
+    candidates.push({
+      segment: {
+        sourceName: segment,
+        resolvedName: objectType.name,
+        kind: 'variable',
+        sourceType: 'context',
+        targetType: objectType.name,
+        cardinality: '1',
+      },
+      nextType: objectType.name,
+      description: `ObjectType '${objectType.name}'`,
+    });
+  }
+
+  const scopeVariable = lookupScopeVariable(segment, context);
+  if (scopeVariable) {
+    candidates.push({
+      segment: {
+        sourceName: segment,
+        resolvedName: scopeVariable.name,
+        kind: 'variable',
+        sourceType: 'context',
+        targetType: scopeVariable.objectType,
+        cardinality: '1',
+      },
+      nextType: scopeVariable.objectType,
+      description: `scope variable '${scopeVariable.name}' -> '${scopeVariable.objectType}'`,
+    });
+  }
+
+  candidates.push(...resolveFeitTypeRole(segment, maps.feitTypes, maps.objectTypes));
+  return candidates;
+}
+
+function resolveSegmentCandidates(
+  segment: string,
+  currentType: string,
+  maps: ResolutionMaps
+): NavigationCandidate[] {
+  const candidates: NavigationCandidate[] = [];
+  const segmentLower = segment.toLowerCase();
+
+  const attrMap = maps.attributes.get(currentType) || maps.attributes.get(currentType.toLowerCase());
+  const attr = attrMap?.get(segment) || attrMap?.get(segmentLower);
+  if (attr) {
+    const { targetType, cardinality } = resolveAttributeTarget(attr);
+    candidates.push({
+      segment: {
+        sourceName: segment,
+        resolvedName: attr.name,
+        kind: 'attribute',
+        sourceType: currentType,
+        targetType,
+        cardinality,
+      },
+      nextType: lookupObjectType(targetType, maps)?.name,
+      unit: attr.unit,
+      timeline: resolveTimelineFromAttribute(attr),
+      description: `attribute '${attr.name}' on '${currentType}'`,
+    });
+  }
+
+  const kenmerkMap = maps.kenmerken.get(currentType) || maps.kenmerken.get(currentType.toLowerCase());
+  const registry = maps.kenmerkRegistries.get(currentType) || maps.kenmerkRegistries.get(currentType.toLowerCase());
+  let kenmerk = kenmerkMap?.get(segment) || kenmerkMap?.get(segmentLower);
+  if (!kenmerk && registry && kenmerkMap) {
+    const canonicalName = registry.getCanonicalLabel(segment);
+    kenmerk = kenmerkMap.get(canonicalName) || kenmerkMap.get(canonicalName.toLowerCase());
+  }
+
+  if (kenmerk) {
+    candidates.push({
+      segment: {
+        sourceName: segment,
+        resolvedName: kenmerk.name,
+        kind: 'attribute',
+        sourceType: currentType,
+        targetType: 'Boolean',
+        cardinality: '1',
+      },
+      timeline: resolveTimelineFromKenmerk(kenmerk),
+      description: `kenmerk '${kenmerk.name}' on '${currentType}'`,
+    });
+  }
+
+  candidates.push(...resolveFeitTypeNavigation(segment, currentType, maps.feitTypes, maps.objectTypes));
+  return candidates;
+}
+
+function resolveFinalType(
+  finalType: string,
+  maps: ResolutionMaps
+): DataType | DomainReference | { type: 'ObjectType'; name: string } {
+  const finalObjectType = lookupObjectType(finalType, maps);
+  if (finalObjectType) {
+    return { type: 'ObjectType', name: finalObjectType.name } as any;
+  }
+
+  switch (finalType) {
+    case 'Numeriek':
+    case 'Tekst':
+    case 'Boolean':
+    case 'Datum':
+    case 'DatumTijd':
+      return { type: finalType } as DataType;
+    default:
+      return { type: 'DomainReference', domain: finalType } as DomainReference;
+  }
+}
+
+function stripDanglingDimensionPreposition(text: string): string {
+  return text.replace(/\s+(van|op|bij|in|met|voor)$/i, '').trim();
+}
+
 function resolveAttributeReference(
   expr: AttributeReference,
   context: ResolutionContext,
   maps: ResolutionMaps
 ): AttributeReference {
-  // Normalize path: handle compound possessives like "zijn reis" → ["self", "reis"]
   const path = normalizeCompoundPossessives(expr.path);
   if (path.length === 0) {
     return expr;
@@ -633,8 +855,8 @@ function resolveAttributeReference(
   let hasCollectionNavigation = false;
   let terminalUnit: string | undefined;
   let terminalTimelineInfo: TimelineInfo | undefined;
+  let startIndex = 0;
 
-  // Check if first segment is a possessive pronoun
   const firstSegment = path[0].toLowerCase();
   const isPossessive = POSSESSIVE_PRONOUNS.includes(firstSegment);
 
@@ -650,200 +872,56 @@ function resolveAttributeReference(
       cardinality: '1',
     });
     currentType = binding.objectTypeName;
+    startIndex = 1;
   } else {
-    // First segment might be an object type or variable
-    const objectType = maps.objectTypes.get(path[0]) || maps.objectTypes.get(path[0].toLowerCase());
-    if (objectType) {
-      currentType = objectType.name;
-      resolvedPath.push({
-        sourceName: path[0],
-        resolvedName: objectType.name,
-        kind: 'variable',
-        sourceType: 'context',
-        targetType: objectType.name,
-        cardinality: '1',
-      });
-    } else {
-      // Check if it's a FeitType role name (e.g., "verdeler" → "Budgetverdeler")
-      const feitTypeRole = resolveFeitTypeRole(path[0], maps.feitTypes, maps.objectTypes);
-      if (feitTypeRole) {
-        currentType = feitTypeRole.objectType;
-        resolvedPath.push({
-          sourceName: path[0],
-          resolvedName: feitTypeRole.objectType,
-          kind: 'feittype',
-          sourceType: 'context',
-          targetType: feitTypeRole.objectType,
-          cardinality: feitTypeRole.cardinality,
-        });
-      } else {
-        // Check scope for variable
-        for (let i = context.scopeStack.length - 1; i >= 0; i--) {
-          const frame = context.scopeStack[i];
-          const scopeVar = frame.variables.get(path[0]) || frame.variables.get(path[0].toLowerCase());
-          if (scopeVar) {
-            currentType = scopeVar.objectType;
-            resolvedPath.push({
-              sourceName: path[0],
-              resolvedName: scopeVar.name,
-              kind: 'variable',
-              sourceType: 'context',
-              targetType: scopeVar.objectType,
-              cardinality: '1',
-            });
-            break;
-          }
-        }
+    const rootCandidates = resolveRootCandidates(path[0], context, maps);
+    if (rootCandidates.length > 0) {
+      const root = selectSingleCandidate(
+        rootCandidates,
+        `Ambiguous navigation root '${path[0]}' in path '${formatPath(path)}'`
+      );
+      resolvedPath.push(root.segment);
+      currentType = root.nextType;
+      if (root.segment.cardinality === 'N') {
+        hasCollectionNavigation = true;
       }
+      startIndex = 1;
+    } else if (!currentType) {
+      throw new Error(`Unknown navigation root '${path[0]}' in path '${formatPath(path)}'`);
     }
   }
-
-  // Resolve remaining path segments as attributes
-  const startIndex = isPossessive ? 1 : (resolvedPath.length > 0 ? 1 : 0);
 
   for (let i = startIndex; i < path.length; i++) {
     const segment = path[i];
-    const segmentLower = segment.toLowerCase();
-
     if (!currentType) {
-      // Can't resolve further without knowing the type
-      break;
+      const previousSegment = resolvedPath[resolvedPath.length - 1]?.sourceName ?? path[i - 1];
+      throw new Error(
+        `Cannot navigate through scalar segment '${previousSegment}' in path '${formatPath(path)}'`
+      );
     }
 
-    // Look up attribute in current type
-    const attrMap = maps.attributes.get(currentType) || maps.attributes.get(currentType.toLowerCase());
-    const attr = attrMap?.get(segment) || attrMap?.get(segmentLower);
+    const segmentCandidates = resolveSegmentCandidates(segment, currentType, maps);
+    const candidate = selectSingleCandidate(
+      segmentCandidates,
+      segmentCandidates.length > 1
+        ? `Ambiguous navigation segment '${segment}' from '${currentType}' in path '${formatPath(path)}'`
+        : `Cannot resolve navigation segment '${segment}' from '${currentType}' in path '${formatPath(path)}'`
+    );
 
-    if (attr) {
-      // Determine target type
-      let targetType: string;
-      let cardinality: '1' | 'N' = '1';
-
-      if ('domain' in attr.dataType) {
-        targetType = attr.dataType.domain;
-      } else if (attr.dataType.type === 'Lijst') {
-        cardinality = 'N';
-        hasCollectionNavigation = true;
-        targetType = attr.dataType.specification || 'unknown';
-      } else {
-        targetType = attr.dataType.type;
-      }
-
-      resolvedPath.push({
-        sourceName: segment,
-        resolvedName: attr.name,
-        kind: 'attribute',
-        sourceType: currentType,
-        targetType,
-        cardinality,
-      });
-
-      // Capture unit from this attribute. If it's not the terminal segment,
-      // it'll be overwritten or cleared by subsequent navigation.
-      terminalUnit = attr.unit;
-
-      // Capture timeline info from this attribute
-      if (attr.timelineGranularity) {
-        terminalTimelineInfo = {
-          granularity: attr.timelineGranularity,
-          source: 'attribute',
-        };
-      } else {
-        terminalTimelineInfo = undefined;
-      }
-
-      // Update current type for next segment (if it's an object type)
-      const nextObjectType = maps.objectTypes.get(targetType) || maps.objectTypes.get(targetType.toLowerCase());
-      currentType = nextObjectType?.name;
-    } else {
-      // Check if it's a kenmerk (using equivalence registry for variant matching)
-      const kenmerkMap = maps.kenmerken.get(currentType) || maps.kenmerken.get(currentType.toLowerCase());
-      const registry = maps.kenmerkRegistries.get(currentType) || maps.kenmerkRegistries.get(currentType.toLowerCase());
-
-      // First try direct lookup
-      let kenmerk = kenmerkMap?.get(segment) || kenmerkMap?.get(segmentLower);
-
-      // If not found, use registry to resolve variant (e.g., "is minderjarig" → "minderjarig")
-      if (!kenmerk && registry && kenmerkMap) {
-        const canonicalName = registry.getCanonicalLabel(segment);
-        kenmerk = kenmerkMap.get(canonicalName) || kenmerkMap.get(canonicalName.toLowerCase());
-      }
-
-      if (kenmerk) {
-        resolvedPath.push({
-          sourceName: segment,
-          resolvedName: kenmerk.name,
-          kind: 'attribute', // kenmerken are treated as boolean attributes
-          sourceType: currentType,
-          targetType: 'Boolean',
-          cardinality: '1',
-        });
-
-        // Capture timeline info from kenmerk if present
-        if (kenmerk.timelineGranularity) {
-          terminalTimelineInfo = {
-            granularity: kenmerk.timelineGranularity,
-            source: 'kenmerk',
-          };
-        } else {
-          terminalTimelineInfo = undefined;
-        }
-
-        currentType = undefined; // Boolean is a leaf type
-      } else {
-        // Try FeitType navigation - check if segment matches a role name
-        // that navigates from currentType to another objectType
-        const feitTypeNavigation = resolveFeitTypeNavigation(
-          segment,
-          currentType,
-          maps.feitTypes,
-          maps.objectTypes
-        );
-
-        if (feitTypeNavigation) {
-          resolvedPath.push(feitTypeNavigation);
-          currentType = feitTypeNavigation.targetType;
-          if (feitTypeNavigation.cardinality === 'N') {
-            hasCollectionNavigation = true;
-          }
-        } else {
-          // Could not resolve - unknown segment
-          break;
-        }
-      }
+    resolvedPath.push(candidate.segment);
+    if (candidate.segment.cardinality === 'N') {
+      hasCollectionNavigation = true;
     }
+    terminalUnit = candidate.unit;
+    terminalTimelineInfo = candidate.timeline;
+    currentType = candidate.nextType;
   }
 
-  // Set resolved info
   if (resolvedPath.length > 0) {
     const lastSegment = resolvedPath[resolvedPath.length - 1];
-    const finalType = lastSegment.targetType;
-
-    // Determine the resolved type
-    let resolvedType: DataType | DomainReference | { type: 'ObjectType'; name: string } | undefined;
-    const finalObjectType = maps.objectTypes.get(finalType) || maps.objectTypes.get(finalType?.toLowerCase() || '');
-
-    if (finalObjectType) {
-      resolvedType = { type: 'ObjectType', name: finalObjectType.name } as any;
-    } else {
-      // It's a primitive type
-      switch (finalType) {
-        case 'Numeriek':
-        case 'Tekst':
-        case 'Boolean':
-        case 'Datum':
-        case 'DatumTijd':
-          resolvedType = { type: finalType } as DataType;
-          break;
-        default:
-          // Might be a domain reference
-          resolvedType = { type: 'DomainReference', domain: finalType } as DomainReference;
-      }
-    }
-
     expr.resolved = {
       resolvedPath,
-      resolvedType,
+      resolvedType: resolveFinalType(lastSegment.targetType, maps),
       possessiveOwner,
       hasCollectionNavigation,
       unit: terminalUnit,
@@ -894,7 +972,9 @@ function resolveDimensionedAttributeReference(
         const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const wordBoundaryRegex = new RegExp(`(^|\\s)${escapedLabel}(\\s|$)`, 'gi');
         if (wordBoundaryRegex.test(cleanedSegment)) {
-          cleanedSegment = cleanedSegment.replace(wordBoundaryRegex, ' ').trim().replace(/\s+/g, ' ');
+          cleanedSegment = stripDanglingDimensionPreposition(
+            cleanedSegment.replace(wordBoundaryRegex, ' ').trim().replace(/\s+/g, ' ')
+          );
         }
       }
 

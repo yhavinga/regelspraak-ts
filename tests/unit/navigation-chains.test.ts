@@ -33,6 +33,16 @@ describe('Navigation Chain Processing', () => {
       expect((ast as any)?.path).toEqual(['passagier', 'reis', 'bestemming']);
     });
 
+    test('should preserve compound attribute names that contain van without a following article', () => {
+      const result = engine.parse('het percentage van loon van de persoon');
+
+      expect(result.success).toBe(true);
+      const ast = result.ast;
+      expect(ast).not.toBeNull();
+      expect(ast?.type).toBe('AttributeReference');
+      expect((ast as any)?.path).toEqual(['persoon', 'percentage van loon']);
+    });
+
     test('should parse TOKA distribution navigation chain', () => {
       const input = 'de treinmiles op basis van evenredige verdeling van alle passagiers met recht op treinmiles van het te verdelen contingent treinmiles';
       const result = engine.parse(input);
@@ -45,11 +55,11 @@ describe('Navigation Chain Processing', () => {
       // Should preserve the full navigation chain
       const path = (ast as any)?.path;
       expect(path).toBeDefined();
-      expect(path.length).toBeGreaterThanOrEqual(4);
-
-      // First element should be "treinmiles op basis van evenredige verdeling" (compound attribute)
-      // or split into multiple segments
-      expect(path[0]).toContain('treinmiles');
+      expect(path).toEqual([
+        'te verdelen contingent treinmiles',
+        'alle passagiers met recht op treinmiles',
+        'treinmiles op basis van evenredige verdeling'
+      ]);
     });
 
     test('should preserve possessive pronouns in navigation', () => {
