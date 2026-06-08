@@ -119,6 +119,60 @@ describe('Engine - Object Type Definitions', () => {
       });
     });
 
+    test('should parse list attribute with primitive element type', () => {
+      const source = `Objecttype factuur
+  bedragen Lijst van Numeriek;`;
+
+      const result = engine.parse(source);
+
+      expect(result.success).toBe(true);
+      expect(stripLocations(result.ast?.members[0])).toEqual({
+        type: 'AttributeSpecification',
+        name: 'bedragen',
+        dataType: {
+          type: 'Lijst',
+          elementType: { type: 'Numeriek' }
+        }
+      });
+    });
+
+    test('should parse list attribute with named element type', () => {
+      const source = `Objecttype factuur
+  regels Lijst van FactuurRegel;`;
+
+      const result = engine.parse(source);
+
+      expect(result.success).toBe(true);
+      expect(stripLocations(result.ast?.members[0])).toEqual({
+        type: 'AttributeSpecification',
+        name: 'regels',
+        dataType: {
+          type: 'Lijst',
+          elementType: { type: 'NamedTypeReference', name: 'FactuurRegel' }
+        }
+      });
+    });
+
+    test('should parse nested list attribute structurally', () => {
+      const source = `Objecttype matrix
+  rijen Lijst van Lijst van Numeriek;`;
+
+      const result = engine.parse(source);
+
+      expect(result.success).toBe(true);
+      expect(stripLocations(result.ast?.members[0])).toEqual({
+        type: 'AttributeSpecification',
+        name: 'rijen',
+        dataType: {
+          type: 'Lijst',
+          elementType: {
+            type: 'Lijst',
+            elementType: { type: 'Numeriek' }
+          }
+        }
+      });
+    });
+
     test('should parse number attribute', () => {
       const source = `Objecttype persoon
   leeftijd Numeriek (geheel getal);`;

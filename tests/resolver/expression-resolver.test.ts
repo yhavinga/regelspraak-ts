@@ -161,6 +161,114 @@ describe('Expression Resolver', () => {
 
       expect(expr.resolved?.resolvedSymbol?.name).toBe('De Startdatum');
     });
+
+    it('resolves named object elements in list parameters', () => {
+      const model: DomainModel = {
+        objectTypes: [{
+          type: 'ObjectTypeDefinition',
+          name: 'FactuurRegel',
+          members: [],
+        }],
+        parameters: [{
+          type: 'ParameterDefinition',
+          name: 'regels',
+          dataType: {
+            type: 'Lijst',
+            elementType: { type: 'NamedTypeReference', name: 'FactuurRegel' },
+          },
+        }],
+        regels: [],
+        regelGroepen: [],
+        beslistabels: [],
+        dimensions: [],
+        dagsoortDefinities: [],
+        domains: [],
+        feitTypes: [],
+        unitSystems: [],
+      };
+
+      const context = createResolutionContext(model);
+      const expr: ParameterReference = {
+        type: 'ParameterReference',
+        parameterName: 'regels',
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.resolvedType).toEqual({
+        type: 'Lijst',
+        elementType: { type: 'ObjectType', name: 'FactuurRegel' },
+      });
+      expect(expr.resolved?.resolvedSymbol?.dataType).toEqual(expr.resolved?.resolvedType);
+    });
+
+    it('resolves named domain elements in list parameters', () => {
+      const model: DomainModel = {
+        objectTypes: [],
+        parameters: [{
+          type: 'ParameterDefinition',
+          name: 'bedragen',
+          dataType: { type: 'Lijst', elementType: { type: 'NamedTypeReference', name: 'Bedrag' } },
+        }],
+        regels: [],
+        regelGroepen: [],
+        beslistabels: [],
+        dimensions: [],
+        dagsoortDefinities: [],
+        domains: [{
+          type: 'DomainDefinition',
+          name: 'Bedrag',
+          baseType: 'Numeriek',
+        }],
+        feitTypes: [],
+        unitSystems: [],
+      };
+
+      const context = createResolutionContext(model);
+      const expr: ParameterReference = {
+        type: 'ParameterReference',
+        parameterName: 'bedragen',
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.resolvedType).toEqual({
+        type: 'Lijst',
+        elementType: { type: 'DomainReference', domain: 'Bedrag' },
+      });
+    });
+
+    it('rejects unknown named elements in list parameters', () => {
+      const model: DomainModel = {
+        objectTypes: [],
+        parameters: [{
+          type: 'ParameterDefinition',
+          name: 'regels',
+          dataType: {
+            type: 'Lijst',
+            elementType: { type: 'NamedTypeReference', name: 'Onbekend' },
+          },
+        }],
+        regels: [],
+        regelGroepen: [],
+        beslistabels: [],
+        dimensions: [],
+        dagsoortDefinities: [],
+        domains: [],
+        feitTypes: [],
+        unitSystems: [],
+      };
+
+      const context = createResolutionContext(model);
+      const expr: ParameterReference = {
+        type: 'ParameterReference',
+        parameterName: 'regels',
+      };
+
+      expect(() => resolveExpression(expr, context)).toThrow(
+        /Unknown type reference 'Onbekend'/
+      );
+    });
   });
 
   describe('Possessive Pronoun Resolution', () => {
@@ -331,7 +439,10 @@ describe('Expression Resolver', () => {
           members: [{
             type: 'AttributeSpecification',
             name: 'regels',
-            dataType: { type: 'Lijst', specification: 'FactuurRegel' },
+            dataType: {
+              type: 'Lijst',
+              elementType: { type: 'NamedTypeReference', name: 'FactuurRegel' },
+            },
           }],
         }, {
           type: 'ObjectTypeDefinition',
@@ -363,6 +474,128 @@ describe('Expression Resolver', () => {
 
       expect(expr.resolved?.hasCollectionNavigation).toBe(true);
       expect(expr.resolved?.resolvedPath![1].cardinality).toBe('N');
+      expect(expr.resolved?.resolvedPath![1].targetType).toBe('FactuurRegel');
+      expect(expr.resolved?.resolvedType).toEqual({ type: 'ObjectType', name: 'FactuurRegel' });
+    });
+
+    it('resolves list element domains from named element references', () => {
+      const model: DomainModel = {
+        objectTypes: [{
+          type: 'ObjectTypeDefinition',
+          name: 'Factuur',
+          members: [{
+            type: 'AttributeSpecification',
+            name: 'bedragen',
+            dataType: {
+              type: 'Lijst',
+              elementType: { type: 'NamedTypeReference', name: 'Bedrag' },
+            },
+          }],
+        }],
+        parameters: [],
+        regels: [],
+        regelGroepen: [],
+        beslistabels: [],
+        dimensions: [],
+        dagsoortDefinities: [],
+        domains: [{
+          type: 'DomainDefinition',
+          name: 'Bedrag',
+          baseType: 'Numeriek',
+        }],
+        feitTypes: [],
+        unitSystems: [],
+      };
+
+      const context = createResolutionContext(model);
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['Factuur', 'bedragen'],
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.hasCollectionNavigation).toBe(true);
+      expect(expr.resolved?.resolvedPath![1].cardinality).toBe('N');
+      expect(expr.resolved?.resolvedPath![1].targetType).toBe('Bedrag');
+      expect(expr.resolved?.resolvedType).toEqual({ type: 'DomainReference', domain: 'Bedrag' });
+    });
+
+    it('rejects unknown list element references', () => {
+      const model: DomainModel = {
+        objectTypes: [{
+          type: 'ObjectTypeDefinition',
+          name: 'Factuur',
+          members: [{
+            type: 'AttributeSpecification',
+            name: 'regels',
+            dataType: {
+              type: 'Lijst',
+              elementType: { type: 'NamedTypeReference', name: 'Onbekend' },
+            },
+          }],
+        }],
+        parameters: [],
+        regels: [],
+        regelGroepen: [],
+        beslistabels: [],
+        dimensions: [],
+        dagsoortDefinities: [],
+        domains: [],
+        feitTypes: [],
+        unitSystems: [],
+      };
+
+      const context = createResolutionContext(model);
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['Factuur', 'regels'],
+      };
+
+      expect(() => resolveExpression(expr, context)).toThrow(
+        /Unknown type reference 'Onbekend'/
+      );
+    });
+
+    it('rejects ambiguous list element references', () => {
+      const model: DomainModel = {
+        objectTypes: [{
+          type: 'ObjectTypeDefinition',
+          name: 'Factuur',
+          members: [{
+            type: 'AttributeSpecification',
+            name: 'regels',
+            dataType: { type: 'Lijst', elementType: { type: 'NamedTypeReference', name: 'Regel' } },
+          }],
+        }, {
+          type: 'ObjectTypeDefinition',
+          name: 'Regel',
+          members: [],
+        }],
+        parameters: [],
+        regels: [],
+        regelGroepen: [],
+        beslistabels: [],
+        dimensions: [],
+        dagsoortDefinities: [],
+        domains: [{
+          type: 'DomainDefinition',
+          name: 'Regel',
+          baseType: 'Tekst',
+        }],
+        feitTypes: [],
+        unitSystems: [],
+      };
+
+      const context = createResolutionContext(model);
+      const expr: AttributeReference = {
+        type: 'AttributeReference',
+        path: ['Factuur', 'regels'],
+      };
+
+      expect(() => resolveExpression(expr, context)).toThrow(
+        /Type reference 'Regel' is ambiguous/
+      );
     });
 
     it('keeps a declared compound attribute with prepositions as one segment', () => {

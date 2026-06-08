@@ -31,7 +31,10 @@ import {
   AttributeSpecification,
   KenmerkSpecification,
   DataType,
+  DeclaredValueType,
   DomainReference,
+  NamedTypeReference,
+  ObjectTypeReference,
   TimelineGranularity,
 } from '../ast/object-types';
 import { ParameterDefinition } from '../ast/parameters';
@@ -79,6 +82,8 @@ interface ResolutionMaps {
   kenmerken: Map<string, Map<string, KenmerkSpecification>>;
   /** objectType → KenmerkEquivalenceRegistry for variant matching */
   kenmerkRegistries: Map<string, KenmerkEquivalenceRegistry>;
+  /** domain name → DomainReference */
+  domains: Map<string, DomainReference>;
   /** dimension name → Dimension definition */
   dimensions: Map<string, Dimension>;
   /** label → dimension name (for reverse lookup) */
@@ -91,6 +96,8 @@ interface ResolutionMaps {
  * pronoun ("zijn", "haar", "hun") in path form.
  */
 const POSSESSIVE_PRONOUNS = ['zijn', 'haar', 'hun', 'self'];
+
+type ResolvableDeclaredValueType = DeclaredValueType | ObjectTypeReference;
 
 /**
  * Normalize compound possessives in path arrays.
@@ -129,6 +136,7 @@ function buildMaps(model: DomainModel): ResolutionMaps {
   const attributes = new Map<string, Map<string, AttributeSpecification>>();
   const kenmerken = new Map<string, Map<string, KenmerkSpecification>>();
   const kenmerkRegistries = new Map<string, KenmerkEquivalenceRegistry>();
+  const domains = new Map<string, DomainReference>();
   const dimensions = new Map<string, Dimension>();
   const labelToDimension = new Map<string, string>();
 
@@ -165,6 +173,12 @@ function buildMaps(model: DomainModel): ResolutionMaps {
     parameters.set(param.name.toLowerCase(), param);
   }
 
+  for (const domain of model.domains || []) {
+    const reference: DomainReference = { type: 'DomainReference', domain: domain.name };
+    domains.set(domain.name, reference);
+    domains.set(domain.name.toLowerCase(), reference);
+  }
+
   // Check both 'feitTypes' and 'feittypen' - AST uses 'feittypen', some code uses 'feitTypes'
   for (const ft of model.feitTypes || (model as any).feittypen || []) {
     feitTypes.set(ft.naam, ft);
@@ -192,7 +206,17 @@ function buildMaps(model: DomainModel): ResolutionMaps {
     }
   }
 
-  return { objectTypes, parameters, feitTypes, attributes, kenmerken, kenmerkRegistries, dimensions, labelToDimension };
+  return {
+    objectTypes,
+    parameters,
+    feitTypes,
+    attributes,
+    kenmerken,
+    kenmerkRegistries,
+    domains,
+    dimensions,
+    labelToDimension,
+  };
 }
 
 /**
@@ -437,13 +461,14 @@ function resolveVariableReference(
   // Check if it's a parameter
   const param = maps.parameters.get(name) || maps.parameters.get(nameLower);
   if (param) {
+    const resolvedDataType = resolveDeclaredSymbolType(param.dataType, maps);
     expr.resolved = {
       resolvedSymbol: {
         kind: 'parameter',
         name: param.name,
-        dataType: param.dataType,
+        dataType: resolvedDataType,
       },
-      resolvedType: param.dataType,
+      resolvedType: resolvedDataType,
       unit: param.unit,
     };
     return expr;
@@ -463,13 +488,14 @@ function resolveParameterReference(
 
   const param = maps.parameters.get(name) || maps.parameters.get(nameLower);
   if (param) {
+    const resolvedDataType = resolveDeclaredSymbolType(param.dataType, maps);
     const resolved: ResolvedInfo = {
       resolvedSymbol: {
         kind: 'parameter',
         name: param.name,
-        dataType: param.dataType,
+        dataType: resolvedDataType,
       },
-      resolvedType: param.dataType,
+      resolvedType: resolvedDataType,
       unit: param.unit,
     };
 
@@ -650,6 +676,37 @@ function lookupObjectType(
   return maps.objectTypes.get(name) || maps.objectTypes.get(name.toLowerCase());
 }
 
+function lookupDomain(
+  name: string,
+  maps: ResolutionMaps
+): DomainReference | undefined {
+  return maps.domains.get(name) || maps.domains.get(name.toLowerCase());
+}
+
+function resolveNamedTypeReference(
+  reference: NamedTypeReference,
+  maps: ResolutionMaps
+): DomainReference | ObjectTypeReference {
+  const domain = lookupDomain(reference.name, maps);
+  const objectType = lookupObjectType(reference.name, maps);
+
+  if (domain && objectType) {
+    throw new Error(
+      `Type reference '${reference.name}' is ambiguous: both a domain and object type are defined`
+    );
+  }
+
+  if (domain) {
+    return domain;
+  }
+
+  if (objectType) {
+    return { type: 'ObjectType', name: objectType.name };
+  }
+
+  throw new Error(`Unknown type reference '${reference.name}'`);
+}
+
 function lookupScopeVariable(
   name: string,
   context: ResolutionContext
@@ -664,19 +721,110 @@ function lookupScopeVariable(
   return undefined;
 }
 
-function resolveAttributeTarget(
-  attr: AttributeSpecification
-): { targetType: string; cardinality: '1' | 'N' } {
-  if ('domain' in attr.dataType) {
-    return { targetType: attr.dataType.domain, cardinality: '1' };
+function resolveDeclaredValueType(
+  dataType: ResolvableDeclaredValueType,
+  maps: ResolutionMaps
+): DataType | DomainReference | ObjectTypeReference {
+  if (dataType.type === 'ObjectType') {
+    return dataType;
   }
-  if (attr.dataType.type === 'Lijst') {
+
+  if (dataType.type === 'NamedTypeReference') {
+    return resolveNamedTypeReference(dataType, maps);
+  }
+
+  if ('domain' in dataType) {
+    return dataType;
+  }
+
+  if (dataType.type === 'Lijst') {
     return {
-      targetType: attr.dataType.specification || 'unknown',
+      ...dataType,
+      elementType: resolveDeclaredValueType(dataType.elementType, maps),
+    };
+  }
+
+  return dataType;
+}
+
+function resolveDeclaredSymbolType(
+  dataType: DataType | DomainReference,
+  maps: ResolutionMaps
+): DataType | DomainReference {
+  const resolved = resolveDeclaredValueType(dataType, maps);
+
+  if (resolved.type === 'ObjectType') {
+    throw new Error(`Object type '${resolved.name}' cannot be used as a scalar value type`);
+  }
+
+  return resolved;
+}
+
+function resolveDeclaredTarget(
+  dataType: ResolvableDeclaredValueType,
+  maps: ResolutionMaps
+): { targetType: string; cardinality: '1' | 'N' } {
+  if (dataType.type === 'ObjectType') {
+    return { targetType: dataType.name, cardinality: '1' };
+  }
+
+  if (dataType.type === 'NamedTypeReference') {
+    const resolved = resolveNamedTypeReference(dataType, maps);
+    return {
+      targetType: resolved.type === 'ObjectType' ? resolved.name : resolved.domain,
+      cardinality: '1',
+    };
+  }
+
+  if ('domain' in dataType) {
+    return { targetType: dataType.domain, cardinality: '1' };
+  }
+
+  if (dataType.type === 'Lijst') {
+    const elementTarget = resolveDeclaredTarget(dataType.elementType, maps);
+    const elementType = dataType.elementType;
+    const targetType = elementType.type === 'Lijst'
+      ? formatDeclaredType(elementType, maps)
+      : elementTarget.targetType;
+
+    return {
+      targetType,
       cardinality: 'N',
     };
   }
-  return { targetType: attr.dataType.type, cardinality: '1' };
+
+  return { targetType: dataType.type, cardinality: '1' };
+}
+
+function resolveAttributeTarget(
+  attr: AttributeSpecification,
+  maps: ResolutionMaps
+): { targetType: string; cardinality: '1' | 'N' } {
+  return resolveDeclaredTarget(attr.dataType, maps);
+}
+
+function formatDeclaredType(
+  dataType: ResolvableDeclaredValueType,
+  maps: ResolutionMaps
+): string {
+  if (dataType.type === 'ObjectType') {
+    return dataType.name;
+  }
+
+  if (dataType.type === 'NamedTypeReference') {
+    const resolved = resolveNamedTypeReference(dataType, maps);
+    return resolved.type === 'ObjectType' ? resolved.name : resolved.domain;
+  }
+
+  if ('domain' in dataType) {
+    return dataType.domain;
+  }
+
+  if (dataType.type === 'Lijst') {
+    return `Lijst van ${formatDeclaredType(dataType.elementType, maps)}`;
+  }
+
+  return dataType.type;
 }
 
 function resolveTimelineFromAttribute(
@@ -770,7 +918,7 @@ function resolveSegmentCandidates(
   const attrMap = maps.attributes.get(currentType) || maps.attributes.get(currentType.toLowerCase());
   const attr = attrMap?.get(segment) || attrMap?.get(segmentLower);
   if (attr) {
-    const { targetType, cardinality } = resolveAttributeTarget(attr);
+    const { targetType, cardinality } = resolveAttributeTarget(attr, maps);
     candidates.push({
       segment: {
         sourceName: segment,
@@ -829,6 +977,7 @@ function resolveFinalType(
     case 'Boolean':
     case 'Datum':
     case 'DatumTijd':
+    case 'Percentage':
       return { type: finalType } as DataType;
     default:
       return { type: 'DomainReference', domain: finalType } as DomainReference;

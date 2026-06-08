@@ -78,7 +78,20 @@ import {
   Rule,
   RuleVersion
 } from '../ast/rules';
-import { ObjectTypeDefinition, KenmerkSpecification, AttributeSpecification, DataType, DomainReference, DomainDefinition, NumericSpecification, SignConstraint, NumberFormat, TimelineGranularity } from '../ast/object-types';
+import {
+  ObjectTypeDefinition,
+  KenmerkSpecification,
+  AttributeSpecification,
+  DataType,
+  DomainReference,
+  DomainDefinition,
+  NumericSpecification,
+  SignConstraint,
+  NumberFormat,
+  TimelineGranularity,
+  ListElementType,
+  NamedTypeReference
+} from '../ast/object-types';
 import { ParameterDefinition } from '../ast/parameters';
 import { PeriodDefinition } from '../ast/timelines';
 import { UnitSystemDefinition, UnitDefinition, UnitConversion } from '../ast/unit-systems';
@@ -4300,15 +4313,31 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     } else if (ctx.percentageDatatype && ctx.percentageDatatype()) {
       return this.visitPercentageDatatype(ctx.percentageDatatype());
     } else if (ctx.lijstDatatype && ctx.lijstDatatype()) {
-      // Handle list datatype - parse as text for now
-      const node: DataType = { type: 'Lijst', specification: this.extractText(ctx.lijstDatatype()) };
-      this.setLocation(node, ctx);
-      return node;
+      return this.visitLijstDatatype(ctx.lijstDatatype());
     }
 
     // Try to determine from text as fallback
     const text = this.extractText(ctx);
     throw new Error(`Unknown data type: ${text}`);
+  }
+
+  visitLijstDatatype(ctx: any): DataType {
+    let elementType: ListElementType;
+
+    const datatypeCtx = ctx.datatype?.();
+    if (datatypeCtx) {
+      elementType = this.visitDatatype(datatypeCtx);
+    } else {
+      const namedTypeCtx = ctx.domeinRef?.() || ctx.objectTypeRef?.();
+      if (!namedTypeCtx) {
+        throw new Error(`List datatype requires an element type: ${this.extractText(ctx)}`);
+      }
+      elementType = this.visitNamedTypeReference(namedTypeCtx);
+    }
+
+    const node: DataType = { type: 'Lijst', elementType };
+    this.setLocation(node, ctx);
+    return node;
   }
 
   visitNumeriekDatatype(ctx: any): DataType {
@@ -4384,6 +4413,15 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const node = {
       type: 'DomainReference' as const,
       domain
+    };
+    this.setLocation(node, ctx);
+    return node;
+  }
+
+  private visitNamedTypeReference(ctx: any): NamedTypeReference {
+    const node = {
+      type: 'NamedTypeReference' as const,
+      name: this.extractText(ctx)
     };
     this.setLocation(node, ctx);
     return node;

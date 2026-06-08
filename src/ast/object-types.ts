@@ -64,11 +64,25 @@ export type DataType =
   | { type: 'Datum' }
   | { type: 'DatumTijd' }
   | { type: 'Percentage'; numericSpec?: NumericSpecification }
-  | { type: 'Lijst'; specification?: string };
+  | { type: 'Lijst'; elementType: ListElementType };
+
+export type ListElementType = DataType | DomainReference | NamedTypeReference | ObjectTypeReference;
+
+export type DeclaredValueType = DataType | DomainReference | NamedTypeReference;
 
 export interface DomainReference {
   type: 'DomainReference';
   domain: string;
+}
+
+export interface NamedTypeReference {
+  type: 'NamedTypeReference';
+  name: string;
+}
+
+export interface ObjectTypeReference {
+  type: 'ObjectType';
+  name: string;
 }
 
 export interface DomainDefinition {

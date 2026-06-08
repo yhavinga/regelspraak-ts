@@ -1,5 +1,10 @@
 import { DomainModel } from './ast/domain-model';
-import { ObjectTypeDefinition, AttributeSpecification, KenmerkSpecification } from './ast/object-types';
+import {
+  ObjectTypeDefinition,
+  AttributeSpecification,
+  KenmerkSpecification,
+  ListElementType
+} from './ast/object-types';
 import { ParameterDefinition } from './ast/parameters';
 import { Rule, RegelGroep, Gelijkstelling, Kenmerktoekenning, ObjectCreation } from './ast/rules';
 import {
@@ -102,11 +107,7 @@ export class SemanticAnalyzer {
       this.globalScope.define(param.name, {
         name: param.name,
         kind: SymbolKind.PARAMETER,
-        datatype: typeof param.dataType === 'object' && 'typeName' in param.dataType ? 
-                  (param.dataType as any).typeName : 
-                  typeof param.dataType === 'object' && 'domain' in param.dataType ? 
-                  (param.dataType as any).domain : 
-                  undefined,
+        datatype: this.getDataTypeString(param.dataType),
         definition: param
       });
     }
@@ -584,10 +585,19 @@ export class SemanticAnalyzer {
     return false;
   }
 
-  private getDataTypeString(dataType: any): string {
+  private getDataTypeString(dataType: ListElementType): string {
+    if (dataType.type === 'ObjectType') {
+      return dataType.name;
+    }
+
+    if (dataType.type === 'NamedTypeReference') {
+      return dataType.name;
+    }
+
     if ('domain' in dataType) {
       return dataType.domain;
     }
+
     switch (dataType.type) {
       case 'Tekst': return 'Tekst';
       case 'Numeriek': {
@@ -602,6 +612,8 @@ export class SemanticAnalyzer {
       case 'Boolean': return 'Boolean';
       case 'Datum': return 'Datum';
       case 'DatumTijd': return 'DatumTijd';
+      case 'Percentage': return 'Percentage';
+      case 'Lijst': return `Lijst van ${this.getDataTypeString(dataType.elementType)}`;
       default: return 'Unknown';
     }
   }
