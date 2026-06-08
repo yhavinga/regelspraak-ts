@@ -59,7 +59,7 @@ export interface BooleanLiteral extends Expression {
 
 export interface BinaryExpression extends Expression {
   type: 'BinaryExpression';
-  operator: '+' | '-' | '*' | '/' | '==' | '!=' | '>' | '<' | '>=' | '<=' | '&&' | '||' |
+  operator: '+' | '-' | '*' | '/' | '^' | '==' | '!=' | '>' | '<' | '>=' | '<=' | '&&' | '||' |
   'is een dagsoort' | 'zijn een dagsoort' | 'is geen dagsoort' | 'zijn geen dagsoort' |
   'is numeriek met exact' | 'is niet numeriek met exact' |
   'zijn numeriek met exact' | 'zijn niet numeriek met exact';

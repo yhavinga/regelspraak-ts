@@ -948,12 +948,30 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
   }
 
   visitPowerExpression(ctx: PowerExpressionContext): Expression {
-    // For now, just pass through to primary
     const primaryExprs = ctx.primaryExpression_list();
-    if (primaryExprs.length > 1) {
-      throw new Error('Power operator not yet supported');
+    if (primaryExprs.length === 1) {
+      return this.visit(primaryExprs[0]);
     }
-    return this.visit(primaryExprs[0]);
+
+    const operators = ctx.powerOperator_list();
+    if (operators.some(operator => operator.CARET && operator.CARET())) {
+      throw new Error("Power operator '^' is not part of RegelSpraak v2.1.0; use 'tot de macht'");
+    }
+
+    let result = this.visit(primaryExprs[primaryExprs.length - 1]);
+
+    for (let i = operators.length - 1; i >= 0; i--) {
+      const left = this.visit(primaryExprs[i]);
+      result = {
+        type: 'BinaryExpression',
+        operator: '^',
+        left,
+        right: result
+      } as BinaryExpression;
+      this.setLocation(result, ctx);
+    }
+
+    return result;
   }
 
   visitPrimaryExpression(ctx: PrimaryExpressionContext): Expression {

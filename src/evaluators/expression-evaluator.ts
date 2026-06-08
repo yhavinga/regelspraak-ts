@@ -219,6 +219,10 @@ export class ExpressionEvaluator implements IEvaluator {
       return this.evaluateNumericExactExpression(expr, context);
     }
 
+    if (expr.operator === '^') {
+      return this.evaluatePowerExpression(expr, context);
+    }
+
     const left = this.evaluate(expr.left, context);
     const right = this.evaluate(expr.right, context);
 
@@ -327,6 +331,36 @@ export class ExpressionEvaluator implements IEvaluator {
     return {
       type: 'number',
       value: result
+    };
+  }
+
+  private evaluatePowerExpression(
+    expr: BinaryExpression,
+    context: RuntimeContext
+  ): Value {
+    const roundedPowerExpressions = (context as any).roundedPowerExpressions as Set<BinaryExpression> | undefined;
+    if (!roundedPowerExpressions?.has(expr)) {
+      throw new Error('Power expressions must be rounded before evaluation');
+    }
+
+    const left = this.evaluate(expr.left, context);
+    const right = this.evaluate(expr.right, context);
+
+    if (left.type === 'null' || right.type === 'null') {
+      return { type: 'null', value: null };
+    }
+
+    if (left.type !== 'number' || right.type !== 'number') {
+      throw new Error(`Cannot apply ^ to ${left.type} and ${right.type}`);
+    }
+
+    if (left.unit || right.unit || (left as UnitValue).compositeUnit || (right as UnitValue).compositeUnit) {
+      throw new Error('Power operator requires unitless operands');
+    }
+
+    return {
+      type: 'number',
+      value: Math.pow(left.value as number, right.value as number)
     };
   }
 
@@ -3222,7 +3256,16 @@ export class ExpressionEvaluator implements IEvaluator {
    * Handles patterns like "naar beneden afgerond op 0 decimalen"
    */
   private evaluateAfrondingExpression(expr: any, context: RuntimeContext): Value {
-    const innerValue = this.evaluate(expr.expression, context);
+    const roundingContext = Object.create(context) as RuntimeContext;
+    const roundedPowerExpressions = this.collectRoundedPowerExpressions(expr.expression);
+    const inheritedPowerExpressions = (context as any).roundedPowerExpressions as Set<BinaryExpression> | undefined;
+    if (inheritedPowerExpressions || roundedPowerExpressions.size > 0) {
+      (roundingContext as any).roundedPowerExpressions = new Set([
+        ...(inheritedPowerExpressions ?? []),
+        ...roundedPowerExpressions,
+      ]);
+    }
+    const innerValue = this.evaluate(expr.expression, roundingContext);
     const decimals = expr.decimals ?? 0;
     const direction = expr.direction as string | undefined;
 
@@ -3252,6 +3295,19 @@ export class ExpressionEvaluator implements IEvaluator {
       ...innerValue,
       value: result
     };
+  }
+
+  private collectRoundedPowerExpressions(expr: Expression): Set<BinaryExpression> {
+    const expressions = new Set<BinaryExpression>();
+    let current: Expression | undefined = expr;
+
+    while (current?.type === 'BinaryExpression' && (current as BinaryExpression).operator === '^') {
+      const powerExpression = current as BinaryExpression;
+      expressions.add(powerExpression);
+      current = powerExpression.right;
+    }
+
+    return expressions;
   }
 
   /**

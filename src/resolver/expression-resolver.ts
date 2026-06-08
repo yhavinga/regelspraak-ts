@@ -1119,7 +1119,7 @@ function resolveBinaryExpression(
   // Determine result type based on operator
   const comparisonOps = ['==', '!=', '>', '<', '>=', '<='];
   const logicalOps = ['&&', '||'];
-  const arithmeticOps = ['+', '-', '*', '/'];
+  const arithmeticOps = ['+', '-', '*', '/', '^'];
 
   // Combine timeline info from operands
   const combinedTimeline = combineTimelineInfo(
@@ -1140,7 +1140,20 @@ function resolveBinaryExpression(
     const rightType = (expr.right.resolved?.resolvedType as any)?.type;
     const isDateLike = (t: string | undefined) => t === 'Datum' || t === 'DatumTijd';
 
-    if ((expr.operator === '+' || expr.operator === '-') &&
+    if (expr.operator === '^') {
+      if ((leftType && leftType !== 'Numeriek') || (rightType && rightType !== 'Numeriek')) {
+        throw new Error(
+          `Power operator requires numeric operands, got ${leftType ?? 'unknown'} and ${rightType ?? 'unknown'}`
+        );
+      }
+      if (expr.left.resolved?.unit || expr.right.resolved?.unit) {
+        throw new Error('Power operator requires unitless operands');
+      }
+      expr.resolved = {
+        resolvedType: { type: 'Numeriek' },
+        timeline: combinedTimeline,
+      };
+    } else if ((expr.operator === '+' || expr.operator === '-') &&
         isDateLike(leftType) && rightType === 'Numeriek') {
       expr.resolved = {
         resolvedType: { type: leftType } as DataType,
@@ -1240,6 +1253,8 @@ function resolveAfrondingExpression(
 
   expr.resolved = {
     resolvedType: { type: 'Numeriek' },
+    unit: expr.expression.resolved?.unit,
+    timeline: expr.expression.resolved?.timeline,
   };
 
   return expr;
