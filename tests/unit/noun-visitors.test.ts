@@ -1,4 +1,5 @@
 import { Engine } from '../../src';
+import { RegelSpraakVisitorImpl } from '../../src/_visitors/regelspraak-visitor-impl';
 
 // Helper to strip location properties from AST nodes for testing
 function stripLocations(obj: any): any {
@@ -238,11 +239,41 @@ Parameter de belasting op basis van afstand : Bedrag`;
   });
 
   describe('visitNaamwoordExpr - expression wrapper', () => {
-    test('should parse noun expression as string literal', () => {
+    test('should parse quoted text as string literal', () => {
+      const result = engine.parse('"test waarde"');
+
+      if (!result.success) {
+        console.error('Parse error:', result.errors);
+      }
+
+      expect(result.success).toBe(true);
+      expect(stripLocations(result.ast)).toEqual({
+        type: 'StringLiteral',
+        value: 'test waarde'
+      });
+    });
+
+    test('should parse enum literals as string literal', () => {
+      const result = engine.parse("'actief'");
+
+      if (!result.success) {
+        console.error('Parse error:', result.errors);
+      }
+
+      expect(result.success).toBe(true);
+      expect(stripLocations(result.ast)).toEqual({
+        type: 'StringLiteral',
+        value: 'actief'
+      });
+    });
+
+    test('should preserve known multi-word bare references', () => {
       const source = `
+Parameter de lage basistarief eerste schijf : Numeriek
+
 Regel test
 geldig altijd
-  De uitvoer van een test moet berekend worden als "test waarde".`;
+  De uitvoer van een test moet berekend worden als de lage basistarief eerste schijf.`;
 
       const model = engine.parseModel(source);
 
@@ -252,6 +283,58 @@ geldig altijd
 
       expect(model.success).toBe(true);
       expect(model.model?.regels).toHaveLength(1);
+
+      const result = model.model?.regels[0].result ?? model.model?.regels[0].resultaat;
+      expect(stripLocations(result.expression)).toEqual({
+        type: 'VariableReference',
+        variableName: 'lage basistarief eerste schijf'
+      });
+    });
+
+    test('should parse explicitly supported noun navigation as attribute references', () => {
+      const result = engine.parse('de naam van persoon');
+
+      if (!result.success) {
+        console.error('Parse error:', result.errors);
+      }
+
+      expect(result.success).toBe(true);
+      expect(stripLocations(result.ast)).toEqual({
+        type: 'AttributeReference',
+        path: ['persoon', 'naam']
+      });
+    });
+
+    test('should reject unsupported noun expressions instead of producing string literals', () => {
+      const result = engine.parse('hoge premie');
+
+      expect(result.success).toBe(false);
+      expect(result.errors?.[0]?.message).toMatch(/Unsupported expression context: NaamwoordExprContext/);
+    });
+
+    test('should reject unhandled multi-child visitor contexts instead of producing string literals', () => {
+      const terminal = (text: string) => ({
+        symbol: {},
+        getText: () => text
+      });
+
+      class UnhandledContext {
+        children = [terminal('onbekende'), terminal('vorm')];
+        start = { line: 7, column: 11 };
+
+        getChildCount(): number {
+          return this.children.length;
+        }
+
+        getChild(index: number): unknown {
+          return this.children[index];
+        }
+      }
+
+      const visitor = new RegelSpraakVisitorImpl();
+
+      expect(() => (visitor as any).visitChildren(new UnhandledContext()))
+        .toThrow(/Unsupported visitor context: UnhandledContext at line 7, column 11: "onbekende vorm"/);
     });
   });
 

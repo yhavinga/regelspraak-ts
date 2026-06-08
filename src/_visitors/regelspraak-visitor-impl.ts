@@ -102,6 +102,22 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     }
   }
 
+  private unsupportedVisitorContext(ctx: any, kind: string): never {
+    const contextName = ctx?.constructor?.name ?? 'UnknownContext';
+    const rawText = ctx ? this.extractTextWithSpaces(ctx) : '';
+    const sourceText = rawText.replace(/\s+/g, ' ').trim();
+    const location = ctx?.start
+      ? ` at line ${ctx.start.line}, column ${ctx.start.column}`
+      : '';
+    const text = sourceText ? `: "${sourceText}"` : '';
+
+    throw new Error(`Unsupported ${kind}: ${contextName}${location}${text}`);
+  }
+
+  private unsupportedExpression(ctx: any): never {
+    this.unsupportedVisitorContext(ctx, 'expression context');
+  }
+
   /**
    * Extract timeline granularity from a tijdlijn context.
    * Maps grammar tokens to TimelineGranularity values:
@@ -1083,13 +1099,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
           return (this as any)[methodName](ctx);
         }
 
-        // Last resort: try generic visit
-        const result = this.visit(ctx);
-        if (result) {
-          return result;
-        }
-
-        throw new Error(`Unhandled primaryExpression context type: ${contextName}`);
+        this.unsupportedExpression(ctx);
     }
   }
 
@@ -5976,15 +5986,9 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         }
       }
 
-      // Not a navigation pattern, return as string literal
-      const node: StringLiteral = {
-        type: 'StringLiteral',
-        value: text
-      };
-      this.setLocation(node, ctx);
-      return node;
+      this.unsupportedExpression(ctx);
     }
-    // Fallback to text extraction
+    // Fallback to text extraction for diagnostics when the expected child is absent.
     const fullText = this.extractTextWithSpaces(ctx);
 
     // Check for navigation patterns in the full text
@@ -6016,12 +6020,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       }
     }
 
-    const node: StringLiteral = {
-      type: 'StringLiteral',
-      value: fullText
-    };
-    this.setLocation(node, ctx);
-    return node;
+    this.unsupportedExpression(ctx);
   }
 
   visitParamRefExpr(ctx: any): Expression {
@@ -6093,12 +6092,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       return this.visit(node.children[0]);
     }
 
-    // Multiple children - try text extraction as fallback before giving up
-    const text = this.extractTextWithSpaces(node);
-    console.warn(`Unhandled ${node.constructor.name} with ${node.children.length} children - using text fallback: "${text}"`);
-
-    // Return as string literal for now - better than crashing
-    return { type: 'StringLiteral', value: text };
+    this.unsupportedVisitorContext(node, 'visitor context');
   }
 
   visitConsistentieregel(ctx: any): any {
