@@ -1,4 +1,5 @@
 import { Expression } from './expressions';
+import type { RuleVersion } from './rules';
 
 /**
  * Decision table AST nodes for RegelSpraak Beslistabel
@@ -31,7 +32,8 @@ export interface DecisionTableRow {
 export interface DecisionTable {
   type: 'DecisionTable';
   name: string;
-  validity: string; // For now, always "altijd"
+  version?: RuleVersion;
+  validity: string; // Compatibility projection
   resultColumn: string; // Header text for result column
   conditionColumns: string[]; // Header texts for condition columns
   rows: DecisionTableRow[];

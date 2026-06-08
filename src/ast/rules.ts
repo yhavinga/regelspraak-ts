@@ -11,7 +11,8 @@ import { DimensionedAttributeReference } from './dimensions';
 export interface Rule {
   type: 'Rule';
   name?: string;  // Make optional for compatibility
-  version?: RuleVersion;  // Make optional for compatibility
+  versions?: RuleVersion[];  // Complete version set for this rule
+  version?: RuleVersion;  // First version, kept for compatibility
   resultaat?: ResultPart;  // Also support 'resultaat' property name
   result?: ResultPart;  // Keep for backward compatibility
   voorwaarde?: Voorwaarde;  // Also support 'voorwaarde' property name
@@ -30,7 +31,14 @@ export interface VariableAssignment {
 
 export interface RuleVersion {
   type: 'RuleVersion';
-  validity: 'altijd' | 'vanaf' | 'tot'; // Simplified for now
+  kind: 'altijd' | 'interval';
+  start?: Date;
+  end?: Date;
+  validity: 'altijd' | 'vanaf' | 'tot'; // Compatibility projection
+  result?: ResultPart;
+  condition?: Voorwaarde;
+  variables?: VariableAssignment[];
+  location?: SourceLocation;
 }
 
 export type ResultPart = Gelijkstelling | ObjectCreation | MultipleResults | Kenmerktoekenning | Consistentieregel | Verdeling | FeitCreatie | DagsoortDefinitie;

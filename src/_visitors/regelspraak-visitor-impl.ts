@@ -74,7 +74,9 @@ import {
   VerdelingMaximum,
   VerdelingAfronding,
   FeitCreatie,
-  VariableAssignment
+  VariableAssignment,
+  Rule,
+  RuleVersion
 } from '../ast/rules';
 import { ObjectTypeDefinition, KenmerkSpecification, AttributeSpecification, DataType, DomainReference, DomainDefinition, NumericSpecification, SignConstraint, NumberFormat, TimelineGranularity } from '../ast/object-types';
 import { ParameterDefinition } from '../ast/parameters';
@@ -103,6 +105,112 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
   private setLocation(node: any, ctx: any): void {
     if (node && typeof node === 'object' && ctx) {
       node.location = createSourceLocation(ctx);
+    }
+  }
+
+  private parseDateLiteralText(dateText: string): Date {
+    const normalized = dateText.replace(/^dd\.\s*/i, '').trim().split(/\s+/)[0];
+    const parts = normalized.split('-');
+    if (parts.length !== 3) {
+      throw new Error(`Invalid date format: ${dateText}`);
+    }
+
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+    const date = new Date(Date.UTC(year, month - 1, day));
+
+    if (
+      date.getUTCFullYear() !== year ||
+      date.getUTCMonth() !== month - 1 ||
+      date.getUTCDate() !== day
+    ) {
+      throw new Error(`Invalid date value: ${dateText}`);
+    }
+
+    return date;
+  }
+
+  private parseValidityDate(ctx: any, bound: 'start' | 'end'): Date {
+    if (ctx.datumLiteral && ctx.datumLiteral()) {
+      return this.parseDateLiteralText(ctx.datumLiteral().getText());
+    }
+
+    const yearText = ctx.NUMBER && ctx.NUMBER()?.getText();
+    if (!yearText || !/^\d{4}$/.test(yearText)) {
+      throw new Error(`Invalid validity year: ${ctx.getText()}`);
+    }
+
+    const year = parseInt(yearText, 10);
+    return bound === 'start'
+      ? new Date(Date.UTC(year, 0, 1))
+      : new Date(Date.UTC(year, 11, 31));
+  }
+
+  private compatibilityValidity(version: Pick<RuleVersion, 'start' | 'end'>): RuleVersion['validity'] {
+    if (version.start) {
+      return 'vanaf';
+    }
+    if (version.end) {
+      return 'tot';
+    }
+    return 'altijd';
+  }
+
+  private createAlwaysRuleVersion(): RuleVersion {
+    return {
+      type: 'RuleVersion',
+      kind: 'altijd',
+      validity: 'altijd'
+    };
+  }
+
+  private validateVersionInterval(version: RuleVersion): void {
+    if (version.start && version.end && version.start.getTime() > version.end.getTime()) {
+      throw new Error('Rule version validity start date must not be after end date');
+    }
+  }
+
+  private validateRuleVersionOverlap(rules: Rule[]): void {
+    const byName = new Map<string, RuleVersion[]>();
+
+    for (const rule of rules) {
+      if (!rule.name) {
+        continue;
+      }
+
+      const versions = rule.versions && rule.versions.length > 0
+        ? rule.versions
+        : rule.version
+          ? [rule.version]
+          : [];
+
+      if (versions.length === 0) {
+        continue;
+      }
+
+      const existing = byName.get(rule.name) ?? [];
+      existing.push(...versions);
+      byName.set(rule.name, existing);
+    }
+
+    for (const [ruleName, versions] of byName.entries()) {
+      const intervals = versions
+        .map(version => {
+          const start = version.start?.getTime() ?? Number.NEGATIVE_INFINITY;
+          const end = version.end?.getTime() ?? Number.POSITIVE_INFINITY;
+          return { version, start, end };
+        })
+        .sort((a, b) => a.start - b.start || a.end - b.end);
+
+      for (let i = 1; i < intervals.length; i++) {
+        const previous = intervals[i - 1];
+        const current = intervals[i];
+
+        if (current.start <= previous.end) {
+          throw new Error(`Rule '${ruleName}' has overlapping validity intervals`);
+        }
+      }
     }
   }
 
@@ -242,6 +350,11 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         model.unitSystems.push(result);
       }
     }
+
+    this.validateRuleVersionOverlap([
+      ...model.regels,
+      ...model.regelGroepen.flatMap(group => group.rules)
+    ]);
 
     return model;
   }
@@ -1174,24 +1287,12 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const datumCtx = ctx.datumLiteral();
     const dateText = datumCtx.getText();
 
-    // Parse the date - format is DD-MM-YYYY
-    const parts = dateText.split('-');
-    if (parts.length === 3) {
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1; // JavaScript months are 0-indexed
-      const year = parseInt(parts[2], 10);
-      // Create UTC date to avoid timezone issues
-      const date = new Date(Date.UTC(year, month, day));
-
-      const node = {
-        type: 'DateLiteral',
-        value: date
-      };
-      this.setLocation(node, ctx);
-      return node;
-    }
-
-    throw new Error(`Invalid date format: ${dateText}`);
+    const node = {
+      type: 'DateLiteral',
+      value: this.parseDateLiteralText(dateText)
+    };
+    this.setLocation(node, ctx);
+    return node;
   }
 
   visitIdentifierExpr(ctx: IdentifierExprContext): Expression {
@@ -2687,39 +2788,22 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       // Get the text with spaces preserved
       const name = this.extractTextWithSpaces(nameCtx).trim();
 
-      // Get version info
-      const versionCtx = ctx.regelVersie();
-      if (!versionCtx) {
+      // Get version blocks
+      const versionBlockContexts = ctx.regelVersieBlok_list ? ctx.regelVersieBlok_list() : [];
+      if (versionBlockContexts.length === 0) {
         throw new Error('Expected "geldig" keyword');
       }
-      const version = this.visit(versionCtx);
-
-      // Get result part
-      const resultCtx = ctx.resultaatDeel();
-      if (!resultCtx) {
-        throw new Error('Expected result part');
-      }
-      const result = this.visit(resultCtx);
-
-      // Check for optional condition (voorwaardeDeel)
-      let condition: Voorwaarde | undefined;
-      if (ctx.voorwaardeDeel && ctx.voorwaardeDeel()) {
-        condition = this.visitVoorwaardeDeel(ctx.voorwaardeDeel());
-      }
-
-      // Check for optional variable assignments (variabeleDeel)
-      let variables: VariableAssignment[] | undefined;
-      if (ctx.variabeleDeel && ctx.variabeleDeel()) {
-        variables = this.visitVariabeleDeel(ctx.variabeleDeel());
-      }
+      const versions = versionBlockContexts.map((blockCtx: any) => this.visitRegelVersieBlok(blockCtx));
+      const firstVersion = versions[0];
 
       const rule = {
         type: 'Rule',
         name,
-        version,
-        result,
-        condition,
-        variables
+        versions,
+        version: firstVersion,
+        result: firstVersion.result,
+        condition: firstVersion.condition,
+        variables: firstVersion.variables
       };
 
       // Store location separately
@@ -2732,6 +2816,27 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       }
       throw new Error('Failed to parse rule');
     }
+  }
+
+  visitRegelVersieBlok(ctx: any): RuleVersion {
+    const version = this.visitRegelVersie(ctx.regelVersie());
+    const resultCtx = ctx.resultaatDeel();
+    if (!resultCtx) {
+      throw new Error('Expected result part');
+    }
+
+    version.result = this.visit(resultCtx);
+
+    if (ctx.voorwaardeDeel && ctx.voorwaardeDeel()) {
+      version.condition = this.visitVoorwaardeDeel(ctx.voorwaardeDeel());
+    }
+
+    if (ctx.variabeleDeel && ctx.variabeleDeel()) {
+      version.variables = this.visitVariabeleDeel(ctx.variabeleDeel());
+    }
+
+    this.setLocation(version, ctx);
+    return version;
   }
 
   visitRegelGroep(ctx: any): any {
@@ -3666,26 +3771,39 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     return operatorMap[op] || op;
   }
 
-  visitRegelVersie(ctx: any): any {
-    const geldigheid = this.visit(ctx.versieGeldigheid());
-
-    const node = {
-      type: 'RuleVersion',
-      validity: geldigheid
-    };
+  visitRegelVersie(ctx: any): RuleVersion {
+    const node = this.visitVersieGeldigheid(ctx.versieGeldigheid());
     this.setLocation(node, ctx);
     return node;
   }
 
-  visitVersieGeldigheid(ctx: any): string {
+  visitVersieGeldigheid(ctx: any): RuleVersion {
     if (ctx.ALTIJD()) {
-      return 'altijd';
-    } else if (ctx.VANAF()) {
-      return 'vanaf';
-    } else if (ctx.TOT()) {
-      return 'tot';
+      const version = this.createAlwaysRuleVersion();
+      this.setLocation(version, ctx);
+      return version;
     }
-    return 'altijd'; // default
+
+    const dateContexts = ctx.geldigheidsDatum_list ? ctx.geldigheidsDatum_list() : [];
+    const startsAt = !!(ctx.VANAF && ctx.VANAF());
+    const start = startsAt && dateContexts[0]
+      ? this.parseValidityDate(dateContexts[0], 'start')
+      : undefined;
+    const endDateContext = startsAt ? dateContexts[1] : dateContexts[0];
+    const end = endDateContext
+      ? this.parseValidityDate(endDateContext, 'end')
+      : undefined;
+
+    const version: RuleVersion = {
+      type: 'RuleVersion',
+      kind: 'interval',
+      start,
+      end,
+      validity: this.compatibilityValidity({ start, end })
+    };
+    this.validateVersionInterval(version);
+    this.setLocation(version, ctx);
+    return version;
   }
 
   visitResultaatDeel(ctx: any): any {
@@ -6178,11 +6296,18 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       throw new Error(`Could not parse consistency rule result for '${naam}'`);
     }
 
+    const version: RuleVersion = {
+      ...this.createAlwaysRuleVersion(),
+      result: resultaat,
+      condition: voorwaarde
+    };
+
     // Return as a Rule with Consistentieregel as the result
     const node = {
       type: 'Rule',
       name: naam,
-      version: { type: 'RuleVersion', validity: 'altijd' },
+      versions: [version],
+      version,
       result: resultaat,
       condition: voorwaarde
     };
@@ -6481,10 +6606,9 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const name = this.extractText(ctx.naamwoord()).trim();
 
     // Check if there's a regelVersie (validity rule)
-    let validity = 'altijd';  // default
+    let version = this.createAlwaysRuleVersion();
     if (ctx.regelVersie && ctx.regelVersie()) {
-      const versie = this.visit(ctx.regelVersie());
-      validity = versie.validity || 'altijd';
+      version = this.visitRegelVersie(ctx.regelVersie());
     }
 
     // Visit the table structure
@@ -6503,7 +6627,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const decisionTable = {
       type: 'DecisionTable',
       name,
-      validity,
+      version,
+      validity: version.validity,
       ...table,  // Contains resultColumn, conditionColumns, and rows
       parsedResult,
       parsedConditions

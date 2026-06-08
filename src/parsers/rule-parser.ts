@@ -46,6 +46,7 @@ export class RuleParser {
     
     const version: RuleVersion = {
       type: 'RuleVersion',
+      kind: 'altijd',
       validity: 'altijd'
     };
     

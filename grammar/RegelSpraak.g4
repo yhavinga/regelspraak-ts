@@ -385,7 +385,11 @@ cardinalityWord
 // --- RegelSpraak Rule Structure (§13.4.2) ---
 regel
     : REGEL regelName NUMBER?
-      regelVersie
+      regelVersieBlok+
+    ;
+
+regelVersieBlok
+    : regelVersie
       resultaatDeel ( voorwaardeDeel DOT? | DOT )? // Adjusted termination logic
       ( variabeleDeel )? // Optional variable block
     ;
@@ -417,7 +421,13 @@ regelVersie
 
 versieGeldigheid
     : ALTIJD
-    | VANAF datumLiteral ( (TM | TOT_EN_MET) datumLiteral )?
+    | VANAF geldigheidsDatum ( (TM | TOT_EN_MET) geldigheidsDatum )?
+    | (TM | TOT_EN_MET) geldigheidsDatum
+    ;
+
+geldigheidsDatum
+    : datumLiteral
+    | NUMBER
     ;
 
 // §13.4.3 Resultaat Deel

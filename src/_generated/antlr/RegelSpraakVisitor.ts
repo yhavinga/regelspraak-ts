@@ -64,11 +64,13 @@ import { RolNameWordsContext } from "./RegelSpraakParser";
 import { CardinalityLineContext } from "./RegelSpraakParser";
 import { CardinalityWordContext } from "./RegelSpraakParser";
 import { RegelContext } from "./RegelSpraakParser";
+import { RegelVersieBlokContext } from "./RegelSpraakParser";
 import { RegelGroepContext } from "./RegelSpraakParser";
 import { RegelNameContext } from "./RegelSpraakParser";
 import { RegelNameExtensionContext } from "./RegelSpraakParser";
 import { RegelVersieContext } from "./RegelSpraakParser";
 import { VersieGeldigheidContext } from "./RegelSpraakParser";
+import { GeldigheidsDatumContext } from "./RegelSpraakParser";
 import { DagsoortdefinitieResultaatContext } from "./RegelSpraakParser";
 import { GelijkstellingResultaatContext } from "./RegelSpraakParser";
 import { ConsistencyCheckResultaatContext } from "./RegelSpraakParser";
@@ -638,6 +640,12 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitRegel?: (ctx: RegelContext) => Result;
 	/**
+	 * Visit a parse tree produced by `RegelSpraakParser.regelVersieBlok`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRegelVersieBlok?: (ctx: RegelVersieBlokContext) => Result;
+	/**
 	 * Visit a parse tree produced by `RegelSpraakParser.regelGroep`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -667,6 +675,12 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitVersieGeldigheid?: (ctx: VersieGeldigheidContext) => Result;
+	/**
+	 * Visit a parse tree produced by `RegelSpraakParser.geldigheidsDatum`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitGeldigheidsDatum?: (ctx: GeldigheidsDatumContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `DagsoortdefinitieResultaat`
 	 * labeled alternative in `RegelSpraakParser.resultaatDeel`.
