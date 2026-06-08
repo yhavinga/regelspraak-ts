@@ -1,13 +1,24 @@
-import { Engine, Context } from '../../src';
+import { Engine, Context, AntlrParser } from '../../src';
 
 describe('Engine - String Interpolation (Tekstreeks)', () => {
   let engine: Engine;
+  let parser: AntlrParser;
 
   beforeEach(() => {
     engine = new Engine();
+    parser = new AntlrParser();
   });
 
   describe('plain strings (no interpolation)', () => {
+    test('should parse plain string as StringLiteral', () => {
+      const expr = parser.parseExpression('"Dit is gewone tekst"');
+
+      expect(expr).toMatchObject({
+        type: 'StringLiteral',
+        value: 'Dit is gewone tekst'
+      });
+    });
+
     test('should handle plain string without interpolation', () => {
       const result = engine.run('"Dit is gewone tekst"');
       expect(result.success).toBe(true);
@@ -22,6 +33,62 @@ describe('Engine - String Interpolation (Tekstreeks)', () => {
   });
 
   describe('variable interpolation', () => {
+    test('should parse interpolated string as structured TekstreeksExpression', () => {
+      const expr = parser.parseExpression('"Hallo «naam»"');
+
+      expect(expr.type).toBe('TekstreeksExpression');
+      expect((expr as any).parts).toEqual([
+        { type: 'TekstreeksText', text: 'Hallo ' },
+        {
+          type: 'TekstreeksInterpolation',
+          expression: {
+            type: 'VariableReference',
+            variableName: 'naam',
+            location: expect.any(Object)
+          }
+        }
+      ]);
+    });
+
+    test('should parse multiple interpolations and preserve adjacent structure', () => {
+      const expr = parser.parseExpression('"«voornaam»«achternaam»"');
+
+      expect(expr.type).toBe('TekstreeksExpression');
+      expect((expr as any).parts).toEqual([
+        {
+          type: 'TekstreeksInterpolation',
+          expression: {
+            type: 'VariableReference',
+            variableName: 'voornaam',
+            location: expect.any(Object)
+          }
+        },
+        {
+          type: 'TekstreeksInterpolation',
+          expression: {
+            type: 'VariableReference',
+            variableName: 'achternaam',
+            location: expect.any(Object)
+          }
+        }
+      ]);
+    });
+
+    test('should preserve nested expression AST inside interpolation', () => {
+      const expr = parser.parseExpression('"Som: «basis plus toeslag»"');
+
+      expect(expr.type).toBe('TekstreeksExpression');
+      expect((expr as any).parts[1]).toMatchObject({
+        type: 'TekstreeksInterpolation',
+        expression: {
+          type: 'BinaryExpression',
+          operator: '+',
+          left: { type: 'VariableReference', variableName: 'basis' },
+          right: { type: 'VariableReference', variableName: 'toeslag' }
+        }
+      });
+    });
+
     test('should interpolate single variable', () => {
       const context = new Context();
       context.setVariable('naam', { type: 'string', value: 'Jan' });

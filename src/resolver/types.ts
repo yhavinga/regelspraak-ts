@@ -13,7 +13,7 @@ import { DataType, DomainReference, TimelineGranularity } from '../ast/object-ty
 /**
  * Kind of symbol a reference resolves to
  */
-export type SymbolKind = 'parameter' | 'variable' | 'attribute' | 'kenmerk' | 'feittype' | 'objecttype';
+export type SymbolKind = 'parameter' | 'variable' | 'attribute' | 'kenmerk' | 'feittype' | 'objecttype' | 'self';
 
 /**
  * Timeline metadata from RegelSpraak §3.8

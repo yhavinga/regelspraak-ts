@@ -1,5 +1,5 @@
 import { IEvaluator, Value, RuntimeContext } from '../interfaces';
-import { Expression, NumberLiteral, StringLiteral, BinaryExpression, UnaryExpression, VariableReference, ParameterReference, FunctionCall, AggregationExpression, SubselectieExpression, RegelStatusExpression, AllAttributesExpression, Predicaat, KenmerkPredicaat, AttributeComparisonPredicaat, AttributeReference, SamengesteldeVoorwaarde, QuantifierType, VergelijkingInPredicaat } from '../ast/expressions';
+import { Expression, NumberLiteral, StringLiteral, BinaryExpression, UnaryExpression, VariableReference, SelfReference, ParameterReference, FunctionCall, AggregationExpression, SubselectieExpression, RegelStatusExpression, AllAttributesExpression, Predicaat, KenmerkPredicaat, AttributeComparisonPredicaat, AttributeReference, SamengesteldeVoorwaarde, QuantifierType, VergelijkingInPredicaat } from '../ast/expressions';
 import { AggregationEngine } from './aggregation-engine';
 import { TimelineEvaluator } from './timeline-evaluator';
 import { TimelineExpression, TimelineValue, TimelineValueImpl } from '../ast/timelines';
@@ -84,6 +84,8 @@ export class ExpressionEvaluator implements IEvaluator {
         return this.evaluateUnaryExpression(expr as UnaryExpression, context);
       case 'VariableReference':
         return this.evaluateVariableReference(expr as VariableReference, context);
+      case 'SelfReference':
+        return this.evaluateSelfReference(expr as SelfReference, context);
       case 'ParameterReference':
         return this.evaluateParameterReference(expr as ParameterReference, context);
       case 'FunctionCall':
@@ -650,6 +652,14 @@ export class ExpressionEvaluator implements IEvaluator {
     }
 
     throw new Error(`Undefined variable: ${expr.variableName}`);
+  }
+
+  private evaluateSelfReference(_expr: SelfReference, context: RuntimeContext): Value {
+    const currentInstance = (context as any).current_instance;
+    if (!currentInstance) {
+      throw new Error('No current instance available for pronoun resolution');
+    }
+    return currentInstance;
   }
 
   private evaluateParameterReference(expr: ParameterReference, context: RuntimeContext): Value {

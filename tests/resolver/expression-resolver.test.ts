@@ -6,7 +6,14 @@ import {
   ResolvedPathSegment,
 } from '../../src/resolver';
 import { DomainModel } from '../../src/ast/domain-model';
-import { AttributeReference, ParameterReference, VariableReference, Expression } from '../../src/ast/expressions';
+import {
+  AttributeReference,
+  ParameterReference,
+  VariableReference,
+  SelfReference,
+  TekstreeksExpression,
+  Expression,
+} from '../../src/ast/expressions';
 
 /**
  * Tests for expression resolution - annotating AST nodes with semantic information.
@@ -50,6 +57,46 @@ describe('Expression Resolver', () => {
 
       expect(expr.resolved).toBeDefined();
       expect(expr.resolved?.resolvedType).toEqual({ type: 'Boolean' });
+    });
+
+    it('resolves TekstreeksExpression to Tekst and resolves interpolation expressions', () => {
+      const model = createPersonModel();
+      model.parameters.push({
+        type: 'ParameterDefinition',
+        name: 'aanhef',
+        dataType: { type: 'Tekst' },
+      });
+      const context = createResolutionContext(model, 'Persoon', 'persoon');
+
+      const expr: TekstreeksExpression = {
+        type: 'TekstreeksExpression',
+        parts: [
+          { type: 'TekstreeksText', text: 'Hallo ' },
+          {
+            type: 'TekstreeksInterpolation',
+            expression: { type: 'ParameterReference', parameterName: 'aanhef' } as ParameterReference,
+          },
+          { type: 'TekstreeksText', text: ': ' },
+          {
+            type: 'TekstreeksInterpolation',
+            expression: { type: 'AttributeReference', path: ['self', 'leeftijd'] } as AttributeReference,
+          },
+        ],
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.resolvedType).toEqual({ type: 'Tekst' });
+      const parameterPart = expr.parts[1];
+      const attributePart = expr.parts[3];
+      expect(parameterPart.type).toBe('TekstreeksInterpolation');
+      expect(attributePart.type).toBe('TekstreeksInterpolation');
+      if (parameterPart.type === 'TekstreeksInterpolation') {
+        expect(parameterPart.expression.resolved?.resolvedType).toEqual({ type: 'Tekst' });
+      }
+      if (attributePart.type === 'TekstreeksInterpolation') {
+        expect(attributePart.expression.resolved?.resolvedPath?.[1].resolvedName).toBe('leeftijd');
+      }
     });
   });
 
@@ -117,6 +164,42 @@ describe('Expression Resolver', () => {
   });
 
   describe('Possessive Pronoun Resolution', () => {
+    it('resolves bare "hij" to the current object binding', () => {
+      const model = createPersonModel();
+      const context = createResolutionContext(model, 'Persoon', 'persoon');
+
+      const expr: SelfReference = {
+        type: 'SelfReference',
+        pronoun: 'hij',
+      };
+
+      resolveExpression(expr, context);
+
+      expect(expr.resolved?.resolvedSymbol?.kind).toBe('self');
+      expect(expr.resolved?.resolvedSymbol?.name).toBe('persoon');
+      expect(expr.resolved?.resolvedType).toEqual({ type: 'ObjectType', name: 'Persoon' });
+      expect(expr.resolved?.resolvedPath).toEqual([{
+        sourceName: 'hij',
+        resolvedName: 'persoon',
+        kind: 'possessive',
+        sourceType: 'context',
+        targetType: 'Persoon',
+        cardinality: '1',
+      }]);
+    });
+
+    it('rejects bare "hij" without a current object binding', () => {
+      const model = createPersonModel();
+      const context = createResolutionContext(model);
+
+      const expr: SelfReference = {
+        type: 'SelfReference',
+        pronoun: 'hij',
+      };
+
+      expect(() => resolveExpression(expr, context)).toThrow(/current object binding/);
+    });
+
     it('resolves "zijn" to current object attribute', () => {
       const model = createPersonModel();
       const context = createResolutionContext(model, 'Persoon', 'persoon');

@@ -72,6 +72,11 @@ export interface VariableReference extends Expression {
   variableName: string;
 }
 
+export interface SelfReference extends Expression {
+  type: 'SelfReference';
+  pronoun: 'hij';
+}
+
 export interface ParameterReference extends Expression {
   type: 'ParameterReference';
   parameterName: string;

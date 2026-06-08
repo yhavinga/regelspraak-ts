@@ -1,4 +1,4 @@
-import { CharStream, CommonTokenStream, ErrorListener, RecognitionException, Recognizer } from 'antlr4';
+import { CharStream, CommonTokenStream } from 'antlr4';
 import RegelSpraakLexer from './_generated/antlr/RegelSpraakLexer';
 import RegelSpraakParser from './_generated/antlr/RegelSpraakParser';
 import { RegelSpraakVisitorImpl } from './_visitors/regelspraak-visitor-impl';
@@ -8,21 +8,7 @@ import { DecisionTable } from './ast/decision-tables';
 import { ObjectTypeDefinition } from './ast/object-types';
 import { ParameterDefinition } from './ast/parameters';
 import { DomainModel } from './ast/domain-model';
-
-/**
- * Custom error listener to capture parse errors
- */
-class CustomErrorListener extends ErrorListener<any> {
-  private errors: string[] = [];
-
-  syntaxError(recognizer: Recognizer<any>, offendingSymbol: any, line: number, column: number, msg: string, e: RecognitionException | undefined): void {
-    this.errors.push(`line ${line}:${column} ${msg}`);
-  }
-
-  getErrors(): string[] {
-    return this.errors;
-  }
-}
+import { CollectingErrorListener } from './parser-error-listener';
 
 /**
  * Parser service using ANTLR4-generated parser
@@ -101,7 +87,7 @@ export class AntlrParser {
     const parser = new RegelSpraakParser(tokens);
 
     // Set up custom error listener
-    const errorListener = new CustomErrorListener();
+    const errorListener = new CollectingErrorListener();
     parser.removeErrorListeners();
     parser.addErrorListener(errorListener);
 
@@ -138,7 +124,7 @@ export class AntlrParser {
     const parser = new RegelSpraakParser(tokens);
 
     // Set up custom error listener
-    const errorListener = new CustomErrorListener();
+    const errorListener = new CollectingErrorListener();
     parser.removeErrorListeners();
     parser.addErrorListener(errorListener);
 
@@ -174,7 +160,7 @@ export class AntlrParser {
       const parser = new RegelSpraakParser(tokens);
 
       // Set up custom error listener
-      const errorListener = new CustomErrorListener();
+      const errorListener = new CollectingErrorListener();
       parser.removeErrorListeners();
       parser.addErrorListener(errorListener);
 
@@ -239,7 +225,7 @@ export class AntlrParser {
       const parser = new RegelSpraakParser(tokens);
 
       // Set up custom error listener
-      const errorListener = new CustomErrorListener();
+      const errorListener = new CollectingErrorListener();
       parser.removeErrorListeners();
       parser.addErrorListener(errorListener);
 
@@ -290,7 +276,7 @@ export class AntlrParser {
       const parser = new RegelSpraakParser(tokens);
 
       // Set up custom error listener
-      const errorListener = new CustomErrorListener();
+      const errorListener = new CollectingErrorListener();
       parser.removeErrorListeners();
       parser.addErrorListener(errorListener);
 
@@ -325,7 +311,7 @@ export class AntlrParser {
       const parser = new RegelSpraakParser(tokens);
 
       // Set up custom error listener
-      const errorListener = new CustomErrorListener();
+      const errorListener = new CollectingErrorListener();
       parser.removeErrorListeners();
       parser.addErrorListener(errorListener);
 
@@ -360,7 +346,7 @@ export class AntlrParser {
       const parser = new RegelSpraakParser(tokens);
 
       // Set up custom error listener
-      const errorListener = new CustomErrorListener();
+      const errorListener = new CollectingErrorListener();
       parser.removeErrorListeners();
       parser.addErrorListener(errorListener);
 

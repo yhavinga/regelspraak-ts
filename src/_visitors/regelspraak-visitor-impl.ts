@@ -26,8 +26,11 @@ import {
   BinaryExpression,
   UnaryExpression,
   VariableReference,
+  SelfReference,
   ParameterReference,
   FunctionCall,
+  TekstreeksExpression,
+  TekstreeksPart,
   SubselectieExpression,
   RegelStatusExpression,
   Predicaat,
@@ -49,6 +52,7 @@ import {
   GenesteVoorwaardeInPredicaat,
   VergelijkingInPredicaat
 } from '../ast/expressions';
+import { CollectingErrorListener } from '../parser-error-listener';
 import {
   Predicate,
   SimplePredicate,
@@ -116,6 +120,15 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
   private unsupportedExpression(ctx: any): never {
     this.unsupportedVisitorContext(ctx, 'expression context');
+  }
+
+  private createSelfReference(ctx: any): SelfReference {
+    const node: SelfReference = {
+      type: 'SelfReference',
+      pronoun: 'hij'
+    };
+    this.setLocation(node, ctx);
+    return node;
   }
 
   /**
@@ -964,9 +977,6 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         return this.visitPercentageLiteralExpr(ctx as PercentageLiteralExprContext);
       case 'EnumLiteralExprContext':
         return this.visitEnumLiteralExpr(ctx);
-      case 'TekstreeksLiteralExprContext':
-        // Handle text sequence literal - needs implementation
-        return this.visitStringLiteralExpr(ctx); // Temporary fallback
 
       // References
       case 'OnderwerpRefExprContext':
@@ -982,8 +992,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       case 'NaamwoordExprContext':
         return this.visitNaamwoordExpr(ctx);
       case 'PronounExprContext':
-        // Handle pronoun expression - needs implementation
-        return this.visitIdentifierExpr(ctx as any); // Temporary fallback
+        return this.visitPronounExpr(ctx);
 
       // Function calls and special expressions
       case 'PasenFuncExprContext':
@@ -1048,9 +1057,6 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         return this.visitDimensieAggExpr(ctx);
       case 'DimensieRangeAggExprContext':
         return this.visitDimensieRangeAggExpr(ctx);
-      case 'TekstreeksExprContext':
-        // Needs implementation
-        return this.visitStringLiteralExpr(ctx); // Temporary fallback
       case 'ConcatenatieExprContext':
         return this.visitConcatenatieExpr(ctx);
       case 'RekendatumKeywordExprContext': {
@@ -1171,9 +1177,14 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
   }
 
   visitIdentifierExpr(ctx: IdentifierExprContext): Expression {
+    const variableName = ctx.identifier().getText();
+    if (variableName.toLowerCase() === 'hij') {
+      return this.createSelfReference(ctx);
+    }
+
     const ref = {
       type: 'VariableReference',
-      variableName: ctx.identifier().getText()
+      variableName
     } as VariableReference;
 
     // Store location for this variable reference
@@ -1517,15 +1528,10 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     // Get the onderwerpReferentie context from the OnderwerpRefExpr wrapper
     const onderwerpRef = ctx.onderwerpReferentie ? ctx.onderwerpReferentie() : ctx;
 
-    // Handle pronoun "hij" -> map to "self" for consistency with Python
+    // Handle the explicit animate pronoun as a context-bound self reference.
     const ctxText = ctx.getText ? ctx.getText() : '';
     if (ctxText === 'hij') {
-      const ref = {
-        type: 'VariableReference',
-        variableName: 'self'
-      } as VariableReference;
-      this.setLocation(ref, ctx);
-      return ref;
+      return this.createSelfReference(ctx);
     }
 
     // FIX 1: Detect aggregation patterns that grammar didn't catch
@@ -1680,40 +1686,48 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
   }
 
   visitStringLiteralExpr(ctx: any): Expression {
-    // Get the string literal token
-    const text = ctx.STRING_LITERAL().getText();
+    const literal = ctx.STRING_LITERAL?.();
+    if (!literal) {
+      this.unsupportedExpression(ctx);
+    }
+    return this.buildStringOrTekstreeksExpression(ctx, literal.getText());
+  }
 
-    // Remove surrounding quotes
-    const value = text.slice(1, -1);
+  visitTekstreeksExpr(ctx: any): Expression {
+    const literal = ctx.STRING_LITERAL?.();
+    if (!literal) {
+      this.unsupportedExpression(ctx);
+    }
+    return this.buildStringOrTekstreeksExpression(ctx, literal.getText());
+  }
 
-    // Check for interpolation markers «»
+  private buildStringOrTekstreeksExpression(ctx: any, literalText: string): Expression {
+    const value = literalText.slice(1, -1);
+
     if (!value.includes('«')) {
-      // Plain string - no interpolation
-      const node = {
+      const node: StringLiteral = {
         type: 'StringLiteral',
         value
-      } as Expression;
+      };
       this.setLocation(node, ctx);
       return node;
     }
 
-    // Parse interpolated string (Tekstreeks)
-    const parts: any[] = [];
+    const parts: TekstreeksPart[] = [];
     let i = 0;
     let textStart = 0;
 
     while (i < value.length) {
       if (value[i] === '«') {
-        // Emit text before marker
         if (i > textStart) {
           parts.push({ type: 'TekstreeksText', text: value.slice(textStart, i) });
         }
-        // Find closing marker
+
         const closeIdx = value.indexOf('»', i + 1);
         if (closeIdx === -1) {
           throw new Error('Unclosed « in string interpolation');
         }
-        // Extract and parse embedded expression
+
         const exprText = value.slice(i + 1, closeIdx);
         const exprNode = this.parseEmbeddedExpression(exprText);
         parts.push({ type: 'TekstreeksInterpolation', expression: exprNode });
@@ -1723,12 +1737,12 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         i++;
       }
     }
-    // Emit trailing text
+
     if (textStart < value.length) {
       parts.push({ type: 'TekstreeksText', text: value.slice(textStart) });
     }
 
-    const node = { type: 'TekstreeksExpression', parts } as any;
+    const node: TekstreeksExpression = { type: 'TekstreeksExpression', parts };
     this.setLocation(node, ctx);
     return node;
   }
@@ -1742,9 +1756,28 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const lexer = new RegelSpraakLexer(chars);
     const tokens = new CommonTokenStream(lexer);
     const parser = new RegelSpraakParser(tokens);
+    const errorListener = new CollectingErrorListener();
 
-    // Parse as expression
+    parser.removeErrorListeners();
+    parser.addErrorListener(errorListener);
+
     const exprCtx = parser.expressie();
+    const errors = errorListener.getErrors();
+    if (errors.length > 0) {
+      throw new Error(`Invalid embedded expression in string interpolation: ${errors[0]}`);
+    }
+
+    const currentToken = parser.getCurrentToken();
+    if (currentToken && currentToken.type !== RegelSpraakParser.EOF) {
+      throw new Error(
+        `Unexpected input after embedded expression in string interpolation: ${currentToken.text}`
+      );
+    }
+
+    if (!exprCtx) {
+      throw new Error('Failed to parse embedded expression in string interpolation');
+    }
+
     return this.visit(exprCtx);
   }
 
@@ -3095,6 +3128,10 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       } as AttributeReference;
       this.setLocation(ref, ctx);
       return ref;
+    }
+
+    if (path.length === 1 && path[0] === 'self') {
+      return this.createSelfReference(ctx);
     }
 
     // Always return AttributeReference for onderwerp contexts
@@ -5432,6 +5469,10 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     };
     this.setLocation(node, ctx);
     return node;
+  }
+
+  visitPronounExpr(ctx: any): SelfReference {
+    return this.createSelfReference(ctx);
   }
 
   visitBooleanTrueLiteralExpr(ctx: any): Expression {

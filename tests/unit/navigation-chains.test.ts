@@ -1,4 +1,4 @@
-import { Engine } from '../../src';
+import { Context, Engine } from '../../src';
 
 describe('Navigation Chain Processing', () => {
   let engine: Engine;
@@ -70,13 +70,24 @@ describe('Navigation Chain Processing', () => {
       expect(result.success).toBe(true);
       const ast = result.ast;
       expect(ast).not.toBeNull();
+      expect(ast?.type).toBe('SelfReference');
+      expect((ast as any)?.pronoun).toBe('hij');
+    });
 
-      // "hij" alone is parsed as VariableReference, not AttributeReference
-      if (ast?.type === 'VariableReference') {
-        expect((ast as any)?.variableName).toBe('self');
-      } else if (ast?.type === 'AttributeReference') {
-        expect((ast as any)?.path).toEqual(['self']);
-      }
+    test('should evaluate pronoun "hij" as the current instance', () => {
+      const context = new Context();
+      const currentInstance = {
+        type: 'object',
+        objectType: 'Persoon',
+        objectId: 'persoon1',
+        value: {}
+      };
+      (context as any).current_instance = currentInstance;
+
+      const result = engine.run('hij', context);
+
+      expect(result.success).toBe(true);
+      expect(result.value).toBe(currentInstance);
     });
 
     test('should split "van" within single basisOnderwerp', () => {

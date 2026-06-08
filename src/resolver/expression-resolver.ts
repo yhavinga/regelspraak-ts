@@ -20,6 +20,8 @@ import {
   SubselectieExpression,
   NumberLiteral,
   StringLiteral,
+  SelfReference,
+  TekstreeksExpression,
   BooleanLiteral,
   FunctionCall,
   SamengesteldeVoorwaarde,
@@ -244,8 +246,14 @@ function resolveExpressionInternal(
     case 'StringLiteral':
       return resolveStringLiteral(expr as StringLiteral);
 
+    case 'TekstreeksExpression':
+      return resolveTekstreeksExpression(expr as TekstreeksExpression, context, maps);
+
     case 'BooleanLiteral':
       return resolveBooleanLiteral(expr as BooleanLiteral);
+
+    case 'SelfReference':
+      return resolveSelfReference(expr as SelfReference, context, maps);
 
     case 'VariableReference':
       return resolveVariableReference(expr as VariableReference, context, maps);
@@ -308,6 +316,23 @@ function resolveStringLiteral(expr: StringLiteral): StringLiteral {
   return expr;
 }
 
+function resolveTekstreeksExpression(
+  expr: TekstreeksExpression,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): TekstreeksExpression {
+  for (const part of expr.parts) {
+    if (part.type === 'TekstreeksInterpolation') {
+      resolveExpressionInternal(part.expression, context, maps);
+    }
+  }
+
+  expr.resolved = {
+    resolvedType: { type: 'Tekst' },
+  };
+  return expr;
+}
+
 function resolveBooleanLiteral(expr: BooleanLiteral): BooleanLiteral {
   expr.resolved = {
     resolvedType: { type: 'Boolean' },
@@ -318,6 +343,57 @@ function resolveBooleanLiteral(expr: BooleanLiteral): BooleanLiteral {
 // ============================================================================
 // Reference Resolvers
 // ============================================================================
+
+function requireSelfBinding(
+  context: ResolutionContext,
+  maps: ResolutionMaps,
+  sourceName: string
+): { variableName: string; objectTypeName: string } {
+  if (!context.currentObjectType || !context.currentVariable) {
+    throw new Error(`Cannot resolve '${sourceName}' without a current object binding`);
+  }
+
+  const objectType =
+    maps.objectTypes.get(context.currentObjectType) ||
+    maps.objectTypes.get(context.currentObjectType.toLowerCase());
+  if (!objectType) {
+    throw new Error(`Cannot resolve '${sourceName}': unknown object type '${context.currentObjectType}'`);
+  }
+
+  return {
+    variableName: context.currentVariable,
+    objectTypeName: objectType.name,
+  };
+}
+
+function resolveSelfReference(
+  expr: SelfReference,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): SelfReference {
+  const binding = requireSelfBinding(context, maps, expr.pronoun);
+  const resolvedType = { type: 'ObjectType', name: binding.objectTypeName } as any;
+
+  expr.resolved = {
+    resolvedSymbol: {
+      kind: 'self',
+      name: binding.variableName,
+      dataType: resolvedType,
+    },
+    resolvedType,
+    possessiveOwner: binding.variableName,
+    resolvedPath: [{
+      sourceName: expr.pronoun,
+      resolvedName: binding.variableName,
+      kind: 'possessive',
+      sourceType: 'context',
+      targetType: binding.objectTypeName,
+      cardinality: '1',
+    }],
+  };
+
+  return expr;
+}
 
 function resolveVariableReference(
   expr: VariableReference,
@@ -563,18 +639,17 @@ function resolveAttributeReference(
   const isPossessive = POSSESSIVE_PRONOUNS.includes(firstSegment);
 
   if (isPossessive) {
-    if (context.currentVariable && context.currentObjectType) {
-      possessiveOwner = context.currentVariable;
-      resolvedPath.push({
-        sourceName: path[0],
-        resolvedName: context.currentVariable,
-        kind: 'possessive',
-        sourceType: 'context',
-        targetType: context.currentObjectType,
-        cardinality: '1',
-      });
-      currentType = context.currentObjectType;
-    }
+    const binding = requireSelfBinding(context, maps, path[0]);
+    possessiveOwner = binding.variableName;
+    resolvedPath.push({
+      sourceName: path[0],
+      resolvedName: binding.variableName,
+      kind: 'possessive',
+      sourceType: 'context',
+      targetType: binding.objectTypeName,
+      cardinality: '1',
+    });
+    currentType = binding.objectTypeName;
   } else {
     // First segment might be an object type or variable
     const objectType = maps.objectTypes.get(path[0]) || maps.objectTypes.get(path[0].toLowerCase());
