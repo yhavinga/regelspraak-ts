@@ -52,6 +52,19 @@ export class RuleExecutor implements IRuleExecutor {
   private expressionEvaluator = new ExpressionEvaluator();
   private feitExecutor = new FeitExecutor();
 
+  private isStrictExecution(context: RuntimeContext): boolean {
+    return (context as any)._strictExecution === true;
+  }
+
+  private conditionEvaluationFailure(error: unknown, ruleName?: string): RuleExecutionResult {
+    const cause = error instanceof Error ? error : new Error('unknown error');
+    const ruleContext = ruleName ? ` for rule '${ruleName}'` : '';
+    return {
+      success: false,
+      error: new Error(`Condition evaluation failed${ruleContext}: ${cause.message}`)
+    };
+  }
+
   private recordRuleFired(
     context: RuntimeContext,
     ruleName: string | undefined,
@@ -359,6 +372,10 @@ export class RuleExecutor implements IRuleExecutor {
             };
           }
         } catch (error) {
+          if (this.isStrictExecution(context)) {
+            return this.conditionEvaluationFailure(error);
+          }
+
           // If condition evaluation fails (e.g., missing attribute), treat as false
           return {
             success: true,
@@ -470,6 +487,9 @@ export class RuleExecutor implements IRuleExecutor {
       // Single-instance mode: evaluate once, set on current instance
       const value = this.expressionEvaluator.evaluate(gelijkstelling.expression, context);
       const result = this.navigateAndSetAttribute(engineInstance, targetPath, value, context);
+      if (!result.success && this.isStrictExecution(context)) {
+        return result;
+      }
 
       // Record rule fired with target and value for explainability
       const ruleName = (context as any)._currentRuleName;
@@ -535,7 +555,10 @@ export class RuleExecutor implements IRuleExecutor {
             lastValue = value;
 
             // Use shared helper for navigation and assignment
-            this.navigateAndSetAttribute(obj, targetPath, value, context, true);
+            const navigationResult = this.navigateAndSetAttribute(obj, targetPath, value, context, true);
+            if (!navigationResult.success && this.isStrictExecution(context)) {
+              return navigationResult;
+            }
           } finally {
             objCtx.current_instance = oldInstance;
           }
@@ -579,7 +602,10 @@ export class RuleExecutor implements IRuleExecutor {
               lastValue = instanceValue;
 
               // Use shared helper for navigation and assignment
-              this.navigateAndSetAttribute(obj, targetPath, instanceValue, context, true);
+              const navigationResult = this.navigateAndSetAttribute(obj, targetPath, instanceValue, context, true);
+              if (!navigationResult.success && this.isStrictExecution(context)) {
+                return navigationResult;
+              }
             } finally {
               // Restore previous current_instance
               roleCtx.current_instance = oldInstance;
@@ -951,6 +977,10 @@ export class RuleExecutor implements IRuleExecutor {
             writeCount++;
           }
         } catch (error) {
+          if (this.isStrictExecution(context)) {
+            return this.conditionEvaluationFailure(error, ruleName);
+          }
+
           // If condition evaluation fails (e.g., missing attribute), skip this object
           // Continue to next object
         }
@@ -1220,6 +1250,10 @@ export class RuleExecutor implements IRuleExecutor {
           }
         }
       } catch (error) {
+        if (this.isStrictExecution(context)) {
+          return this.conditionEvaluationFailure(error, ruleName);
+        }
+
         // If condition evaluation fails, skip this object
         continue;
       }
@@ -1299,6 +1333,10 @@ export class RuleExecutor implements IRuleExecutor {
           }
         }
       } catch (error) {
+        if (this.isStrictExecution(context)) {
+          return this.conditionEvaluationFailure(error, ruleName);
+        }
+
         // If condition evaluation fails, skip this object
         continue;
       }
@@ -2032,12 +2070,22 @@ export class RuleExecutor implements IRuleExecutor {
       for (const rule of regelGroep.rules) {
         try {
           const result = this.execute(rule, context);
+          if (!result.success && this.isStrictExecution(context)) {
+            return result;
+          }
           results.push({
             rule: rule.name,
             status: result.success ? 'evaluated' : 'error',
             result: result
           });
         } catch (error) {
+          if (this.isStrictExecution(context)) {
+            return {
+              success: false,
+              error: error instanceof Error ? error : new Error('Unknown error')
+            };
+          }
+
           results.push({
             rule: rule.name,
             status: 'error',
@@ -2080,6 +2128,10 @@ export class RuleExecutor implements IRuleExecutor {
                   };
                 }
               } catch (error) {
+                if (this.isStrictExecution(context)) {
+                  return this.conditionEvaluationFailure(error, rule.name);
+                }
+
                 // Condition evaluation failed - treat as termination
                 results.push({
                   iteration,
@@ -2104,10 +2156,15 @@ export class RuleExecutor implements IRuleExecutor {
                 status: 'object_created',
                 result
               });
+            } else if (this.isStrictExecution(context)) {
+              return result;
             }
           } else {
             // Execute other rules normally
             const result = this.execute(rule, context);
+            if (!result.success && this.isStrictExecution(context)) {
+              return result;
+            }
             results.push({
               iteration,
               rule: rule.name,

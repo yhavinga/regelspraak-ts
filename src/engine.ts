@@ -1,4 +1,4 @@
-import { IEngine, ParseResult, RuntimeContext, ExecutionResult, Value } from './interfaces';
+import { IEngine, ParseResult, RuntimeContext, ExecutionResult, Value, EngineExecutionOptions } from './interfaces';
 import { Context } from './context';
 import { ExpressionEvaluator } from './evaluators/expression-evaluator';
 import { RuleExecutor } from './executors/rule-executor';
@@ -7,6 +7,10 @@ import { AntlrParser } from './parser';
 import { UnitSystemDefinition } from './ast/unit-systems';
 import { UnitRegistry } from './units/unit-registry';
 import { UnitSystem, BaseUnit } from './units/base-unit';
+
+type RuleConditionEvaluation =
+  | { success: true; skipped: boolean }
+  | { success: false; error: Error };
 
 /**
  * Main RegelSpraak engine
@@ -169,7 +173,16 @@ export class Engine implements IEngine {
     }
   }
 
-  execute(ast: any, context: RuntimeContext): ExecutionResult {
+  execute(ast: any, context: RuntimeContext = new Context(), options: EngineExecutionOptions = {}): ExecutionResult {
+    const strict = options.strict === true || (context as any)._strictExecution === true;
+    return this.withStrictExecution(context, strict, () => this.executeNode(ast, context, strict));
+  }
+
+  executeStrict(ast: any, context: RuntimeContext = new Context()): ExecutionResult {
+    return this.execute(ast, context, { strict: true });
+  }
+
+  private executeNode(ast: any, context: RuntimeContext, strict: boolean): ExecutionResult {
     try {
       // Handle array of definitions
       if (Array.isArray(ast)) {
@@ -179,7 +192,7 @@ export class Engine implements IEngine {
         };
 
         for (const definition of ast) {
-          const result = this.execute(definition, context);
+          const result = this.executeNode(definition, context, strict);
           if (!result.success) {
             return result; // Return first error
           }
@@ -191,375 +204,9 @@ export class Engine implements IEngine {
 
       // Check for DomainModel structure (no type field, but has regels, objectTypes, etc.)
       if (!ast.type && (ast.regels || ast.objectTypes || ast.parameters)) {
-        // This is a DomainModel from the parser
-
-        // First register any unit systems
-        for (const unitSystem of (ast.unitSystems || [])) {
-          this.registerUnitSystem(unitSystem, context);
-        }
-
-        // Register all FeitTypes before executing rules
-        for (const feittype of (ast.feitTypes || [])) {
-          if ((context as any).registerFeittype) {
-            (context as any).registerFeittype(feittype);
-          }
-        }
-
-        let lastResult: ExecutionResult = {
-          success: true,
-          value: { type: 'string', value: 'Model executed' }
-        };
-
-        // Get beslistabels from the model
-        const beslistabels = ast.beslistabels || [];
-
-        // ============================================================
-        // Phase 1: Execute decision tables that provide lookup values
-        // ============================================================
-        for (const beslistabel of beslistabels) {
-          const targetType = this.deduceBeslistabelTargetType(beslistabel, context);
-          if (!targetType) continue;
-
-          const instances = (context as any).getObjectsByType(targetType);
-          for (const instance of instances) {
-            const previousInstance = (context as any).current_instance;
-            (context as any).current_instance = instance;
-            try {
-              this.decisionTableExecutor.execute(beslistabel, context);
-            } catch (e) {
-              // Silently continue - table may depend on rule output
-            } finally {
-              (context as any).current_instance = previousInstance;
-            }
-          }
-        }
-
-        // ============================================================
-        // Phase 2: Execute all rules in sequence
-        // ============================================================
-        for (const rule of (ast.regels || [])) {
-          // Deduce target type for rule (central deduction matching Python)
-          const targetType = this.deduceRuleTargetType(rule, context);
-
-          if (!targetType) {
-            // Rule doesn't target specific object type - execute directly
-            const result = this.ruleExecutor.execute(rule, context);
-            if (!result.success) {
-              return { success: false, error: result.error };
-            }
-            if (result.value) {
-              lastResult = { success: true, value: result.value };
-            }
-            continue;
-          }
-
-          // Iterate over all instances of target type
-          const instances = (context as any).getObjectsByType(targetType);
-          for (const instance of instances) {
-            const previousInstance = (context as any).current_instance;
-            (context as any).current_instance = instance;
-            try {
-              // Evaluate condition if present
-              const voorwaarde = rule.voorwaarde || rule.condition;
-              if (voorwaarde) {
-                const expression = voorwaarde.expression || voorwaarde.expressie;
-                if (expression) {
-                  const conditionResult = this.expressionEvaluator.evaluate(expression, context);
-                  if (conditionResult.type !== 'boolean' || !conditionResult.value) {
-                    continue; // Condition not met - skip this instance
-                  }
-                }
-              }
-
-              // Execute rule for this instance with engine iteration flag
-              const previousIterationFlag = (context as any)._engineControlsIteration;
-              (context as any)._engineControlsIteration = true;
-              try {
-                const result = this.ruleExecutor.execute(rule, context);
-                if (!result.success) {
-                  return { success: false, error: result.error };
-                }
-                if (result.value) {
-                  lastResult = { success: true, value: result.value };
-                }
-              } finally {
-                (context as any)._engineControlsIteration = previousIterationFlag;
-              }
-            } catch (e) {
-              console.warn(`Rule '${rule.name || rule.naam}' failed for ${targetType} instance: ${e}`);
-            } finally {
-              (context as any).current_instance = previousInstance;
-            }
-          }
-        }
-
-        // ============================================================
-        // Phase 3: Re-execute decision tables that depend on rule outputs
-        // ============================================================
-        for (const beslistabel of beslistabels) {
-          const targetType = this.deduceBeslistabelTargetType(beslistabel, context);
-          if (!targetType) continue;
-
-          const instances = (context as any).getObjectsByType(targetType);
-          for (const instance of instances) {
-            const previousInstance = (context as any).current_instance;
-            (context as any).current_instance = instance;
-            try {
-              this.decisionTableExecutor.execute(beslistabel, context);
-            } catch (e) {
-              console.warn(`Decision table phase 3 error for ${beslistabel.naam}: ${e}`);
-            } finally {
-              (context as any).current_instance = previousInstance;
-            }
-          }
-        }
-
-        // ============================================================
-        // Phase 4: Re-run Gelijkstelling rules that depend on decision tables
-        // ============================================================
-        for (const rule of (ast.regels || [])) {
-          // Support both result (English from parseModel) and resultaat (Dutch) property names
-          const resultType = rule.result?.type || rule.resultaat?.type;
-          if (resultType !== 'Gelijkstelling') continue;
-
-          const targetType = this.deduceRuleTargetType(rule, context);
-          if (!targetType) {
-            // No target type - execute directly
-            const result = this.ruleExecutor.execute(rule, context);
-            if (result.success && result.value) {
-              lastResult = { success: true, value: result.value };
-            }
-            continue;
-          }
-
-          // Iterate over all instances of target type
-          const instances = (context as any).getObjectsByType(targetType);
-          for (const instance of instances) {
-            const previousInstance = (context as any).current_instance;
-            (context as any).current_instance = instance;
-            try {
-              // Execute rule with engine iteration flag
-              const previousIterationFlag = (context as any)._engineControlsIteration;
-              (context as any)._engineControlsIteration = true;
-              try {
-                const result = this.ruleExecutor.execute(rule, context);
-                if (result.success && result.value) {
-                  lastResult = { success: true, value: result.value };
-                }
-              } finally {
-                (context as any)._engineControlsIteration = previousIterationFlag;
-              }
-            } finally {
-              (context as any).current_instance = previousInstance;
-            }
-          }
-        }
-
-        // Execute each regelgroep in sequence
-        for (const regelGroep of (ast.regelGroepen || [])) {
-          const result = this.ruleExecutor.executeRegelGroep(regelGroep, context);
-          if (!result.success) {
-            return {
-              success: false,
-              error: result.error
-            };
-          }
-          if (result.value) {
-            lastResult = {
-              success: true,
-              value: result.value
-            };
-          }
-        }
-
-        return lastResult;
+        return this.executeModel(ast, context, strict);
       } else if (ast.type === 'Model') {
-        // First register any unit systems
-        for (const unitSystem of (ast as any).unitSystems || []) {
-          this.registerUnitSystem(unitSystem, context);
-        }
-
-        // Register all FeitTypes before executing rules
-        for (const feittype of (ast as any).feittypen || []) {
-          if (context.registerFeittype) {
-            context.registerFeittype(feittype);
-          }
-        }
-
-        let lastResult: ExecutionResult = {
-          success: true,
-          value: { type: 'string', value: 'Model executed' }
-        };
-
-        // Get beslistabels from the model (handle both naming conventions)
-        const beslistabels = (ast as any).beslistabels || (ast as any).decisionTables || [];
-
-        // ============================================================
-        // Phase 1: Execute decision tables that provide lookup values
-        // (e.g., "Woonregio factor" which maps province to region)
-        // ============================================================
-        for (const beslistabel of beslistabels) {
-          const targetType = this.deduceBeslistabelTargetType(beslistabel, context);
-          if (!targetType) continue;
-
-          const instances = (context as any).getObjectsByType(targetType);
-          for (const instance of instances) {
-            const previousInstance = (context as any).current_instance;
-            (context as any).current_instance = instance;
-            try {
-              this.decisionTableExecutor.execute(beslistabel, context);
-            } catch (e) {
-              // Silently continue - table may depend on rule output computed in Phase 3
-            } finally {
-              (context as any).current_instance = previousInstance;
-            }
-          }
-        }
-
-        // ============================================================
-        // Phase 2: Execute all rules in sequence
-        // ============================================================
-        for (const rule of (ast as any).rules || []) {
-          // Deduce target type for rule (central deduction matching Python)
-          const targetType = this.deduceRuleTargetType(rule, context);
-
-          if (!targetType) {
-            // Rule doesn't target specific object type - execute directly
-            const result = this.ruleExecutor.execute(rule, context);
-            if (!result.success) {
-              return { success: false, error: result.error };
-            }
-            if (result.value) {
-              lastResult = { success: true, value: result.value };
-            }
-            continue;
-          }
-
-          // Iterate over all instances of target type
-          const instances = (context as any).getObjectsByType(targetType);
-          for (const instance of instances) {
-            const previousInstance = (context as any).current_instance;
-            (context as any).current_instance = instance;
-            try {
-              // Evaluate condition if present
-              const voorwaarde = rule.voorwaarde || rule.condition;
-              if (voorwaarde) {
-                const expression = voorwaarde.expression || voorwaarde.expressie;
-                if (expression) {
-                  const conditionResult = this.expressionEvaluator.evaluate(expression, context);
-                  if (conditionResult.type !== 'boolean' || !conditionResult.value) {
-                    continue; // Condition not met - skip this instance
-                  }
-                }
-              }
-
-              // Execute rule for this instance with engine iteration flag
-              const previousIterationFlag = (context as any)._engineControlsIteration;
-              (context as any)._engineControlsIteration = true;
-              try {
-                const result = this.ruleExecutor.execute(rule, context);
-                if (!result.success) {
-                  return { success: false, error: result.error };
-                }
-                if (result.value) {
-                  lastResult = { success: true, value: result.value };
-                }
-              } finally {
-                (context as any)._engineControlsIteration = previousIterationFlag;
-              }
-            } catch (e) {
-              console.warn(`Rule '${rule.name || rule.naam}' failed for ${targetType} instance: ${e}`);
-            } finally {
-              (context as any).current_instance = previousInstance;
-            }
-          }
-        }
-
-        // ============================================================
-        // Phase 3: Re-execute decision tables that depend on rule outputs
-        // (e.g., "Belasting op basis van reisduur" needs "belasting op basis van afstand")
-        // ============================================================
-        for (const beslistabel of beslistabels) {
-          const targetType = this.deduceBeslistabelTargetType(beslistabel, context);
-          if (!targetType) continue;
-
-          const instances = (context as any).getObjectsByType(targetType);
-          for (const instance of instances) {
-            const previousInstance = (context as any).current_instance;
-            (context as any).current_instance = instance;
-            try {
-              this.decisionTableExecutor.execute(beslistabel, context);
-            } catch (e) {
-              // Log error but continue
-              console.warn(`Decision table phase 3 error for ${beslistabel.naam}: ${e}`);
-            } finally {
-              (context as any).current_instance = previousInstance;
-            }
-          }
-        }
-
-        // ============================================================
-        // Phase 4: Re-run Gelijkstelling rules that depend on decision tables
-        // (e.g., "Te betalen belasting" needs "belasting op basis van reisduur" from Phase 3)
-        // ============================================================
-        for (const rule of (ast as any).rules || []) {
-          // Only re-run Gelijkstelling rules
-          // Support both result (English from parseModel) and resultaat (Dutch) property names
-          const resultType = rule.result?.type || rule.resultaat?.type;
-          if (resultType !== 'Gelijkstelling') continue;
-
-          const targetType = this.deduceRuleTargetType(rule, context);
-          if (!targetType) {
-            // No target type - execute directly
-            const result = this.ruleExecutor.execute(rule, context);
-            if (result.success && result.value) {
-              lastResult = { success: true, value: result.value };
-            }
-            continue;
-          }
-
-          // Iterate over all instances of target type
-          const instances = (context as any).getObjectsByType(targetType);
-          for (const instance of instances) {
-            const previousInstance = (context as any).current_instance;
-            (context as any).current_instance = instance;
-            try {
-              // Execute rule with engine iteration flag
-              const previousIterationFlag = (context as any)._engineControlsIteration;
-              (context as any)._engineControlsIteration = true;
-              try {
-                const result = this.ruleExecutor.execute(rule, context);
-                if (result.success && result.value) {
-                  lastResult = { success: true, value: result.value };
-                }
-              } finally {
-                (context as any)._engineControlsIteration = previousIterationFlag;
-              }
-            } finally {
-              (context as any).current_instance = previousInstance;
-            }
-          }
-          // Silently continue on errors - rule may have already been evaluated correctly
-        }
-
-        // Execute each regelgroep in sequence
-        for (const regelGroep of (ast as any).regelGroepen || []) {
-          const result = this.ruleExecutor.executeRegelGroep(regelGroep, context);
-          if (!result.success) {
-            return {
-              success: false,
-              error: result.error
-            };
-          }
-          if (result.value) {
-            lastResult = {
-              success: true,
-              value: result.value
-            };
-          }
-        }
-
-        return lastResult;
+        return this.executeModel(ast, context, strict);
       } else if (ast.type === 'Rule') {
         const result = this.ruleExecutor.execute(ast, context);
         // Convert RuleExecutionResult to ExecutionResult
@@ -650,7 +297,229 @@ export class Engine implements IEngine {
     }
   }
 
-  run(source: string, context?: RuntimeContext): ExecutionResult {
+  private executeModel(ast: any, context: RuntimeContext, strict: boolean): ExecutionResult {
+    const model = this.normalizeModel(ast);
+
+    for (const unitSystem of model.unitSystems) {
+      this.registerUnitSystem(unitSystem, context);
+    }
+
+    for (const feittype of model.feitTypes) {
+      if (context.registerFeittype) {
+        context.registerFeittype(feittype);
+      }
+    }
+
+    let lastResult: ExecutionResult = {
+      success: true,
+      value: { type: 'string', value: 'Model executed' }
+    };
+
+    const phase1Failure = this.executeDecisionTablePhase(model.beslistabels, context, strict, 1);
+    if (phase1Failure) return phase1Failure;
+
+    const rulesResult = this.executeRulePhase(model.rules, context, strict, false, lastResult);
+    if (!rulesResult.success) return rulesResult;
+    lastResult = rulesResult;
+
+    const phase3Failure = this.executeDecisionTablePhase(model.beslistabels, context, strict, 3);
+    if (phase3Failure) return phase3Failure;
+
+    const equalityResult = this.executeRulePhase(model.rules, context, strict, true, lastResult);
+    if (!equalityResult.success) return equalityResult;
+    lastResult = equalityResult;
+
+    for (const regelGroep of model.regelGroepen) {
+      const result = this.ruleExecutor.executeRegelGroep(regelGroep, context);
+      if (!result.success) {
+        return {
+          success: false,
+          error: result.error
+        };
+      }
+      if (result.value) {
+        lastResult = {
+          success: true,
+          value: result.value
+        };
+      }
+    }
+
+    return lastResult;
+  }
+
+  private normalizeModel(ast: any): {
+    rules: any[];
+    beslistabels: any[];
+    feitTypes: any[];
+    unitSystems: UnitSystemDefinition[];
+    regelGroepen: any[];
+  } {
+    return {
+      rules: ast.regels || ast.rules || [],
+      beslistabels: ast.beslistabels || ast.decisionTables || [],
+      feitTypes: ast.feitTypes || ast.feittypen || [],
+      unitSystems: ast.unitSystems || [],
+      regelGroepen: ast.regelGroepen || []
+    };
+  }
+
+  private executeDecisionTablePhase(
+    beslistabels: any[],
+    context: RuntimeContext,
+    strict: boolean,
+    phase: 1 | 3
+  ): ExecutionResult | undefined {
+    for (const beslistabel of beslistabels) {
+      const targetType = this.deduceBeslistabelTargetType(beslistabel, context);
+      if (!targetType) continue;
+
+      const instances = (context as any).getObjectsByType(targetType);
+      for (const instance of instances) {
+        const previousInstance = (context as any).current_instance;
+        (context as any).current_instance = instance;
+        try {
+          const result = this.decisionTableExecutor.execute(beslistabel, context);
+          if (strict && phase === 3 && !result.success) {
+            return this.phaseFailure(`Decision table '${this.getDefinitionName(beslistabel)}' failed in phase ${phase}`, result.error);
+          }
+        } catch (error) {
+          if (strict && phase === 3) {
+            return this.phaseFailure(`Decision table '${this.getDefinitionName(beslistabel)}' failed in phase ${phase}`, error);
+          }
+          if (phase === 3) {
+            console.warn(`Decision table phase 3 error for ${this.getDefinitionName(beslistabel)}: ${error}`);
+          }
+        } finally {
+          (context as any).current_instance = previousInstance;
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  private executeRulePhase(
+    rules: any[],
+    context: RuntimeContext,
+    strict: boolean,
+    equalityOnly: boolean,
+    initialResult: ExecutionResult
+  ): ExecutionResult {
+    let lastResult = initialResult;
+
+    for (const rule of rules) {
+      if (equalityOnly && (rule.result?.type || rule.resultaat?.type) !== 'Gelijkstelling') {
+        continue;
+      }
+
+      const targetType = this.deduceRuleTargetType(rule, context);
+      if (!targetType) {
+        const result = this.ruleExecutor.execute(rule, context);
+        if (!result.success) {
+          if (equalityOnly && !strict) continue;
+          return { success: false, error: result.error };
+        }
+        if (result.value) {
+          lastResult = { success: true, value: result.value };
+        }
+        continue;
+      }
+
+      const instances = (context as any).getObjectsByType(targetType);
+      for (const instance of instances) {
+        const previousInstance = (context as any).current_instance;
+        (context as any).current_instance = instance;
+        try {
+          if (!equalityOnly) {
+            const conditionState = this.evaluateRuleCondition(rule, context);
+            if (!conditionState.success) {
+              if (strict) return conditionState;
+              console.warn(`Rule '${this.getDefinitionName(rule)}' failed for ${targetType} instance: ${conditionState.error}`);
+              continue;
+            }
+            if (conditionState.skipped) continue;
+          }
+
+          const result = this.executeRuleForCurrentInstance(rule, context);
+          if (!result.success) {
+            if (equalityOnly && !strict) continue;
+            return { success: false, error: result.error };
+          }
+          if (result.value) {
+            lastResult = { success: true, value: result.value };
+          }
+        } catch (error) {
+          if (strict) {
+            return this.phaseFailure(`Rule '${this.getDefinitionName(rule)}' failed for ${targetType} instance`, error);
+          }
+          console.warn(`Rule '${this.getDefinitionName(rule)}' failed for ${targetType} instance: ${error}`);
+        } finally {
+          (context as any).current_instance = previousInstance;
+        }
+      }
+    }
+
+    return lastResult;
+  }
+
+  private evaluateRuleCondition(rule: any, context: RuntimeContext): RuleConditionEvaluation {
+    const voorwaarde = rule.voorwaarde || rule.condition;
+    if (!voorwaarde) return { success: true, skipped: false };
+
+    const expression = voorwaarde.expression || voorwaarde.expressie;
+    if (!expression) return { success: true, skipped: false };
+
+    try {
+      const conditionResult = this.expressionEvaluator.evaluate(expression, context);
+      return { success: true, skipped: conditionResult.type !== 'boolean' || !conditionResult.value };
+    } catch (error) {
+      const cause = error instanceof Error ? error : new Error(String(error));
+      return {
+        success: false,
+        error: new Error(`Condition evaluation failed for rule '${this.getDefinitionName(rule)}': ${cause.message}`)
+      };
+    }
+  }
+
+  private executeRuleForCurrentInstance(rule: any, context: RuntimeContext) {
+    const previousIterationFlag = (context as any)._engineControlsIteration;
+    (context as any)._engineControlsIteration = true;
+    try {
+      return this.ruleExecutor.execute(rule, context);
+    } finally {
+      (context as any)._engineControlsIteration = previousIterationFlag;
+    }
+  }
+
+  private phaseFailure(message: string, error: unknown): ExecutionResult {
+    const cause = error instanceof Error ? error : new Error(String(error));
+    return {
+      success: false,
+      error: new Error(`${message}: ${cause.message}`)
+    };
+  }
+
+  private getDefinitionName(definition: any): string {
+    return definition.name || definition.naam || '<unnamed>';
+  }
+
+  private withStrictExecution<T>(context: RuntimeContext, strict: boolean, run: () => T): T {
+    const ctx = context as any;
+    const previous = ctx._strictExecution;
+    ctx._strictExecution = strict;
+    try {
+      return run();
+    } finally {
+      if (previous === undefined) {
+        delete ctx._strictExecution;
+      } else {
+        ctx._strictExecution = previous;
+      }
+    }
+  }
+
+  run(source: string, context?: RuntimeContext, options: EngineExecutionOptions = {}): ExecutionResult {
     const parseResult = this.parse(source);
     if (!parseResult.success) {
       return {
@@ -694,7 +563,11 @@ export class Engine implements IEngine {
       }
     }
 
-    return this.execute(parseResult.ast!, ctx);
+    return this.execute(parseResult.ast!, ctx, options);
+  }
+
+  runStrict(source: string, context?: RuntimeContext): ExecutionResult {
+    return this.run(source, context, { strict: true });
   }
 
   evaluate(source: string, data?: Record<string, any>): ExecutionResult {
