@@ -7,7 +7,7 @@ import { ParameterDefinition } from './parameters';
 import { Rule, RegelGroep } from './rules';
 import { DecisionTable } from './decision-tables';
 import { Dimension } from './dimensions';
-import { DagsoortDefinitie } from './dagsoort';
+import { Dagsoort, DagsoortDefinitie } from './dagsoort';
 import { DomainReference, DomainDefinition } from './object-types';
 import { UnitSystemDefinition } from './unit-systems';
 import { FeitType } from './feittype';
@@ -19,6 +19,7 @@ export interface DomainModel {
   regelGroepen: RegelGroep[];
   beslistabels: DecisionTable[];
   dimensions: Dimension[];
+  dagsoorten?: Dagsoort[];
   dagsoortDefinities: DagsoortDefinitie[];
   domains: DomainDefinition[];
   feitTypes: FeitType[];

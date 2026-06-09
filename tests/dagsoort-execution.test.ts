@@ -2,6 +2,7 @@ import { AntlrParser } from '../src/parser';
 import { Context } from '../src/context';
 import { ExpressionEvaluator } from '../src/evaluators/expression-evaluator';
 import { BinaryExpression, StringLiteral } from '../src/ast';
+import { PredicateEvaluator } from '../src/predicates/predicate-evaluator';
 
 describe('Dagsoort Execution Tests', () => {
   it('should evaluate kerstdag using model-driven rules', () => {
@@ -79,7 +80,119 @@ describe('Dagsoort Execution Tests', () => {
     expect(regularResult.value).toBe(false);
   });
 
-  it('should return false for undefined dagsoort', () => {
+  it('should evaluate the same model rule through direct predicate evaluation', () => {
+    const code = `
+      Dagsoort de kerstdag (mv: kerstdagen);
+
+      Regel Kerstdag
+        geldig altijd
+          Een dag is een kerstdag
+          indien de dag aan alle volgende voorwaarden voldoet:
+          - de maand uit (de dag) is gelijk aan 12
+          - de dag uit (de dag) is gelijk aan 25.
+    `;
+
+    const parser = new AntlrParser();
+    const model = parser.parseModel(code);
+    const context = new Context(model);
+    const expressionEvaluator = new ExpressionEvaluator();
+    const predicateEvaluator = new PredicateEvaluator(expressionEvaluator);
+
+    expect(predicateEvaluator.evaluate(
+      { type: 'SimplePredicate', operator: 'dagsoort', dagsoort: 'kerstdag' },
+      { type: 'date', value: new Date(2024, 11, 25) },
+      context
+    )).toBe(true);
+
+    expect(predicateEvaluator.evaluate(
+      { type: 'SimplePredicate', operator: 'dagsoort', dagsoort: 'kerstdag' },
+      { type: 'date', value: new Date(2024, 11, 24) },
+      context
+    )).toBe(false);
+  });
+
+  it('should resolve plural dagsoort aliases to singular rule definitions', () => {
+    const code = `
+      Dagsoort de kerstdag (mv: kerstdagen);
+
+      Regel Kerstdag
+        geldig altijd
+          Een dag is een kerstdag.
+    `;
+
+    const parser = new AntlrParser();
+    const model = parser.parseModel(code);
+    const context = new Context(model);
+    const evaluator = new ExpressionEvaluator();
+
+    const pluralExpr: BinaryExpression = {
+      type: 'BinaryExpression',
+      operator: 'zijn een dagsoort',
+      left: {
+        type: 'DateLiteral',
+        value: new Date(2024, 11, 25)
+      },
+      right: {
+        type: 'StringLiteral',
+        value: 'kerstdagen'
+      } as StringLiteral
+    };
+
+    const result = evaluator.evaluate(pluralExpr, context);
+    expect(result.type).toBe('boolean');
+    expect(result.value).toBe(true);
+  });
+
+  it('should evaluate active version-specific dagsoort rule conditions', () => {
+    const code = `
+      Dagsoort de peildag;
+
+      Regel Peildag
+        geldig t/m 31-12-2024
+          Een dag is een peildag
+          indien de dag uit (de dag) is gelijk aan 1.
+        geldig vanaf 01-01-2025
+          Een dag is een peildag
+          indien de dag uit (de dag) is gelijk aan 2.
+    `;
+
+    const parser = new AntlrParser();
+    const model = parser.parseModel(code);
+    const context = new Context(model);
+    context.evaluation_date = new Date(2025, 0, 2);
+    const evaluator = new ExpressionEvaluator();
+
+    const activeVersionMatch: BinaryExpression = {
+      type: 'BinaryExpression',
+      operator: 'is een dagsoort',
+      left: {
+        type: 'DateLiteral',
+        value: new Date(2025, 0, 2)
+      },
+      right: {
+        type: 'StringLiteral',
+        value: 'peildag'
+      } as StringLiteral
+    };
+
+    const inactiveVersionMatch: BinaryExpression = {
+      type: 'BinaryExpression',
+      operator: 'is een dagsoort',
+      left: {
+        type: 'DateLiteral',
+        value: new Date(2025, 0, 1)
+      },
+      right: {
+        type: 'StringLiteral',
+        value: 'peildag'
+      } as StringLiteral
+    };
+
+    expect(evaluator.evaluate(activeVersionMatch, context).value).toBe(true);
+    expect(evaluator.evaluate(inactiveVersionMatch, context).value).toBe(false);
+  });
+
+  it('should return false for declared dagsoort without rules', () => {
     const code = `
       Dagsoort de werkdag;
     `;
@@ -90,7 +203,6 @@ describe('Dagsoort Execution Tests', () => {
     const context = new Context(model);
     const evaluator = new ExpressionEvaluator();
 
-    // Test undefined werkdag
     const werkdagExpr: BinaryExpression = {
       type: 'BinaryExpression',
       operator: 'is een dagsoort',
@@ -104,10 +216,51 @@ describe('Dagsoort Execution Tests', () => {
       } as StringLiteral
     };
 
-    // Should return false since no definition exists
     const result = evaluator.evaluate(werkdagExpr, context);
     expect(result.type).toBe('boolean');
     expect(result.value).toBe(false);
+  });
+
+  it('should not use built-in calendar names without model declarations', () => {
+    const parser = new AntlrParser();
+    const model = parser.parseModel('Parameter de test datum : Datum');
+    const context = new Context(model);
+    const evaluator = new ExpressionEvaluator();
+
+    const weekendExpr: BinaryExpression = {
+      type: 'BinaryExpression',
+      operator: 'is een dagsoort',
+      left: {
+        type: 'DateLiteral',
+        value: new Date(2024, 0, 6)
+      },
+      right: {
+        type: 'StringLiteral',
+        value: 'weekend'
+      } as StringLiteral
+    };
+
+    const result = evaluator.evaluate(weekendExpr, context);
+    expect(result.type).toBe('boolean');
+    expect(result.value).toBe(false);
+  });
+
+  it('should retain dagsoort declarations in the parsed model', () => {
+    const parser = new AntlrParser();
+    const model = parser.parseModel(`
+      Dagsoort de kerstdag (mv: kerstdagen);
+      Parameter de test datum : Datum
+    `);
+
+    expect(model.dagsoorten).toEqual([{
+      type: 'Dagsoort',
+      name: 'kerstdag',
+      canonicalName: 'kerstdag',
+      plural: 'kerstdagen',
+      canonicalPlural: 'kerstdagen',
+      location: expect.any(Object)
+    }]);
+    expect(model.dagsoortDefinities).toEqual([]);
   });
 
   it('should evaluate simple dagsoort that is always true', () => {

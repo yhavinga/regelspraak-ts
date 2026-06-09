@@ -20,6 +20,7 @@ import { Expression } from '../ast/expressions';
 import { ExpressionEvaluator } from '../evaluators/expression-evaluator';
 import { UnitRegistry } from '../units/unit-registry';
 import { compareRuntimeValues } from '../units/value-semantics';
+import { evaluateDagsoort as evaluateDagsoortValue } from '../evaluators/dagsoort-evaluator';
 
 export class PredicateEvaluator {
   private expressionEvaluator: ExpressionEvaluator;
@@ -278,36 +279,13 @@ export class PredicateEvaluator {
       throw new Error('Dagsoort predicate requires dagsoort property');
     }
 
-    // Check if value is a date
-    if (value.type !== 'date') {
-      return false;
-    }
-
-    const date = new Date(value.value);
-    const dayOfWeek = date.getDay();
-
-    // Hardcoded day type checks (to be replaced with model-driven evaluation)
-    switch (predicate.dagsoort.toLowerCase()) {
-      case 'werkdag':
-        return dayOfWeek >= 1 && dayOfWeek <= 5; // Monday to Friday
-      
-      case 'weekend':
-        return dayOfWeek === 0 || dayOfWeek === 6; // Saturday or Sunday
-      
-      case 'feestdag':
-        // Check Dutch holidays - simplified for now
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        
-        // King's Day (April 27), Christmas (Dec 25), New Year (Jan 1)
-        return (month === 4 && day === 27) || 
-               (month === 12 && day === 25) || 
-               (month === 1 && day === 1);
-      
-      default:
-        // Check custom day types from model (TODO: implement model-driven check)
-        return false;
-    }
+    return evaluateDagsoortValue(
+      value,
+      predicate.dagsoort,
+      true,
+      context,
+      this.expressionEvaluator
+    );
   }
 
   /**

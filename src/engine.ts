@@ -28,7 +28,7 @@ export class Engine implements IEngine {
     try {
       // Check if this contains multiple definitions (has newlines and multiple keywords)
       const lines = trimmed.split('\n');
-      const definitionKeywords = ['Parameter ', 'Objecttype ', 'Regel ', 'Beslistabel ', 'Consistentieregel ', 'Verdeling ', 'Eenheidsysteem ', 'Dimensie ', 'Feittype ', 'Wederkerig feittype ', 'Regelgroep '];
+      const definitionKeywords = ['Parameter ', 'Objecttype ', 'Regel ', 'Beslistabel ', 'Consistentieregel ', 'Verdeling ', 'Eenheidsysteem ', 'Dimensie ', 'Dagsoort ', 'Feittype ', 'Wederkerig feittype ', 'Regelgroep '];
       let definitionCount = 0;
       for (const line of lines) {
         const trimmedLine = line.trim();
@@ -50,6 +50,8 @@ export class Engine implements IEngine {
         const domains = definitions.filter((def: any) => def.type === 'DomainDefinition');
         const unitSystems = definitions.filter((def: any) => def.type === 'UnitSystemDefinition');
         const dimensions = definitions.filter((def: any) => def.type === 'Dimension');
+        const dagsoorten = definitions.filter((def: any) => def.type === 'Dagsoort');
+        const dagsoortDefinities = definitions.filter((def: any) => def.type === 'DagsoortDefinitie');
         const feittypen = definitions.filter((def: any) => def.type === 'FeitType');
         const regelGroepen = definitions.filter((def: any) => def.type === 'RegelGroep');
         const beslistabels = definitions.filter((def: any) => def.type === 'DecisionTable');
@@ -59,12 +61,16 @@ export class Engine implements IEngine {
           ast: {
             type: 'Model',
             rules,
+            regels: rules,
             objectTypes,
             parameters,
             domains,
             unitSystems,
             dimensions,
+            dagsoorten,
+            dagsoortDefinities,
             feittypen,
+            feitTypes: feittypen,
             regelGroepen,
             beslistabels
           }
@@ -112,6 +118,13 @@ export class Engine implements IEngine {
         // Parse as a full document to handle dimension definition
         const definitions = this.antlrParser.parse(trimmed);
         // Return the first (and should be only) definition
+        return {
+          success: true,
+          ast: Array.isArray(definitions) && definitions.length > 0 ? definitions[0] : definitions
+        };
+      } else if (trimmed.startsWith('Dagsoort ')) {
+        // Parse as a full document to handle dagsoort definition
+        const definitions = this.antlrParser.parse(trimmed);
         return {
           success: true,
           ast: Array.isArray(definitions) && definitions.length > 0 ? definitions[0] : definitions
@@ -423,6 +436,10 @@ export class Engine implements IEngine {
     let lastResult = initialResult;
 
     for (const rule of rules) {
+      if (this.isDagsoortDefinitionRule(rule)) {
+        continue;
+      }
+
       if (equalityOnly && (rule.result?.type || rule.resultaat?.type) !== 'Gelijkstelling') {
         continue;
       }
@@ -475,6 +492,32 @@ export class Engine implements IEngine {
     }
 
     return lastResult;
+  }
+
+  private isDagsoortDefinitionRule(rule: any): boolean {
+    const results = this.collectRuleResultParts(rule);
+    return results.length > 0 && results.every(result => result.type === 'DagsoortDefinitie');
+  }
+
+  private collectRuleResultParts(rule: any): any[] {
+    const versions = rule.versions || [];
+    if (versions.length > 0) {
+      return versions.flatMap((version: any) => this.collectResultParts(version.result));
+    }
+
+    return this.collectResultParts(rule.result || rule.resultaat);
+  }
+
+  private collectResultParts(result: any): any[] {
+    if (!result) {
+      return [];
+    }
+
+    if (result.type === 'MultipleResults') {
+      return (result.results || []).flatMap((nested: any) => this.collectResultParts(nested));
+    }
+
+    return [result];
   }
 
   private evaluateRuleCondition(rule: any, context: RuntimeContext): RuleConditionEvaluation {

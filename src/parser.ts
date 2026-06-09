@@ -44,6 +44,11 @@ export class AntlrParser {
       results.push(dimension);
     }
 
+    // Add day type declarations
+    for (const dagsoort of model.dagsoorten || []) {
+      results.push(dagsoort);
+    }
+
     // Add rules
     for (const regel of model.regels) {
       results.push(regel);

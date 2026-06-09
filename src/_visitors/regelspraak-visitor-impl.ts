@@ -96,6 +96,7 @@ import { ParameterDefinition } from '../ast/parameters';
 import { PeriodDefinition } from '../ast/timelines';
 import { UnitSystemDefinition, UnitDefinition, UnitConversion, UnitExpression } from '../ast/unit-systems';
 import { unitExpression, unitExpressionToString } from '../units/unit-expression';
+import { normalizeDagsoortName } from '../ast/dagsoort';
 import { createSourceLocation } from '../ast/location';
 import { Dimension, DimensionLabel, DimensionedAttributeReference } from '../ast/dimensions';
 import { FeitType, Rol, RoleCardinality } from '../ast/feittype';
@@ -334,6 +335,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       regelGroepen: [],
       beslistabels: [],
       dimensions: [],
+      dagsoorten: [],
       dagsoortDefinities: [],
       domains: [],
       feitTypes: [],
@@ -361,7 +363,9 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
           this.parameterNames.add(result.name);
         } else if (result.type === 'Dimension') {
           model.dimensions.push(result);
-        } else if (result.type === 'Dagsoort' || result.type === 'DagsoortDefinitie') {
+        } else if (result.type === 'Dagsoort') {
+          model.dagsoorten?.push(result);
+        } else if (result.type === 'DagsoortDefinitie') {
           model.dagsoortDefinities.push(result);
         } else if (result.type === 'DomainDefinition') {
           model.domains.push(result);
@@ -4630,22 +4634,26 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       throw new Error('Expected naamwoord in dagsoort definition');
     }
 
-    const name = this.extractTextWithSpaces(nameCtx);
+    const name = this.extractParameterName(this.extractTextWithSpaces(nameCtx));
 
     // Check for plural form
     let plural = undefined;
+    let canonicalPlural = undefined;
     if (ctx.MV_START && ctx.MV_START()) {
       // Get plural identifiers - they are labeled as plural
-      const pluralCtxArray = ctx.plural || [];
+      const pluralCtxArray = ctx._plural || [];
       if (pluralCtxArray.length > 0) {
-        plural = pluralCtxArray.map((t: any) => t.getText()).join(' ');
+        plural = pluralCtxArray.map((t: any) => t.text ?? t.getText()).join(' ');
+        canonicalPlural = normalizeDagsoortName(plural);
       }
     }
 
     const node = {
       type: 'Dagsoort',
       name,
-      plural
+      canonicalName: normalizeDagsoortName(name),
+      plural,
+      canonicalPlural
     };
     this.setLocation(node, ctx);
     return node;
@@ -5754,11 +5762,12 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       throw new Error('Expected naamwoord in dagsoortdefinitie');
     }
 
-    const dagsoortName = this.extractTextWithSpaces(naamwoordCtx);
+    const dagsoortName = this.extractParameterName(this.extractTextWithSpaces(naamwoordCtx));
 
     const node = {
       type: 'DagsoortDefinitie',
-      dagsoortName
+      dagsoortName,
+      canonicalDagsoortName: normalizeDagsoortName(dagsoortName)
     };
     this.setLocation(node, ctx);
     return node;

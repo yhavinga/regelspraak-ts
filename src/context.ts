@@ -83,6 +83,7 @@ export class Context implements RuntimeContext {
         regelGroepen: [],
         beslistabels: [],
         dimensions: [],
+        dagsoorten: [],
         dagsoortDefinities: [],
         domains: [],
         feitTypes: [],

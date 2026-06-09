@@ -182,10 +182,10 @@ export class SemanticAnalyzer {
       });
     }
 
-    // Collect dagsoort definitions
-    for (const dagsoort of model.dagsoortDefinities || []) {
-      this.globalScope.define(dagsoort.dagsoortName, {
-        name: dagsoort.dagsoortName,
+    // Collect dagsoort declarations
+    for (const dagsoort of model.dagsoorten || []) {
+      this.globalScope.define(dagsoort.name, {
+        name: dagsoort.name,
         kind: SymbolKind.DAGSOORT,
         definition: dagsoort
       });

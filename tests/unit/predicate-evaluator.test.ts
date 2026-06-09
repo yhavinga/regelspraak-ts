@@ -10,6 +10,7 @@ import {
 import { ExpressionEvaluator } from '../../src/evaluators/expression-evaluator';
 import { Context } from '../../src/context';
 import { Value } from '../../src/interfaces';
+import { AntlrParser } from '../../src/parser';
 
 describe('Unified Predicate Evaluator', () => {
   let predicateEvaluator: PredicateEvaluator;
@@ -58,16 +59,41 @@ describe('Unified Predicate Evaluator', () => {
     });
 
     it('should evaluate dagsoort predicates', () => {
+      const model = new AntlrParser().parseModel(`
+        Dagsoort de werkdag;
+
+        Regel Werkdag
+          geldig altijd
+            Een dag is een werkdag.
+      `);
+      context = new Context(model);
+
       const predicate: SimplePredicate = {
         type: 'SimplePredicate',
         operator: 'dagsoort',
         dagsoort: 'werkdag'
       };
 
-      // Monday
       const value: Value = {
         type: 'date',
-        value: '2024-01-08'
+        value: new Date('2024-01-08')
+      };
+
+      const result = predicateEvaluator.evaluate(predicate, value, context);
+      expect(result).toBe(true);
+    });
+
+    it('should apply dagsoort predicate negation once', () => {
+      const predicate: SimplePredicate = {
+        type: 'SimplePredicate',
+        operator: 'dagsoort',
+        dagsoort: 'onbekende dagsoort',
+        negated: true
+      };
+
+      const value: Value = {
+        type: 'date',
+        value: new Date('2024-01-08')
       };
 
       const result = predicateEvaluator.evaluate(predicate, value, context);

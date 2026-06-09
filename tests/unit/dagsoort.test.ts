@@ -1,5 +1,41 @@
 import { Engine, Context } from '../../src';
 
+const DAGSOORT_RULES = `
+    Dagsoort de werkdag;
+    Dagsoort het weekend;
+    Dagsoort de feestdag;
+
+    Regel Werkdag
+    geldig altijd
+        Een dag is een werkdag
+        indien de dag voldoet aan alle volgende voorwaarden:
+        - de maand uit (de dag) is gelijk aan 1
+        - de dag uit (de dag) is gelijk aan 2.
+
+    Regel Weekend
+    geldig altijd
+        Een dag is een weekend
+        indien de dag voldoet aan alle volgende voorwaarden:
+        - de maand uit (de dag) is gelijk aan 1
+        - de dag voldoet aan ten minste één van de volgende voorwaarden:
+          .. de dag uit (de dag) is gelijk aan 6
+          .. de dag uit (de dag) is gelijk aan 7.
+
+    Regel Feestdag
+    geldig altijd
+        Een dag is een feestdag
+        indien de dag voldoet aan ten minste één van de volgende voorwaarden:
+        - de dag voldoet aan alle volgende voorwaarden:
+          .. de maand uit (de dag) is gelijk aan 1
+          .. de dag uit (de dag) is gelijk aan 1
+        - de dag voldoet aan alle volgende voorwaarden:
+          .. de maand uit (de dag) is gelijk aan 4
+          .. de dag uit (de dag) is gelijk aan 27
+        - de dag voldoet aan alle volgende voorwaarden:
+          .. de maand uit (de dag) is gelijk aan 12
+          .. de dag uit (de dag) is gelijk aan 25.
+`;
+
 describe('Dagsoort Predicate', () => {
     let engine: Engine;
 
@@ -140,6 +176,7 @@ describe('Dagsoort Predicate', () => {
     describe('executing dagsoort validation', () => {
         test('should identify Tuesday as werkdag', () => {
             const modelText = `
+                ${DAGSOORT_RULES}
                 Objecttype de Planning
                     de datum Datum;
                     is werkdag kenmerk;
@@ -166,8 +203,68 @@ describe('Dagsoort Predicate', () => {
             expect(plannings[0].kenmerken['is werkdag']).toBe(true);
         });
 
+        test('should consume conditional dagsoort rules in strict engine execution', () => {
+            const modelText = `
+                ${DAGSOORT_RULES}
+                Objecttype de Planning
+                    de datum Datum;
+                    is werkdag kenmerk;
+
+                Regel check werkdag
+                geldig altijd
+                    Een Planning is werkdag
+                    indien zijn datum is een dagsoort werkdag.
+            `;
+
+            const context = new Context();
+            const planningId = context.generateObjectId('Planning');
+            context.createObject('Planning', planningId, {
+                datum: { type: 'date', value: new Date('2024-01-02') }
+            });
+
+            const result = engine.runStrict(modelText, context);
+
+            expect(result.success).toBe(true);
+            const plannings = context.getObjectsByType('Planning');
+            expect(plannings.length).toBe(1);
+            expect(plannings[0].kenmerken['is werkdag']).toBe(true);
+        });
+
+        test('should consume unconditional dagsoort rules in strict engine execution', () => {
+            const modelText = `
+                Dagsoort de testdag;
+
+                Regel Testdag
+                geldig altijd
+                    Een dag is een testdag.
+
+                Objecttype de Planning
+                    de datum Datum;
+                    is testdag kenmerk;
+
+                Regel check testdag
+                geldig altijd
+                    Een Planning is testdag
+                    indien zijn datum is een dagsoort testdag.
+            `;
+
+            const context = new Context();
+            const planningId = context.generateObjectId('Planning');
+            context.createObject('Planning', planningId, {
+                datum: { type: 'date', value: new Date('2024-06-15') }
+            });
+
+            const result = engine.runStrict(modelText, context);
+
+            expect(result.success).toBe(true);
+            const plannings = context.getObjectsByType('Planning');
+            expect(plannings.length).toBe(1);
+            expect(plannings[0].kenmerken['is testdag']).toBe(true);
+        });
+
         test('should identify Saturday as weekend', () => {
             const modelText = `
+                ${DAGSOORT_RULES}
                 Objecttype de Afspraak
                     de datum Datum;
                     is weekenddatum kenmerk;
@@ -194,8 +291,35 @@ describe('Dagsoort Predicate', () => {
             expect(afspraken[0].kenmerken['is weekenddatum']).toBe(true);
         });
 
+        test('should not identify Saturday as weekend without model rules', () => {
+            const modelText = `
+                Objecttype de Afspraak
+                    de datum Datum;
+                    is weekenddatum kenmerk;
+
+                Regel check weekend
+                geldig altijd
+                    Een Afspraak is weekenddatum
+                    indien zijn datum is een dagsoort weekend.
+            `;
+
+            const context = new Context();
+            const afspraakId = context.generateObjectId('Afspraak');
+            context.createObject('Afspraak', afspraakId, {
+                datum: { type: 'date', value: new Date('2024-01-06') }
+            });
+
+            const result = engine.run(modelText, context);
+
+            expect(result.success).toBe(true);
+            const afspraken = context.getObjectsByType('Afspraak');
+            expect(afspraken.length).toBe(1);
+            expect(afspraken[0].kenmerken['is weekenddatum']).toBeFalsy();
+        });
+
         test('should identify Sunday as weekend', () => {
             const modelText = `
+                ${DAGSOORT_RULES}
                 Objecttype de Activiteit
                     de datum Datum;
                     is weekenddatum kenmerk;
@@ -224,6 +348,7 @@ describe('Dagsoort Predicate', () => {
 
         test('should identify Christmas as feestdag', () => {
             const modelText = `
+                ${DAGSOORT_RULES}
                 Objecttype de Evenement
                     de datum Datum;
                     is feestdag kenmerk;
@@ -252,6 +377,7 @@ describe('Dagsoort Predicate', () => {
 
         test('should identify New Year as feestdag', () => {
             const modelText = `
+                ${DAGSOORT_RULES}
                 Objecttype de Viering
                     de datum Datum;
                     is feestdag kenmerk;
@@ -280,6 +406,7 @@ describe('Dagsoort Predicate', () => {
 
         test('should handle negative werkdag check', () => {
             const modelText = `
+                ${DAGSOORT_RULES}
                 Objecttype de Rustdag
                     de datum Datum;
                     is vrij kenmerk;
@@ -308,6 +435,7 @@ describe('Dagsoort Predicate', () => {
 
         test('should handle missing date', () => {
             const modelText = `
+                ${DAGSOORT_RULES}
                 Objecttype de Planning
                     de datum Datum;
                     is werkdag kenmerk;
@@ -336,6 +464,7 @@ describe('Dagsoort Predicate', () => {
 
         test('should handle King\'s Day (Koningsdag)', () => {
             const modelText = `
+                ${DAGSOORT_RULES}
                 Objecttype de Feest
                     de datum Datum;
                     is feestdag kenmerk;
@@ -364,6 +493,7 @@ describe('Dagsoort Predicate', () => {
 
         test('should handle regular Tuesday as not feestdag', () => {
             const modelText = `
+                ${DAGSOORT_RULES}
                 Objecttype de Werkdag
                     de datum Datum;
                     is feestdag kenmerk;
