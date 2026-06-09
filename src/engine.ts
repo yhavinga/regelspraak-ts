@@ -7,6 +7,7 @@ import { AntlrParser } from './parser';
 import { UnitSystemDefinition } from './ast/unit-systems';
 import { UnitRegistry } from './units/unit-registry';
 import { UnitSystem, BaseUnit } from './units/base-unit';
+import { ModelResolutionDiagnostic, ModelResolutionOptions } from './resolver';
 
 type RuleConditionEvaluation =
   | { success: true; skipped: boolean }
@@ -181,6 +182,27 @@ export class Engine implements IEngine {
       return {
         success: true,
         model
+      };
+    } catch (error) {
+      return {
+        success: false,
+        errors: [(error as Error).message]
+      };
+    }
+  }
+
+  parseResolvedModel(source: string, options: ModelResolutionOptions = {}): {
+    success: boolean;
+    model?: any;
+    diagnostics?: ModelResolutionDiagnostic[];
+    errors?: string[];
+  } {
+    try {
+      const result = this.antlrParser.parseResolvedModel(source, options);
+      return {
+        success: result.success,
+        model: result.model,
+        diagnostics: result.diagnostics,
       };
     } catch (error) {
       return {

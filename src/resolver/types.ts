@@ -73,6 +73,13 @@ export interface ResolvedPathSegment {
   cardinality: '1' | 'N';
 }
 
+export type ResolvedType =
+  | DataType
+  | DomainReference
+  | { type: 'ObjectType'; name: string }
+  | { type: 'Period' }
+  | { type: 'Timeline' };
+
 /**
  * Resolution metadata attached to Expression nodes
  */
@@ -82,7 +89,7 @@ export interface ResolvedInfo {
    * For references: the type of the referenced value.
    * For operators: the result type.
    */
-  resolvedType?: DataType | DomainReference | { type: 'ObjectType'; name: string };
+  resolvedType?: ResolvedType;
 
   /**
    * For references: what symbol this resolves to

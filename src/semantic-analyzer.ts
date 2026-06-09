@@ -27,6 +27,7 @@ import {
 import { Dimension } from './ast/dimensions';
 import { DagsoortDefinitie } from './ast/dagsoort';
 import { FeitType } from './ast/feittype';
+import { resolveModel } from './resolver';
 
 export interface ValidationError {
   message: string;
@@ -103,6 +104,20 @@ export class SemanticAnalyzer {
     this.validateModel(model);
 
     return this.errors;
+  }
+
+  analyzeForTranspilation(model: DomainModel): ValidationError[] {
+    const errors = this.analyze(model);
+    const resolved = resolveModel(model);
+
+    return [
+      ...errors,
+      ...resolved.diagnostics.map(diagnostic => ({
+        message: diagnostic.message,
+        location: diagnostic.location,
+        severity: diagnostic.severity,
+      })),
+    ];
   }
 
   private collectDefinitions(model: DomainModel): void {

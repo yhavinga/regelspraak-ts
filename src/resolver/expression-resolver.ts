@@ -17,14 +17,19 @@ import {
   AggregationExpression,
   AfrondingExpression,
   BegrenzingExpression,
+  BegrenzingAfrondingExpression,
   SubselectieExpression,
   NumberLiteral,
   StringLiteral,
+  Literal,
   SelfReference,
   TekstreeksExpression,
   BooleanLiteral,
   FunctionCall,
   SamengesteldeVoorwaarde,
+  ConjunctionExpression,
+  DisjunctionExpression,
+  RegelStatusExpression,
 } from '../ast/expressions';
 import {
   ObjectTypeDefinition,
@@ -40,6 +45,7 @@ import {
 import { ParameterDefinition } from '../ast/parameters';
 import { DomainModel } from '../ast/domain-model';
 import { FeitType, Rol } from '../ast/feittype';
+import { Dagsoort, normalizeDagsoortName } from '../ast/dagsoort';
 import {
   Dimension,
   DimensionAggregationSelection,
@@ -48,13 +54,22 @@ import {
 } from '../ast/dimensions';
 import { ResolvedInfo, ResolvedSymbol, ResolvedPathSegment, SymbolKind, TimelineInfo } from './types';
 import { KenmerkEquivalenceRegistry } from '../kenmerk-equivalence-registry';
+import { PeriodDefinition, TimelineExpression } from '../ast/timelines';
 
 /**
  * Scope frame for tracking variable bindings
  */
 export interface ScopeFrame {
   /** Variable name → its type information */
-  variables: Map<string, { name: string; objectType: string }>;
+  variables: Map<string, ResolvedVariable>;
+}
+
+export interface ResolvedVariable {
+  name: string;
+  objectType?: string;
+  resolvedType?: ResolvedInfo['resolvedType'];
+  unit?: string;
+  timeline?: TimelineInfo;
 }
 
 /**
@@ -72,12 +87,15 @@ export interface ResolutionContext {
 
   /** Stack of scope frames from 'waar' clauses */
   scopeStack: ScopeFrame[];
+
+  /** Root lookup strategy for bare attribute paths in scoped contexts */
+  rootResolution?: 'global-first' | 'relative-only';
 }
 
 /**
  * Lookup maps for fast resolution
  */
-interface ResolutionMaps {
+export interface ResolutionMaps {
   objectTypes: Map<string, ObjectTypeDefinition>;
   parameters: Map<string, ParameterDefinition>;
   feitTypes: Map<string, FeitType>;
@@ -93,6 +111,8 @@ interface ResolutionMaps {
   dimensions: Map<string, Dimension>;
   /** label → dimension name (for reverse lookup) */
   labelToDimension: Map<string, string>;
+  /** canonical day type name → Dagsoort declaration */
+  dagsoorten: Map<string, Dagsoort>;
 }
 
 /**
@@ -144,6 +164,7 @@ function buildMaps(model: DomainModel): ResolutionMaps {
   const domains = new Map<string, DomainReference>();
   const dimensions = new Map<string, Dimension>();
   const labelToDimension = new Map<string, string>();
+  const dagsoorten = new Map<string, Dagsoort>();
 
   for (const ot of model.objectTypes || []) {
     objectTypes.set(ot.name, ot);
@@ -211,6 +232,17 @@ function buildMaps(model: DomainModel): ResolutionMaps {
     }
   }
 
+  for (const dagsoort of model.dagsoorten || []) {
+    dagsoorten.set(dagsoort.canonicalName || normalizeDagsoortName(dagsoort.name), dagsoort);
+    dagsoorten.set(normalizeDagsoortName(dagsoort.name), dagsoort);
+    if (dagsoort.canonicalPlural) {
+      dagsoorten.set(dagsoort.canonicalPlural, dagsoort);
+    }
+    if (dagsoort.plural) {
+      dagsoorten.set(normalizeDagsoortName(dagsoort.plural), dagsoort);
+    }
+  }
+
   return {
     objectTypes,
     parameters,
@@ -221,6 +253,7 @@ function buildMaps(model: DomainModel): ResolutionMaps {
     domains,
     dimensions,
     labelToDimension,
+    dagsoorten,
   };
 }
 
@@ -250,6 +283,10 @@ export function pushScope(context: ResolutionContext, frame: ScopeFrame): Resolu
   };
 }
 
+export function createResolutionMaps(model: DomainModel): ResolutionMaps {
+  return buildMaps(model);
+}
+
 /**
  * Resolve all expressions in an expression tree.
  * Mutates expr.resolved in place.
@@ -258,8 +295,16 @@ export function resolveExpression(
   expr: Expression,
   context: ResolutionContext
 ): Expression {
-  const maps = buildMaps(context.model);
+  const maps = createResolutionMaps(context.model);
 
+  return resolveExpressionWithMaps(expr, context, maps);
+}
+
+export function resolveExpressionWithMaps(
+  expr: Expression,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): Expression {
   return resolveExpressionInternal(expr, context, maps);
 }
 
@@ -274,6 +319,12 @@ function resolveExpressionInternal(
 
     case 'StringLiteral':
       return resolveStringLiteral(expr as StringLiteral);
+
+    case 'Literal':
+      return resolveLiteral(expr as Literal);
+
+    case 'DateLiteral':
+      return resolveDateLiteral(expr);
 
     case 'TekstreeksExpression':
       return resolveTekstreeksExpression(expr as TekstreeksExpression, context, maps);
@@ -311,6 +362,9 @@ function resolveExpressionInternal(
     case 'BegrenzingExpression':
       return resolveBegrenzingExpression(expr as BegrenzingExpression, context, maps);
 
+    case 'BegrenzingAfrondingExpression':
+      return resolveBegrenzingAfrondingExpression(expr as BegrenzingAfrondingExpression, context, maps);
+
     case 'SubselectieExpression':
       return resolveSubselectieExpression(expr as SubselectieExpression, context, maps);
 
@@ -319,6 +373,21 @@ function resolveExpressionInternal(
 
     case 'SamengesteldeVoorwaarde':
       return resolveSamengesteldeVoorwaarde(expr as SamengesteldeVoorwaarde, context, maps);
+
+    case 'ConjunctionExpression':
+      return resolveConjunctionExpression(expr as ConjunctionExpression, context, maps);
+
+    case 'DisjunctionExpression':
+      return resolveDisjunctionExpression(expr as DisjunctionExpression, context, maps);
+
+    case 'RegelStatusExpression':
+      return resolveRegelStatusExpression(expr as RegelStatusExpression, context, maps);
+
+    case 'PeriodDefinition':
+      return resolvePeriodDefinition(expr as PeriodDefinition, context, maps);
+
+    case 'TimelineExpression':
+      return resolveTimelineExpression(expr as TimelineExpression, context, maps);
 
     default:
       // Unknown expression type - leave unresolved
@@ -341,6 +410,31 @@ function resolveNumberLiteral(expr: NumberLiteral): NumberLiteral {
 function resolveStringLiteral(expr: StringLiteral): StringLiteral {
   expr.resolved = {
     resolvedType: { type: 'Tekst' },
+  };
+  return expr;
+}
+
+function resolveLiteral(expr: Literal): Literal {
+  const literalType = (expr as any).literalType;
+  let resolvedType: DataType;
+
+  if (literalType === 'date' || expr.value instanceof Date) {
+    resolvedType = { type: 'Datum' };
+  } else if (literalType === 'boolean' || typeof expr.value === 'boolean') {
+    resolvedType = { type: 'Boolean' };
+  } else if (literalType === 'number' || typeof expr.value === 'number') {
+    resolvedType = { type: 'Numeriek' };
+  } else {
+    resolvedType = { type: 'Tekst' };
+  }
+
+  expr.resolved = { resolvedType };
+  return expr;
+}
+
+function resolveDateLiteral<T extends Expression>(expr: T): T {
+  expr.resolved = {
+    resolvedType: { type: 'Datum' },
   };
   return expr;
 }
@@ -437,14 +531,19 @@ function resolveVariableReference(
     const frame = context.scopeStack[i];
     const scopeVar = frame.variables.get(name) || frame.variables.get(nameLower);
     if (scopeVar) {
-      const objectType = maps.objectTypes.get(scopeVar.objectType);
+      const objectType = scopeVar.objectType ? maps.objectTypes.get(scopeVar.objectType) : undefined;
+      const resolvedType = objectType
+        ? ({ type: 'ObjectType', name: objectType.name } as any)
+        : scopeVar.resolvedType;
       expr.resolved = {
         resolvedSymbol: {
           kind: 'variable',
           name: scopeVar.name,
-          dataType: objectType ? { type: 'ObjectType', name: objectType.name } as any : undefined,
+          dataType: resolvedType,
         },
-        resolvedType: objectType ? { type: 'ObjectType', name: objectType.name } as any : undefined,
+        resolvedType,
+        unit: scopeVar.unit,
+        timeline: scopeVar.timeline,
       };
       return expr;
     }
@@ -715,7 +814,7 @@ function resolveNamedTypeReference(
 function lookupScopeVariable(
   name: string,
   context: ResolutionContext
-): { name: string; objectType: string } | undefined {
+): ResolvedVariable | undefined {
   for (let i = context.scopeStack.length - 1; i >= 0; i--) {
     const frame = context.scopeStack[i];
     const variable = frame.variables.get(name) || frame.variables.get(name.toLowerCase());
@@ -893,7 +992,7 @@ function resolveRootCandidates(
   }
 
   const scopeVariable = lookupScopeVariable(segment, context);
-  if (scopeVariable) {
+  if (scopeVariable?.objectType) {
     candidates.push({
       segment: {
         sourceName: segment,
@@ -1028,7 +1127,9 @@ function resolveAttributeReference(
     currentType = binding.objectTypeName;
     startIndex = 1;
   } else {
-    const rootCandidates = resolveRootCandidates(path[0], context, maps);
+    const rootCandidates = context.rootResolution === 'relative-only'
+      ? []
+      : resolveRootCandidates(path[0], context, maps);
     if (rootCandidates.length > 0) {
       const root = selectSingleCandidate(
         rootCandidates,
@@ -1349,11 +1450,22 @@ function resolveBinaryExpression(
   // Resolve operands
   resolveExpressionInternal(expr.left, context, maps);
   resolveExpressionInternal(expr.right, context, maps);
+  validateDagsoortPredicate(expr, maps);
 
   // Determine result type based on operator
   const comparisonOps = ['==', '!=', '>', '<', '>=', '<='];
   const logicalOps = ['&&', '||'];
   const arithmeticOps = ['+', '-', '*', '/', '^'];
+  const predicateOps = [
+    'is een dagsoort',
+    'zijn een dagsoort',
+    'is geen dagsoort',
+    'zijn geen dagsoort',
+    'is numeriek met exact',
+    'is niet numeriek met exact',
+    'zijn numeriek met exact',
+    'zijn niet numeriek met exact',
+  ];
 
   // Combine timeline info from operands
   const combinedTimeline = combineTimelineInfo(
@@ -1361,7 +1473,9 @@ function resolveBinaryExpression(
     expr.right.resolved?.timeline
   );
 
-  if (comparisonOps.includes(expr.operator) || logicalOps.includes(expr.operator)) {
+  if (comparisonOps.includes(expr.operator) ||
+      logicalOps.includes(expr.operator) ||
+      predicateOps.includes(expr.operator)) {
     // Comparisons produce Boolean, but may still be time-dependent
     // if operands are time-dependent (result is Boolean timeline)
     expr.resolved = {
@@ -1410,6 +1524,45 @@ function resolveBinaryExpression(
   return expr;
 }
 
+function validateDagsoortPredicate(
+  expr: BinaryExpression,
+  maps: ResolutionMaps
+): void {
+  const dagsoortOperators = new Set([
+    'is een dagsoort',
+    'zijn een dagsoort',
+    'is geen dagsoort',
+    'zijn geen dagsoort',
+  ]);
+  if (!dagsoortOperators.has(expr.operator)) {
+    return;
+  }
+
+  const dagsoortName = extractDagsoortName(expr.right);
+  if (!dagsoortName) {
+    throw new Error(`Dagsoort predicate requires a dagsoort name`);
+  }
+  if (!maps.dagsoorten.has(normalizeDagsoortName(dagsoortName))) {
+    throw new Error(`Unknown dagsoort '${dagsoortName}'`);
+  }
+}
+
+function extractDagsoortName(expr: Expression): string | undefined {
+  if (expr.type === 'StringLiteral') {
+    return (expr as StringLiteral).value;
+  }
+  if (expr.type === 'Literal' && typeof (expr as Literal).value === 'string') {
+    return (expr as Literal).value;
+  }
+  if (expr.type === 'VariableReference') {
+    return (expr as VariableReference).variableName;
+  }
+  if (expr.type === 'AttributeReference') {
+    return (expr as AttributeReference).path.join(' ');
+  }
+  return undefined;
+}
+
 function resolveUnaryExpression(
   expr: UnaryExpression,
   context: ResolutionContext,
@@ -1425,7 +1578,13 @@ function resolveUnaryExpression(
       resolvedType: { type: 'Numeriek' },
       timeline: operandTimeline,
     };
-  } else if (expr.operator === '!' || expr.operator === 'niet') {
+  } else if (expr.operator === '!' ||
+      expr.operator === 'niet' ||
+      expr.operator === 'voldoet aan de elfproef' ||
+      expr.operator === 'voldoen aan de elfproef' ||
+      expr.operator === 'voldoet niet aan de elfproef' ||
+      expr.operator === 'voldoen niet aan de elfproef' ||
+      expr.operator === 'moeten uniek zijn') {
     expr.resolved = {
       resolvedType: { type: 'Boolean' },
       timeline: operandTimeline,
@@ -1794,12 +1953,46 @@ function resolveBegrenzingExpression(
   return expr;
 }
 
+function resolveBegrenzingAfrondingExpression(
+  expr: BegrenzingAfrondingExpression,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): BegrenzingAfrondingExpression {
+  resolveExpressionInternal(expr.expression, context, maps);
+
+  if (expr.minimum) {
+    resolveExpressionInternal(expr.minimum, context, maps);
+  }
+  if (expr.maximum) {
+    resolveExpressionInternal(expr.maximum, context, maps);
+  }
+
+  expr.resolved = {
+    resolvedType: { type: 'Numeriek' },
+  };
+
+  return expr;
+}
+
 function resolveSubselectieExpression(
   expr: SubselectieExpression,
   context: ResolutionContext,
   maps: ResolutionMaps
 ): SubselectieExpression {
   resolveExpressionInternal(expr.collection, context, maps);
+
+  const elementObjectType = resolveCollectionElementObjectType(expr.collection, maps);
+  const predicateContext = elementObjectType
+    ? {
+      ...context,
+      currentObjectType: elementObjectType,
+      currentVariable: lowerInitial(elementObjectType),
+      rootResolution: 'relative-only' as const,
+    }
+    : context;
+  resolveLegacyPredicateExpressions(expr.predicaat, predicateContext, maps);
+  resolveUnifiedPredicateExpressions((expr.predicaat as any)?.predicate, predicateContext, maps);
+  resolveUnifiedPredicateExpressions(expr.predicate, predicateContext, maps);
 
   // The result is still a collection of the same element type
   if (expr.collection.resolved?.resolvedType) {
@@ -1812,29 +2005,297 @@ function resolveSubselectieExpression(
   return expr;
 }
 
+function resolveLegacyPredicateExpressions(
+  predicate: any,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): void {
+  if (!predicate) return;
+
+  switch (predicate.type) {
+    case 'AttributeComparisonPredicaat':
+      resolvePredicateAttribute(predicate, context, maps);
+      if (predicate.value) resolveExpressionInternal(predicate.value, context, maps);
+      return;
+    case 'VergelijkingInPredicaat':
+      if (predicate.onderwerp) resolveExpressionInternal(predicate.onderwerp, context, maps);
+      if (predicate.attribuut) resolveExpressionInternal(predicate.attribuut, context, maps);
+      if (predicate.waarde) resolveExpressionInternal(predicate.waarde, context, maps);
+      return;
+    case 'GenesteVoorwaardeInPredicaat':
+      resolveLegacyPredicateExpressions(predicate.voorwaarde, context, maps);
+      return;
+    case 'SamengesteldPredicaat':
+      predicate.voorwaarden?.forEach((voorwaarde: any) =>
+        resolveLegacyPredicateExpressions(voorwaarde, context, maps)
+      );
+      return;
+  }
+}
+
+function resolveUnifiedPredicateExpressions(
+  predicate: any,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): void {
+  if (!predicate) return;
+
+  switch (predicate.type) {
+    case 'SimplePredicate':
+      if (predicate.left) resolveExpressionInternal(predicate.left, context, maps);
+      if (predicate.right) resolveExpressionInternal(predicate.right, context, maps);
+      return;
+    case 'AttributePredicate':
+      resolvePredicateAttribute(predicate, context, maps);
+      if (predicate.value) resolveExpressionInternal(predicate.value, context, maps);
+      return;
+    case 'CompoundPredicate':
+      predicate.predicates?.forEach((nested: any) =>
+        resolveUnifiedPredicateExpressions(nested, context, maps)
+      );
+      return;
+    case 'NotPredicate':
+      resolveUnifiedPredicateExpressions(predicate.predicate, context, maps);
+      return;
+  }
+}
+
+function resolvePredicateAttribute(
+  predicate: { attribute?: string; location?: any; resolvedAttribute?: ResolvedInfo },
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): void {
+  if (!predicate.attribute) {
+    return;
+  }
+
+  const attributeRef: AttributeReference = {
+    type: 'AttributeReference',
+    path: predicate.attribute.split('.').map(segment => segment.trim()).filter(Boolean),
+    location: predicate.location,
+  };
+  resolveAttributeReference(attributeRef, context, maps);
+  predicate.resolvedAttribute = attributeRef.resolved;
+}
+
+function resolveConjunctionExpression(
+  expr: ConjunctionExpression,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): ConjunctionExpression {
+  for (const value of expr.values) {
+    resolveExpressionInternal(value, context, maps);
+  }
+
+  expr.resolved = {
+    resolvedType: { type: 'Boolean' },
+  };
+
+  return expr;
+}
+
+function resolveDisjunctionExpression(
+  expr: DisjunctionExpression,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): DisjunctionExpression {
+  for (const value of expr.values) {
+    resolveExpressionInternal(value, context, maps);
+  }
+
+  expr.resolved = {
+    resolvedType: { type: 'Boolean' },
+  };
+
+  return expr;
+}
+
+function resolveRegelStatusExpression(
+  expr: RegelStatusExpression,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): RegelStatusExpression {
+  resolveUnifiedPredicateExpressions((expr as any).predicate, context, maps);
+
+  expr.resolved = {
+    resolvedType: { type: 'Boolean' },
+  };
+
+  return expr;
+}
+
 function resolveFunctionCall(
   expr: FunctionCall,
   context: ResolutionContext,
   maps: ResolutionMaps
 ): FunctionCall {
+  const functionName = expr.functionName.toLowerCase();
+  if (isCollectionAggregateFunction(functionName) && expr.arguments.length === 2) {
+    return resolveCollectionAggregateFunction(expr, context, maps);
+  }
+
   // Resolve arguments
   for (const arg of expr.arguments) {
     resolveExpressionInternal(arg, context, maps);
   }
 
   // Type depends on function
-  const numericFunctions = ['sqrt', 'abs', 'som', 'aantal', 'maximum', 'minimum'];
+  const numericFunctions = [
+    'sqrt',
+    'abs',
+    'aantal',
+    'som',
+    'som_van',
+    'maximum',
+    'minimum',
+    'maximum_van',
+    'minimum_van',
+    'maximum_van_values',
+    'minimum_van_values',
+    'tijdsduur_van',
+    'abs_tijdsduur_van',
+    'aantal_dagen_in',
+    'maand_uit',
+    'dag_uit',
+    'jaar_uit',
+  ];
   const dateFunctions = ['datum_met', 'eerste_paasdag_van'];
+  const firstArgumentFunctions = ['eerste_van', 'laatste_van'];
 
-  if (numericFunctions.includes(expr.functionName.toLowerCase())) {
+  if (numericFunctions.includes(functionName)) {
     expr.resolved = {
       resolvedType: { type: 'Numeriek' },
     };
-  } else if (dateFunctions.includes(expr.functionName.toLowerCase())) {
+  } else if (dateFunctions.includes(functionName)) {
     expr.resolved = {
       resolvedType: { type: 'Datum' },
     };
+  } else if (firstArgumentFunctions.includes(functionName)) {
+    expr.resolved = {
+      resolvedType: expr.arguments[0]?.resolved?.resolvedType,
+      unit: expr.arguments[0]?.resolved?.unit,
+      timeline: expr.arguments[0]?.resolved?.timeline,
+    };
   }
+
+  return expr;
+}
+
+function isCollectionAggregateFunction(functionName: string): boolean {
+  return functionName === 'som_van' ||
+    functionName === 'maximum_van' ||
+    functionName === 'minimum_van' ||
+    functionName === 'eerste_van' ||
+    functionName === 'laatste_van';
+}
+
+function resolveCollectionAggregateFunction(
+  expr: FunctionCall,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): FunctionCall {
+  const functionName = expr.functionName.toLowerCase();
+  const selector = expr.arguments[0];
+  const collection = expr.arguments[1];
+
+  resolveExpressionInternal(collection, context, maps);
+
+  const elementObjectType = resolveCollectionElementObjectType(collection, maps);
+  if (elementObjectType) {
+    resolveExpressionInternal(selector, {
+      ...context,
+      currentObjectType: elementObjectType,
+      currentVariable: lowerInitial(elementObjectType),
+      rootResolution: 'relative-only',
+    }, maps);
+  } else {
+    resolveExpressionInternal(selector, context, maps);
+  }
+
+  expr.resolved = {
+    resolvedType: isSelectorTypedCollectionAggregate(functionName)
+      ? selector.resolved?.resolvedType
+      : { type: 'Numeriek' },
+    unit: isSelectorTypedCollectionAggregate(functionName) ? selector.resolved?.unit : undefined,
+    timeline: isSelectorTypedCollectionAggregate(functionName) ? selector.resolved?.timeline : undefined,
+  };
+
+  return expr;
+}
+
+function isSelectorTypedCollectionAggregate(functionName: string): boolean {
+  return functionName === 'eerste_van' || functionName === 'laatste_van';
+}
+
+function resolveCollectionElementObjectType(expr: Expression, maps: ResolutionMaps): string | undefined {
+  const resolvedType = expr.resolved?.resolvedType as any;
+  if (resolvedType?.type === 'ObjectType') {
+    return resolvedType.name;
+  }
+  if (resolvedType?.type === 'Lijst' && resolvedType.elementType?.type === 'ObjectType') {
+    return resolvedType.elementType.name;
+  }
+  const collectionSegment = expr.resolved?.resolvedPath
+    ?.slice()
+    .reverse()
+    .find(segment => segment.cardinality === 'N' && maps.objectTypes.has(segment.targetType));
+  if (collectionSegment) {
+    return collectionSegment.targetType;
+  }
+  return undefined;
+}
+
+function lowerInitial(value: string): string {
+  return value.charAt(0).toLowerCase() + value.slice(1);
+}
+
+function resolvePeriodDefinition(
+  expr: PeriodDefinition,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): PeriodDefinition {
+  if (expr.startDate) {
+    resolveExpressionInternal(expr.startDate, context, maps);
+  }
+  if (expr.endDate) {
+    resolveExpressionInternal(expr.endDate, context, maps);
+  }
+
+  expr.resolved = {
+    resolvedType: { type: 'Period' },
+  };
+
+  return expr;
+}
+
+function resolveTimelineExpression(
+  expr: TimelineExpression,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): TimelineExpression {
+  resolveExpressionInternal(expr.target, context, maps);
+
+  if (expr.period) {
+    resolvePeriodDefinition(expr.period, context, maps);
+  }
+  if (expr.condition) {
+    resolveExpressionInternal(expr.condition, context, maps);
+  }
+
+  const numericOperations = new Set([
+    'aantal_dagen',
+    'naar_verhouding',
+    'tijdsevenredig_deel_per_maand',
+    'tijdsevenredig_deel_per_jaar',
+  ]);
+
+  expr.resolved = {
+    resolvedType: numericOperations.has(expr.operation)
+      ? { type: 'Numeriek' }
+      : expr.target.resolved?.resolvedType ?? { type: 'Timeline' },
+    unit: expr.target.resolved?.unit,
+    timeline: expr.target.resolved?.timeline,
+  };
 
   return expr;
 }

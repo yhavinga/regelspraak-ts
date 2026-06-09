@@ -16,11 +16,26 @@ export type {
 
 export type {
   ResolutionContext,
+  ResolutionMaps,
+  ResolvedVariable,
   ScopeFrame,
 } from './expression-resolver';
 
 export {
+  createResolutionMaps,
   createResolutionContext,
   pushScope,
   resolveExpression,
+  resolveExpressionWithMaps,
 } from './expression-resolver';
+
+export type {
+  ModelResolutionDiagnostic,
+  ModelResolutionOptions,
+  ModelResolutionResult,
+} from './model-resolver';
+
+export {
+  ModelResolutionError,
+  resolveModel,
+} from './model-resolver';

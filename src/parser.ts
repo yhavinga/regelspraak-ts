@@ -9,6 +9,7 @@ import { ObjectTypeDefinition } from './ast/object-types';
 import { ParameterDefinition } from './ast/parameters';
 import { DomainModel } from './ast/domain-model';
 import { CollectingErrorListener } from './parser-error-listener';
+import { ModelResolutionOptions, ModelResolutionResult, resolveModel } from './resolver';
 
 /**
  * Parser service using ANTLR4-generated parser
@@ -152,6 +153,19 @@ export class AntlrParser {
       console.error('Stack:', (error as Error).stack);
       throw error;
     }
+  }
+
+  /**
+   * Parse and resolve a complete RegelSpraak model for static consumers.
+   * `parseModel` remains syntax-only; callers that need transpiler-grade
+   * metadata opt into this method.
+   */
+  parseResolvedModel(
+    source: string,
+    options: ModelResolutionOptions = {}
+  ): ModelResolutionResult {
+    const model = this.parseModel(source);
+    return resolveModel(model, options);
   }
 
   /**
