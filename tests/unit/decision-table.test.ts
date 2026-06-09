@@ -374,5 +374,145 @@ geldig altijd
         expect(result.error?.message).toContain('No matching row');
       });
     });
+
+    describe('typed decision table columns', () => {
+      test('should preserve typed columns independent of conclusion position', () => {
+        const parser = new AntlrParser();
+        const model = parser.parseModel(`Beslistabel Test
+  geldig altijd
+  |   | indien leeftijd groter is dan | de korting moet gesteld worden op | de toeslag moet gesteld worden op |
+  |---|--------------------------------|-----------------------------------|-----------------------------------|
+  | 1 | 18                             | 10                                | 20                                |`);
+
+        const version = model.beslistabels[0].versions![0];
+
+        expect(version.columns.map(column => column.type)).toEqual([
+          'DecisionTableConditionColumn',
+          'DecisionTableConclusionColumn',
+          'DecisionTableConclusionColumn'
+        ]);
+        expect(version.conditionColumns[0].condition.subjectExpression).toMatchObject({
+          type: 'AttributeReference',
+          path: ['leeftijd']
+        });
+        expect(version.conclusionColumns.map(column => column.result.targetExpression)).toMatchObject([
+          { type: 'AttributeReference', path: ['korting'] },
+          { type: 'AttributeReference', path: ['toeslag'] }
+        ]);
+        expect(model.beslistabels[0].rows[0].conditionValues).toHaveLength(1);
+      });
+
+      test('should execute every conclusion column for the first matching row', () => {
+        const decisionTable = `Beslistabel Test
+  geldig altijd
+  |   | indien leeftijd groter is dan | de korting moet gesteld worden op | de toeslag moet gesteld worden op |
+  |---|--------------------------------|-----------------------------------|-----------------------------------|
+  | 1 | 18                             | 10                                | 20                                |`;
+
+        const context = new Context();
+        context.setVariable('leeftijd', { type: 'number', value: 20 });
+
+        const result = engine.run(decisionTable, context);
+
+        expect(result.success).toBe(true);
+        expect(context.getVariable('korting')).toEqual({ type: 'number', value: 10 });
+        expect(context.getVariable('toeslag')).toEqual({ type: 'number', value: 20 });
+        expect(result.value).toEqual({ type: 'number', value: 20 });
+      });
+
+      test('should evaluate kenmerk condition columns against the current object', () => {
+        const model = `Objecttype de Persoon (bezield)
+      is recht op korting kenmerk (bijvoeglijk);
+      de korting Numeriek;
+
+  Beslistabel Korting
+  geldig altijd
+  |   | de korting van een Persoon moet gesteld worden op | indien hij een recht op korting heeft |
+  |---|---------------------------------------------------|---------------------------------------|
+  | 1 | 10                                                | waar                                  |
+  | 2 | 0                                                 | onwaar                                |`;
+        const context = new Context();
+        context.createObject('Persoon', 'p1', {});
+        context.setKenmerk('Persoon', 'p1', 'recht op korting', true);
+
+        const result = engine.run(model, context);
+        const [persoon] = context.getObjectsByType('Persoon');
+
+        expect(result.success).toBe(true);
+        expect((persoon.value as Record<string, unknown>).korting).toEqual({ type: 'number', value: 10 });
+      });
+
+      test('should execute kenmerk conclusion columns per target object', () => {
+        const model = `Objecttype de Persoon (bezield)
+      is volwassen kenmerk (bijvoeglijk);
+      de leeftijd Numeriek;
+
+  Beslistabel Volwassenheid
+  geldig altijd
+  |   | een Persoon is volwassen | indien leeftijd groter of gelijk is aan |
+  |---|--------------------------|-----------------------------------------|
+  | 1 | waar                     | 18                                      |`;
+        const context = new Context();
+        context.createObject('Persoon', 'p1', { leeftijd: { type: 'number', value: 20 } });
+
+        const result = engine.run(model, context);
+
+        expect(result.success).toBe(true);
+        expect(context.getKenmerk('Persoon', 'p1', 'volwassen')).toBe(true);
+        expect(context.getVariable('volwassen')).toBeUndefined();
+      });
+
+      test('should reject n.v.t. in conclusion columns', () => {
+        const parser = new AntlrParser();
+
+        expect(() => parser.parseModel(`Beslistabel Test
+  geldig altijd
+  |   | de korting moet gesteld worden op | indien leeftijd groter is dan |
+  |---|-----------------------------------|--------------------------------|
+  | 1 | n.v.t.                            | 18                             |`))
+          .toThrow('uses n.v.t. in a conclusion column');
+      });
+    });
+
+    describe('decision table validity', () => {
+      test('should execute only the version active on the evaluation date', () => {
+        const source = `Beslistabel Tarief
+  geldig t/m 31-12-2020
+  |   | de tarief moet gesteld worden op | indien leeftijd groter is dan |
+  |---|----------------------------------|--------------------------------|
+  | 1 | 1                                | 18                             |
+
+  Beslistabel Tarief
+  geldig vanaf 01-01-2021
+  |   | de tarief moet gesteld worden op | indien leeftijd groter is dan |
+  |---|----------------------------------|--------------------------------|
+  | 1 | 2                                | 18                             |`;
+        const context = new Context();
+        context.evaluation_date = new Date(Date.UTC(2021, 0, 1));
+        context.setVariable('leeftijd', { type: 'number', value: 20 });
+
+        const result = engine.run(source, context);
+
+        expect(result.success).toBe(true);
+        expect(context.getVariable('tarief')).toEqual({ type: 'number', value: 2 });
+      });
+
+      test('should reject overlapping decision table versions with the same name', () => {
+        const parser = new AntlrParser();
+
+        expect(() => parser.parseModel(`Beslistabel Tarief
+  geldig vanaf 01-01-2020 t/m 31-12-2021
+  |   | de tarief moet gesteld worden op | indien leeftijd groter is dan |
+  |---|----------------------------------|--------------------------------|
+  | 1 | 1                                | 18                             |
+
+  Beslistabel Tarief
+  geldig vanaf 01-01-2021
+  |   | de tarief moet gesteld worden op | indien leeftijd groter is dan |
+  |---|----------------------------------|--------------------------------|
+  | 1 | 2                                | 18                             |`))
+          .toThrow("Decision table 'Tarief' has overlapping validity intervals");
+      });
+    });
   });
 });

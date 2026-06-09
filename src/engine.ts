@@ -51,6 +51,7 @@ export class Engine implements IEngine {
         const dimensions = definitions.filter((def: any) => def.type === 'Dimension');
         const feittypen = definitions.filter((def: any) => def.type === 'FeitType');
         const regelGroepen = definitions.filter((def: any) => def.type === 'RegelGroep');
+        const beslistabels = definitions.filter((def: any) => def.type === 'DecisionTable');
 
         return {
           success: true,
@@ -62,7 +63,8 @@ export class Engine implements IEngine {
             unitSystems,
             dimensions,
             feittypen,
-            regelGroepen
+            regelGroepen,
+            beslistabels
           }
         };
       }
@@ -371,8 +373,18 @@ export class Engine implements IEngine {
     phase: 1 | 3
   ): ExecutionResult | undefined {
     for (const beslistabel of beslistabels) {
+      if (!this.isDecisionTableActive(beslistabel, context.evaluation_date)) {
+        continue;
+      }
+
       const targetType = this.deduceBeslistabelTargetType(beslistabel, context);
-      if (!targetType) continue;
+      if (!targetType) {
+        const result = this.decisionTableExecutor.execute(beslistabel, context);
+        if (strict && phase === 3 && !result.success) {
+          return this.phaseFailure(`Decision table '${this.getDefinitionName(beslistabel)}' failed in phase ${phase}`, result.error);
+        }
+        continue;
+      }
 
       const instances = (context as any).getObjectsByType(targetType);
       for (const instance of instances) {
@@ -694,70 +706,24 @@ export class Engine implements IEngine {
 
   /**
    * Deduce the target object type from a decision table's result column header.
-   * Parses patterns like "de woonregio factor van een Natuurlijk persoon" → "Natuurlijk persoon"
-   * Also maps Feittype role names (e.g., "passagier") to their object types ("Natuurlijk persoon").
+   * Uses typed conclusion columns and maps Feittype role names
+   * (e.g., "passagier") to their object types ("Natuurlijk persoon").
    */
   private deduceBeslistabelTargetType(table: any, context?: RuntimeContext): string | undefined {
     let rawType: string | undefined;
 
-    // First, try using parsedResult if available (pre-parsed by header parser)
-    if (table.parsedResult?.targetExpression?.path?.length >= 1) {
-      // Path format: ["Natuurlijk persoon", "woonregio factor"]
-      // First element is the object type
-      rawType = table.parsedResult.targetExpression.path[0];
-    }
+    const activeVersion = this.selectActiveDecisionTableVersion(table, context?.evaluation_date);
+    const conclusions = activeVersion?.conclusionColumns?.map((column: any) => column.result)
+      ?? (table.parsedResult ? [table.parsedResult] : []);
 
-    // Try to parse from resultColumn string (singular)
-    if (!rawType && typeof table.resultColumn === 'string') {
-      // Pattern: "de/het X van een/de/het Y moet gesteld worden op"
-      // We want to extract Y (the object type)
-      const vanMatch = table.resultColumn.match(/van\s+(?:een|de|het)\s+(.+?)\s+moet/i);
-      if (vanMatch) {
-        rawType = vanMatch[1].trim();
+    for (const conclusion of conclusions) {
+      rawType = this.deduceBeslistabelConclusionTargetType(conclusion);
+      if (rawType) {
+        break;
       }
     }
 
-    // Legacy: Get the result columns from the table (for older structures)
-    if (!rawType) {
-      const resultColumns = table.resultColumns || table.results || [];
-
-      for (const column of resultColumns) {
-        const headerText = column.headerText || column.header || '';
-
-        // Pattern: "de/het X van een/de/het Y"
-        // We want to extract Y (the object type)
-        const vanMatch = headerText.match(/van\s+(?:een|de|het)\s+(.+?)(?:\s+moet|\s*$)/i);
-        if (vanMatch) {
-          rawType = vanMatch[1].trim();
-          break;
-        }
-
-        // Alternative pattern: look for object type reference in target expression
-        if (column.targetExpression?.path?.length >= 2) {
-          // Path format: ["passagier", "woonregio factor"] or similar
-          const possibleType = column.targetExpression.path[0];
-          if (possibleType) {
-            rawType = possibleType;
-            break;
-          }
-        }
-      }
-    }
-
-    // Try to get from the first row's result assignment target
-    if (!rawType) {
-      const rows = table.rows || [];
-      if (rows.length > 0 && rows[0].results?.length > 0) {
-        const firstResult = rows[0].results[0];
-        if (firstResult?.target?.path?.length >= 2) {
-          rawType = firstResult.target.path[0];
-        }
-      }
-    }
-
-    // If we found a type, check if it's a Feittype role and map to object type
     if (rawType && context) {
-      // Try to map the role alias to its object type
       const mappedType = this.roleAliasToObjectType(rawType, context);
       if (mappedType) {
         return mappedType;
@@ -765,6 +731,44 @@ export class Engine implements IEngine {
     }
 
     return rawType;
+  }
+
+  private deduceBeslistabelConclusionTargetType(conclusion: any): string | undefined {
+    const path = conclusion?.targetExpression?.path;
+    if (!path || path.length === 0) {
+      return undefined;
+    }
+
+    if (conclusion.targetType === 'attribute') {
+      return path.length >= 2 ? path[0] : undefined;
+    }
+
+    if (conclusion.targetType === 'kenmerk') {
+      return path[0];
+    }
+
+    return undefined;
+  }
+
+  private isDecisionTableActive(table: any, evaluationDate: Date): boolean {
+    if (!table.versions || table.versions.length === 0) {
+      return true;
+    }
+    return this.selectActiveDecisionTableVersion(table, evaluationDate) !== undefined;
+  }
+
+  private selectActiveDecisionTableVersion(table: any, evaluationDate?: Date): any | undefined {
+    if (!table.versions || table.versions.length === 0) {
+      return undefined;
+    }
+    const date = evaluationDate ?? new Date();
+    return table.versions.find((version: any) => {
+      const ruleVersion = version.version;
+      const start = ruleVersion?.start?.getTime() ?? Number.NEGATIVE_INFINITY;
+      const end = ruleVersion?.end?.getTime() ?? Number.POSITIVE_INFINITY;
+      const time = date.getTime();
+      return start <= time && time <= end;
+    });
   }
 
   /**

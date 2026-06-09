@@ -12,6 +12,15 @@ import { BeslistabelSeparatorContext } from "./RegelSpraakParser";
 import { BeslistabelRowContext } from "./RegelSpraakParser";
 import { BeslistabelCellValueContext } from "./RegelSpraakParser";
 import { BeslistabelColumnTextContext } from "./RegelSpraakParser";
+import { BeslistabelGelijkstellingHeaderContext } from "./RegelSpraakParser";
+import { BeslistabelKenmerkHeaderContext } from "./RegelSpraakParser";
+import { BeslistabelAttribuutVoorwaardeHeaderContext } from "./RegelSpraakParser";
+import { BeslistabelKenmerkVoorwaardeHeaderContext } from "./RegelSpraakParser";
+import { BeslistabelAttribuutHeaderContext } from "./RegelSpraakParser";
+import { BeslistabelAttribuutNaamContext } from "./RegelSpraakParser";
+import { BeslistabelAttribuutEerstePhraseContext } from "./RegelSpraakParser";
+import { BeslistabelAttribuutVervolgPhraseContext } from "./RegelSpraakParser";
+import { BeslistabelAttribuutVoorzetselContext } from "./RegelSpraakParser";
 import { IdentifierContext } from "./RegelSpraakParser";
 import { IdentifierOrKeywordContext } from "./RegelSpraakParser";
 import { IdentifierOrKeywordNoIsContext } from "./RegelSpraakParser";
@@ -327,6 +336,64 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitBeslistabelColumnText?: (ctx: BeslistabelColumnTextContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `BeslistabelGelijkstellingHeader`
+	 * labeled alternative in `RegelSpraakParser.beslistabelResultaatHeader`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBeslistabelGelijkstellingHeader?: (ctx: BeslistabelGelijkstellingHeaderContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `BeslistabelKenmerkHeader`
+	 * labeled alternative in `RegelSpraakParser.beslistabelResultaatHeader`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBeslistabelKenmerkHeader?: (ctx: BeslistabelKenmerkHeaderContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `BeslistabelAttribuutVoorwaardeHeader`
+	 * labeled alternative in `RegelSpraakParser.beslistabelVoorwaardeHeader`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBeslistabelAttribuutVoorwaardeHeader?: (ctx: BeslistabelAttribuutVoorwaardeHeaderContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `BeslistabelKenmerkVoorwaardeHeader`
+	 * labeled alternative in `RegelSpraakParser.beslistabelVoorwaardeHeader`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBeslistabelKenmerkVoorwaardeHeader?: (ctx: BeslistabelKenmerkVoorwaardeHeaderContext) => Result;
+	/**
+	 * Visit a parse tree produced by `RegelSpraakParser.beslistabelAttribuutHeader`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBeslistabelAttribuutHeader?: (ctx: BeslistabelAttribuutHeaderContext) => Result;
+	/**
+	 * Visit a parse tree produced by `RegelSpraakParser.beslistabelAttribuutNaam`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBeslistabelAttribuutNaam?: (ctx: BeslistabelAttribuutNaamContext) => Result;
+	/**
+	 * Visit a parse tree produced by `RegelSpraakParser.beslistabelAttribuutEerstePhrase`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBeslistabelAttribuutEerstePhrase?: (ctx: BeslistabelAttribuutEerstePhraseContext) => Result;
+	/**
+	 * Visit a parse tree produced by `RegelSpraakParser.beslistabelAttribuutVervolgPhrase`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBeslistabelAttribuutVervolgPhrase?: (ctx: BeslistabelAttribuutVervolgPhraseContext) => Result;
+	/**
+	 * Visit a parse tree produced by `RegelSpraakParser.beslistabelAttribuutVoorzetsel`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBeslistabelAttribuutVoorzetsel?: (ctx: BeslistabelAttribuutVoorzetselContext) => Result;
 	/**
 	 * Visit a parse tree produced by `RegelSpraakParser.identifier`.
 	 * @param ctx the parse tree

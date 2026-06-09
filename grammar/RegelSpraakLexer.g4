@@ -293,6 +293,10 @@ VOET: 'voet';
 POND: 'pond';
 MIJL: 'mijl';
 
+// Decision-table comparison variants that are not prefixes of shorter tokens.
+GROTER_OF_GELIJK_IS_AAN: 'groter of gelijk is aan';
+KLEINER_OF_GELIJK_IS_AAN: 'kleiner of gelijk is aan';
+
 // Add Abbreviations (Place before IDENTIFIER)
 M: 'm';
 KG: 'kg';

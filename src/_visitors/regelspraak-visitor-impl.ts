@@ -99,6 +99,18 @@ import { createSourceLocation } from '../ast/location';
 import { Dimension, DimensionLabel, DimensionedAttributeReference } from '../ast/dimensions';
 import { FeitType, Rol, RoleCardinality } from '../ast/feittype';
 import { DomainModel } from '../ast/domain-model';
+import {
+  DecisionTable,
+  DecisionTableCell,
+  DecisionTableCellValue,
+  DecisionTableColumn,
+  DecisionTableCondition,
+  DecisionTableConclusionColumn,
+  DecisionTableConditionColumn,
+  DecisionTableResult,
+  DecisionTableRow,
+  DecisionTableVersion
+} from '../ast/decision-tables';
 
 /**
  * Implementation of ANTLR4 visitor that builds our AST
@@ -222,6 +234,40 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
         if (current.start <= previous.end) {
           throw new Error(`Rule '${ruleName}' has overlapping validity intervals`);
+        }
+      }
+    }
+  }
+
+  private validateDecisionTableVersionOverlap(tables: DecisionTable[]): void {
+    const byName = new Map<string, RuleVersion[]>();
+
+    for (const table of tables) {
+      const versions = table.versions && table.versions.length > 0
+        ? table.versions.map(version => version.version)
+        : table.version
+          ? [table.version]
+          : [];
+      const existing = byName.get(table.name) ?? [];
+      existing.push(...versions);
+      byName.set(table.name, existing);
+    }
+
+    for (const [tableName, versions] of byName.entries()) {
+      const intervals = versions
+        .map(version => {
+          const start = version.start?.getTime() ?? Number.NEGATIVE_INFINITY;
+          const end = version.end?.getTime() ?? Number.POSITIVE_INFINITY;
+          return { start, end };
+        })
+        .sort((a, b) => a.start - b.start || a.end - b.end);
+
+      for (let i = 1; i < intervals.length; i++) {
+        const previous = intervals[i - 1];
+        const current = intervals[i];
+
+        if (current.start <= previous.end) {
+          throw new Error(`Decision table '${tableName}' has overlapping validity intervals`);
         }
       }
     }
@@ -368,6 +414,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       ...model.regels,
       ...model.regelGroepen.flatMap(group => group.rules)
     ]);
+    this.validateDecisionTableVersionOverlap(model.beslistabels);
 
     return model;
   }
@@ -3682,22 +3729,44 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     // Map Dutch operators to standard operators if not already standard
     const operatorMap: Record<string, string> = {
       'gelijk aan': '==',
+      'gelijk is aan': '==',
       'is gelijk aan': '==',
+      'zijn gelijk aan': '==',
       'ongelijk aan': '!=',
       'is ongelijk aan': '!=',
+      'zijn ongelijk aan': '!=',
       'is niet gelijk aan': '!=',
       'kleiner dan': '<',
       'kleiner is dan': '<',
       'is kleiner dan': '<',
+      'zijn kleiner dan': '<',
       'groter dan': '>',
       'groter is dan': '>',
       'is groter dan': '>',
+      'zijn groter dan': '>',
       'kleiner of gelijk aan': '<=',
+      'kleiner of gelijk is aan': '<=',
       'kleiner dan of gelijk aan': '<=',
+      'is kleiner of gelijk aan': '<=',
+      'zijn kleiner of gelijk aan': '<=',
       'groter of gelijk aan': '>=',
-      'groter dan of gelijk aan': '>='
+      'groter of gelijk is aan': '>=',
+      'groter dan of gelijk aan': '>=',
+      'is groter of gelijk aan': '>=',
+      'zijn groter of gelijk aan': '>='
     };
     return operatorMap[op] || op;
+  }
+
+  private normalizeKenmerkName(name: string): string {
+    const trimmed = name.trim();
+    const lower = trimmed.toLowerCase();
+    for (const article of ['een ', 'de ', 'het ']) {
+      if (lower.startsWith(article)) {
+        return trimmed.substring(article.length);
+      }
+    }
+    return trimmed;
   }
 
   visitRegelVersie(ctx: any): RuleVersion {
@@ -5593,18 +5662,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     let characteristic: string;
 
     if (kenmerkCtx) {
-      characteristic = this.extractTextWithSpaces(kenmerkCtx);
-
-      // Normalize characteristic by stripping leading articles to match domain model
-      // Rule says "is een passagier" but domain model defines "is passagier"
-      const articles = ['een ', 'de ', 'het '];
-      const charLower = characteristic.toLowerCase();
-      for (const article of articles) {
-        if (charLower.startsWith(article)) {
-          characteristic = characteristic.substring(article.length);
-          break;
-        }
-      }
+      characteristic = this.normalizeKenmerkName(this.extractTextWithSpaces(kenmerkCtx));
     } else {
       throw new Error('Could not extract characteristic from kenmerktoekenning');
     }
@@ -6526,7 +6584,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
   // --- Decision Table (Beslistabel) Visitor Methods ---
 
-  visitBeslistabel(ctx: any): any {
+  visitBeslistabel(ctx: any): DecisionTable {
     const name = this.extractText(ctx.naamwoord()).trim();
 
     // Check if there's a regelVersie (validity rule)
@@ -6538,24 +6596,27 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     // Visit the table structure
     const table = this.visit(ctx.beslistabelTable());
 
-    // Import header parser for parsing columns
-    const { DecisionTableHeaderParser } = require('../parsers/decision-table-header-parser');
-    const headerParser = new DecisionTableHeaderParser();
-
-    // Parse the result and condition columns
-    const parsedResult = headerParser.parseResultColumn(table.resultColumn);
-    const parsedConditions = table.conditionColumns.map((col: string) =>
-      headerParser.parseConditionColumn(col)
-    );
-
-    const decisionTable = {
-      type: 'DecisionTable',
-      name,
+    const decisionTableVersion: DecisionTableVersion = {
+      type: 'DecisionTableVersion',
       version,
       validity: version.validity,
-      ...table,  // Contains resultColumn, conditionColumns, and rows
-      parsedResult,
-      parsedConditions
+      columns: table.columns,
+      conclusionColumns: table.conclusionColumns,
+      conditionColumns: table.conditionColumnDefinitions,
+      rows: table.rows
+    };
+
+    const decisionTable: DecisionTable = {
+      type: 'DecisionTable',
+      name,
+      versions: [decisionTableVersion],
+      version,
+      validity: version.validity,
+      resultColumn: table.resultColumn,
+      conditionColumns: table.conditionColumns,
+      rows: table.rows,
+      parsedResult: table.parsedResult,
+      parsedConditions: table.parsedConditions
     };
 
     // Store location separately
@@ -6569,7 +6630,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const header = this.visit(ctx.beslistabelHeader());
 
     // Visit all rows
-    const rows = ctx.beslistabelRow_list().map((row: any) => this.visit(row));
+    const rawRows = ctx.beslistabelRow_list().map((row: any) => this.visit(row));
+    const rows = rawRows.map((row: DecisionTableRow) => this.projectDecisionTableRow(row, header.columns));
 
     const node = {
       ...header,
@@ -6580,20 +6642,162 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
   }
 
   visitBeslistabelHeader(ctx: any): any {
-    // Extract result column text including hidden whitespace
-    const resultColumn = this.getFullText(ctx._resultColumn);
-
-    // Extract condition column texts - they are stored in _conditionColumns array
-    const conditionColumns = ctx._conditionColumns ?
-      ctx._conditionColumns.map((col: any) => this.getFullText(col)) :
+    const columnTexts = ctx._columns ?
+      ctx._columns.map((col: any) => this.getFullText(col).trim()).filter((text: string) => text.length > 0) :
       [];
+    const columns = columnTexts.map((text: string, index: number) => this.parseDecisionTableColumn(text, index));
+    const conclusionColumns = columns.filter(
+      (column: DecisionTableColumn): column is DecisionTableConclusionColumn =>
+        column.type === 'DecisionTableConclusionColumn'
+    );
+    const conditionColumnDefinitions = columns.filter(
+      (column: DecisionTableColumn): column is DecisionTableConditionColumn =>
+        column.type === 'DecisionTableConditionColumn'
+    );
+
+    if (conclusionColumns.length === 0) {
+      throw new Error('Decision table must have at least one conclusion column');
+    }
+    if (conditionColumnDefinitions.length === 0) {
+      throw new Error('Decision table must have at least one condition column');
+    }
 
     const node = {
-      resultColumn,
-      conditionColumns
+      columns,
+      conclusionColumns,
+      conditionColumnDefinitions,
+      resultColumn: conclusionColumns[0].headerText,
+      conditionColumns: conditionColumnDefinitions.map((column: DecisionTableConditionColumn) => column.headerText),
+      parsedResult: conclusionColumns[0].result,
+      parsedConditions: conditionColumnDefinitions.map((column: DecisionTableConditionColumn) => column.condition)
     };
     this.setLocation(node, ctx);
     return node;
+  }
+
+  private parseDecisionTableColumn(headerText: string, columnIndex: number): DecisionTableColumn {
+    const resultTree = this.parseDecisionTableHeaderContext(
+      headerText,
+      parser => parser.beslistabelResultaatHeader()
+    );
+    const conditionTree = this.parseDecisionTableHeaderContext(
+      headerText,
+      parser => parser.beslistabelVoorwaardeHeader()
+    );
+
+    if (resultTree && conditionTree) {
+      throw new Error(`Ambiguous decision table column header: ${headerText}`);
+    }
+
+    if (resultTree) {
+      const result = this.visit(resultTree) as DecisionTableResult;
+      result.headerText = headerText;
+      result.columnIndex = columnIndex;
+      return {
+        type: 'DecisionTableConclusionColumn',
+        columnIndex,
+        headerText,
+        result
+      };
+    }
+
+    if (conditionTree) {
+      const condition = this.visit(conditionTree) as DecisionTableCondition;
+      condition.headerText = headerText;
+      condition.columnIndex = columnIndex;
+      return {
+        type: 'DecisionTableConditionColumn',
+        columnIndex,
+        headerText,
+        condition
+      };
+    }
+
+    throw new Error(`Invalid decision table column header: ${headerText}`);
+  }
+
+  private parseDecisionTableHeaderContext(
+    headerText: string,
+    parse: (parser: RegelSpraakParser) => any
+  ): any | undefined {
+    const chars = new CharStream(headerText.trim());
+    const lexer = new RegelSpraakLexer(chars);
+    const tokens = new CommonTokenStream(lexer);
+    const parser = new RegelSpraakParser(tokens);
+    const errorListener = new CollectingErrorListener();
+    lexer.removeErrorListeners();
+    lexer.addErrorListener(errorListener);
+    parser.removeErrorListeners();
+    parser.addErrorListener(errorListener);
+
+    const tree = parse(parser);
+    return errorListener.getErrors().length === 0 ? tree : undefined;
+  }
+
+  visitBeslistabelGelijkstellingHeader(ctx: any): DecisionTableResult {
+    const targetExpression = this.visitBeslistabelAttribuutHeader(ctx.beslistabelAttribuutHeader());
+    return {
+      type: 'DecisionTableResult',
+      headerText: '',
+      targetType: 'attribute',
+      targetExpression
+    };
+  }
+
+  visitBeslistabelKenmerkHeader(ctx: any): DecisionTableResult {
+    return {
+      type: 'DecisionTableResult',
+      headerText: '',
+      targetType: 'kenmerk',
+      targetExpression: this.visitOnderwerpReferentie(ctx.onderwerpReferentie()),
+      kenmerkName: this.normalizeKenmerkName(this.extractTextWithSpaces(ctx.kenmerkNaam()))
+    };
+  }
+
+  visitBeslistabelAttribuutVoorwaardeHeader(ctx: any): DecisionTableCondition {
+    return {
+      type: 'DecisionTableCondition',
+      headerText: '',
+      subjectExpression: this.visitBeslistabelAttribuutHeader(ctx.beslistabelAttribuutHeader()),
+      operator: this.mapOperator(ctx.comparisonOperator().getText()),
+      isKenmerkCheck: false
+    };
+  }
+
+  visitBeslistabelKenmerkVoorwaardeHeader(ctx: any): DecisionTableCondition {
+    return {
+      type: 'DecisionTableCondition',
+      headerText: '',
+      subjectExpression: this.visitOnderwerpReferentie(ctx.onderwerpReferentie()),
+      operator: '==',
+      isKenmerkCheck: true,
+      kenmerkName: this.normalizeKenmerkName(this.extractTextWithSpaces(ctx.kenmerkNaam()))
+    };
+  }
+
+  visitBeslistabelAttribuutHeader(ctx: any): AttributeReference | SubselectieExpression | DimensionedAttributeReference | BinaryExpression {
+    const attributeNameCtx = ctx.beslistabelAttribuutNaam ? ctx.beslistabelAttribuutNaam() : null;
+    if (!attributeNameCtx) {
+      throw new Error(`Invalid decision table attribute header: ${this.extractTextWithSpaces(ctx)}`);
+    }
+    const attributeName = this.extractDecisionTableAttributeName(this.extractTextWithSpaces(attributeNameCtx));
+    const subjectCtx = ctx.onderwerpReferentie ? ctx.onderwerpReferentie() : null;
+    const objectPath = subjectCtx ? this.visitOnderwerpReferentieToPath(subjectCtx) : [];
+
+    const node: AttributeReference = {
+      type: 'AttributeReference',
+      path: [...objectPath, attributeName]
+    };
+    this.setLocation(node, ctx);
+    return node;
+  }
+
+  private extractDecisionTableAttributeName(text: string): string {
+    const words = text.trim().split(/\s+/);
+    if (words.length > 1 && /^(de|het|een|zijn|haar|hun)$/i.test(words[0])) {
+      return words.slice(1).join(' ');
+    }
+    return this.extractAttributeName(text);
   }
 
   // Helper to get full text including hidden whitespace
@@ -6617,23 +6821,59 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     return this.extractTextWithSpaces(ctx);
   }
 
-  visitBeslistabelRow(ctx: any): any {
+  visitBeslistabelRow(ctx: any): DecisionTableRow {
     const rowNumber = parseInt(ctx._rowNumber.text);
-    const resultExpression = this.visit(ctx._resultExpression);
-
-    // Visit all condition values - they are stored in _conditionValues array
-    const conditionValues = ctx._conditionValues ?
-      ctx._conditionValues.map((value: any) => this.visit(value)) :
+    const values: DecisionTableCellValue[] = ctx._cellValues ?
+      ctx._cellValues.map((value: any) => this.visit(value)) :
       [];
+    const cells: DecisionTableCell[] = values.map((value, columnIndex) => ({
+      type: 'DecisionTableCell',
+      columnIndex,
+      value
+    }));
 
-    const node = {
+    const firstExpression = values.find((value): value is Expression => value !== 'n.v.t.');
+    if (!firstExpression) {
+      throw new Error(`Decision table row ${rowNumber} must contain at least one expression cell`);
+    }
+
+    const node: DecisionTableRow = {
       type: 'DecisionTableRow',
       rowNumber,
-      resultExpression,
-      conditionValues
+      resultExpression: firstExpression,
+      conditionValues: [],
+      cells
     };
     this.setLocation(node, ctx);
     return node;
+  }
+
+  private projectDecisionTableRow(row: DecisionTableRow, columns: DecisionTableColumn[]): DecisionTableRow {
+    const cells = row.cells ?? [];
+    if (cells.length !== columns.length) {
+      throw new Error(
+        `Decision table row ${row.rowNumber} has ${cells.length} cells, expected ${columns.length}`
+      );
+    }
+
+    const conclusionCells = columns
+      .filter((column): column is DecisionTableConclusionColumn => column.type === 'DecisionTableConclusionColumn')
+      .map(column => cells[column.columnIndex]);
+    const conditionValues = columns
+      .filter((column): column is DecisionTableConditionColumn => column.type === 'DecisionTableConditionColumn')
+      .map(column => cells[column.columnIndex].value);
+
+    for (const cell of conclusionCells) {
+      if (cell.value === 'n.v.t.') {
+        throw new Error(`Decision table row ${row.rowNumber} uses n.v.t. in a conclusion column`);
+      }
+    }
+
+    return {
+      ...row,
+      resultExpression: conclusionCells[0].value as Expression,
+      conditionValues
+    };
   }
 
   visitBeslistabelCellValue(ctx: any): any {

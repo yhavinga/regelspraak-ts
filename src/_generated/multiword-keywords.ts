@@ -10,9 +10,9 @@ export interface MultiWordData {
 }
 
 export const multiWordKeywords: MultiWordData = {
-  "generated": "2026-05-29T08:43:57.783Z",
+  "generated": "2026-06-09T07:20:35.667Z",
   "source": "grammar/RegelSpraakLexer.g4",
-  "totalMultiWords": 128,
+  "totalMultiWords": 130,
   "byFirstWord": {
     "(voor": [
       "(voor het attribuut zonder voorzetsel):"
@@ -64,12 +64,14 @@ export const multiWordKeywords: MultiWordData = {
     "groter": [
       "groter dan",
       "groter is dan",
-      "groter of gelijk aan"
+      "groter of gelijk aan",
+      "groter of gelijk is aan"
     ],
     "kleiner": [
       "kleiner dan",
       "kleiner is dan",
-      "kleiner of gelijk aan"
+      "kleiner of gelijk aan",
+      "kleiner of gelijk is aan"
     ],
     "later": [
       "later dan",
@@ -271,6 +273,7 @@ export const multiWordKeywords: MultiWordData = {
     "groter dan",
     "groter is dan",
     "groter of gelijk aan",
+    "groter of gelijk is aan",
     "het tijdsevenredig deel per",
     "het totaal van",
     "het volgende criterium:",
@@ -303,6 +306,7 @@ export const multiWordKeywords: MultiWordData = {
     "kleiner dan",
     "kleiner is dan",
     "kleiner of gelijk aan",
+    "kleiner of gelijk is aan",
     "later dan",
     "later of gelijk aan",
     "met een maximum van",

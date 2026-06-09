@@ -231,4 +231,25 @@ Regel TestParameter
       expect(paramErrors.length).toBe(0);
     });
   });
+
+  describe('Decision Table Validation', () => {
+    test('should validate typed header expressions', () => {
+      const modelText = `
+Beslistabel Test
+geldig altijd
+|   | de korting moet gesteld worden op | indien leeftijd groter is dan |
+|---|-----------------------------------|--------------------------------|
+| 1 | 10                                | 18                             |
+      `;
+
+      const model = parser.parseModel(modelText);
+      const version = model.beslistabels[0].versions![0];
+      (version.conclusionColumns[0].result.targetExpression as any).path = [];
+      (version.conditionColumns[0].condition.subjectExpression as any).path = [];
+
+      const errors = analyzer.analyze(model);
+
+      expect(errors.filter(error => error.message === 'Empty attribute reference path')).toHaveLength(2);
+    });
+  });
 });

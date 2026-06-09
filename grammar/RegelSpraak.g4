@@ -29,7 +29,7 @@ beslistabelTable
 
 // Header row with column titles
 beslistabelHeader
-    : PIPE PIPE? resultColumn=beslistabelColumnText PIPE conditionColumns+=beslistabelColumnText (PIPE conditionColumns+=beslistabelColumnText)* PIPE?
+    : PIPE PIPE? columns+=beslistabelColumnText (PIPE columns+=beslistabelColumnText)* PIPE?
     ;
 
 // Separator line with dashes
@@ -39,7 +39,7 @@ beslistabelSeparator
 
 // Data row with row number and values
 beslistabelRow
-    : PIPE rowNumber=NUMBER PIPE resultExpression=expressie PIPE conditionValues+=beslistabelCellValue (PIPE conditionValues+=beslistabelCellValue)* PIPE?
+    : PIPE rowNumber=NUMBER PIPE cellValues+=beslistabelCellValue (PIPE cellValues+=beslistabelCellValue)* PIPE?
     ;
 
 // Cell value can be expression or n.v.t.
@@ -53,6 +53,38 @@ beslistabelColumnText
     : ~(PIPE)+
     ;
 
+beslistabelResultaatHeader
+    : beslistabelAttribuutHeader WORDT_GESTELD_OP EOF                  # BeslistabelGelijkstellingHeader
+    | onderwerpReferentie (IS | HEEFT) kenmerkNaam EOF                 # BeslistabelKenmerkHeader
+    ;
+
+beslistabelVoorwaardeHeader
+    : INDIEN beslistabelAttribuutHeader comparisonOperator EOF          # BeslistabelAttribuutVoorwaardeHeader
+    | INDIEN onderwerpReferentie (EEN | DE | HET)? kenmerkNaam HEEFT EOF # BeslistabelKenmerkVoorwaardeHeader
+    ;
+
+beslistabelAttribuutHeader
+    : beslistabelAttribuutNaam (VAN onderwerpReferentie)?
+    ;
+
+beslistabelAttribuutNaam
+    : beslistabelAttribuutEerstePhrase (beslistabelAttribuutVoorzetsel beslistabelAttribuutVervolgPhrase)*
+    ;
+
+beslistabelAttribuutEerstePhrase
+    : (DE | HET | EEN | ZIJN)? identifierOrKeywordNoIs+
+    ;
+
+beslistabelAttribuutVervolgPhrase
+    : identifierOrKeywordNoIs+
+    ;
+
+beslistabelAttribuutVoorzetsel
+    : VAN | IN | VOOR | OVER | OP | BIJ | UIT | TOT | EN | MET
+    | OF
+    | TOT_EN_MET
+    ;
+
 // --- Basic Building Blocks ---
 identifier
     : IDENTIFIER
@@ -64,7 +96,18 @@ identifierOrKeyword
     | DAG        // "dag" - commonly used in "een dag"
     | DAGEN      // "dagen" - can be part of attribute names
     | MAAND      // "maand" - used in date expressions
+    | MAANDEN
     | JAAR       // "jaar" - used in date expressions
+    | JAREN
+    | WEEK
+    | WEKEN
+    | UUR
+    | UREN
+    | MINUUT
+    | MINUTEN
+    | SECONDE
+    | SECONDEN
+    | MILLISECONDE
     | AANTAL     // "aantal" - can be part of names
     | PERIODE    // "periode" - can be an attribute name
     | REGEL      // "regel" - can be referenced
@@ -88,7 +131,18 @@ identifierOrKeywordNoIs
     | DAG        // "dag" - commonly used in "een dag"
     | DAGEN      // "dagen" - can be part of attribute names
     | MAAND      // "maand" - used in date expressions
+    | MAANDEN
     | JAAR       // "jaar" - used in date expressions
+    | JAREN
+    | WEEK
+    | WEKEN
+    | UUR
+    | UREN
+    | MINUUT
+    | MINUTEN
+    | SECONDE
+    | SECONDEN
+    | MILLISECONDE
     | AANTAL     // "aantal" - can be part of names
     | PERIODE    // "periode" - can be an attribute name
     | REGEL      // "regel" - can be referenced
@@ -845,8 +899,8 @@ gelijkIsAanOperator
 
 comparisonOperator // Expanded list
     : GELIJK_AAN | ONGELIJK_AAN | GELIJK_IS_AAN
-    | GROTER_DAN | GROTER_OF_GELIJK_AAN
-    | KLEINER_DAN | KLEINER_OF_GELIJK_AAN
+    | GROTER_DAN | GROTER_OF_GELIJK_AAN | GROTER_OF_GELIJK_IS_AAN
+    | KLEINER_DAN | KLEINER_OF_GELIJK_AAN | KLEINER_OF_GELIJK_IS_AAN
     | KLEINER_IS_DAN | GROTER_IS_DAN
     | IS // Used in boolean contexts?
     | IN // Collection membership

@@ -18,7 +18,12 @@ import {
   FunctionCall,
   SubselectieExpression
 } from './ast/expressions';
-import { DecisionTable } from './ast/decision-tables';
+import {
+  DecisionTable,
+  DecisionTableCellValue,
+  DecisionTableCondition,
+  DecisionTableResult
+} from './ast/decision-tables';
 import { Dimension } from './ast/dimensions';
 import { DagsoortDefinitie } from './ast/dagsoort';
 import { FeitType } from './ast/feittype';
@@ -435,11 +440,56 @@ export class SemanticAnalyzer {
   }
 
   private validateBeslistabel(beslistabel: DecisionTable): void {
-    // Validate expressions in decision table
-    for (const row of beslistabel.rows) {
-      if ('result' in row && row.result) {
-        this.validateExpression((row as any).result);
+    const versions = beslistabel.versions && beslistabel.versions.length > 0
+      ? beslistabel.versions
+      : undefined;
+
+    if (versions) {
+      for (const version of versions) {
+        for (const conclusionColumn of version.conclusionColumns) {
+          this.validateDecisionTableResult(conclusionColumn.result);
+        }
+        for (const conditionColumn of version.conditionColumns) {
+          this.validateDecisionTableCondition(conditionColumn.condition);
+        }
+        for (const row of version.rows) {
+          for (const cell of row.cells ?? []) {
+            this.validateDecisionTableCellValue(cell.value);
+          }
+        }
       }
+      return;
+    }
+
+    if (beslistabel.parsedResult) {
+      this.validateDecisionTableResult(beslistabel.parsedResult);
+    }
+    for (const condition of beslistabel.parsedConditions ?? []) {
+      this.validateDecisionTableCondition(condition);
+    }
+    for (const row of beslistabel.rows) {
+      this.validateExpression(row.resultExpression);
+      for (const value of row.conditionValues) {
+        this.validateDecisionTableCellValue(value);
+      }
+    }
+  }
+
+  private validateDecisionTableResult(result: DecisionTableResult): void {
+    if (result.targetExpression) {
+      this.validateExpression(result.targetExpression);
+    }
+  }
+
+  private validateDecisionTableCondition(condition: DecisionTableCondition): void {
+    if (condition.subjectExpression) {
+      this.validateExpression(condition.subjectExpression);
+    }
+  }
+
+  private validateDecisionTableCellValue(value: DecisionTableCellValue): void {
+    if (value !== 'n.v.t.') {
+      this.validateExpression(value);
     }
   }
 
