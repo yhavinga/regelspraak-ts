@@ -1,6 +1,7 @@
-import { Value, RuntimeContext } from '../interfaces';
+import { DimensionedRuntimeValue, RuntimeContext, Value, isDimensionedValue } from '../interfaces';
 import { AggregationExpression, Expression } from '../ast/expressions';
 import { ExpressionEvaluator } from './expression-evaluator';
+import { Dimension, DimensionAggregationSelection, DimensionCoordinate } from '../ast/dimensions';
 
 /**
  * Engine for evaluating aggregation expressions in RegelSpraak
@@ -9,16 +10,25 @@ export class AggregationEngine {
   constructor(private expressionEvaluator: any) { }
 
   evaluate(expr: AggregationExpression, context: RuntimeContext): Value {
+    if (!expr.dimensionSelection && expr.dimensionRange) {
+      expr.dimensionSelection = {
+        type: 'DimensionAggregationSelection',
+        kind: 'range',
+        dimensionName: expr.dimensionRange.dimension || undefined,
+        fromLabel: expr.dimensionRange.from,
+        toLabel: expr.dimensionRange.to
+      };
+    }
+
+    if (expr.dimensionSelection) {
+      return this.evaluateDimensionAggregation(expr, expr.dimensionSelection, context);
+    }
+
     // Collect values to aggregate
     const values = this.collectValues(expr.target, context);
 
-    // Apply dimension range filtering if specified
-    const filteredValues = expr.dimensionRange
-      ? this.filterByDimensionRange(values, expr.dimensionRange, context)
-      : values;
-
     // Perform aggregation
-    return this.aggregate(filteredValues, expr.aggregationType);
+    return this.aggregate(values, expr.aggregationType);
   }
 
   private collectValues(target: Expression | Expression[], context: RuntimeContext): Value[] {
@@ -39,66 +49,230 @@ export class AggregationEngine {
     }
   }
 
-  private filterByDimensionRange(
-    values: Value[],
-    range: { dimension: string; from: string; to: string },
+  private evaluateDimensionAggregation(
+    expr: AggregationExpression,
+    selection: DimensionAggregationSelection,
     context: RuntimeContext
-  ): Value[] {
-    // Get the dimension registry to validate and get label positions
-    const registry = context.dimensionRegistry;
-
-    // Infer axis if not provided
-    let axis = range.dimension;
-    if (!axis) {
-      axis = registry.findAxisForLabel(range.from) || registry.findAxisForLabel(range.to) || '';
+  ): Value {
+    if (Array.isArray(expr.target)) {
+      throw new Error('Dimension aggregation requires a single dimensioned attribute target');
     }
 
-    // Get the labels that fall within the specified range
-    const labelsInRange = axis ? registry.getLabelsInRange(axis, range.from, range.to) : [];
+    const value = this.expressionEvaluator.evaluate(expr.target, context);
+    if (!isDimensionedValue(value)) {
+      throw new Error(`Dimension aggregation requires a dimensioned value, got ${value.type}`);
+    }
 
-    if (labelsInRange.length === 0) {
-      // Invalid range or dimension - return empty array
+    const { dimension, labels } = this.resolveRuntimeSelection(selection, context);
+    const fixedCoordinates = this.resolveRuntimeFixedCoordinates(selection, dimension, context);
+    const selected = this.selectDimensionedCells(value, dimension.name, labels, fixedCoordinates);
+    return this.aggregate(selected, expr.aggregationType);
+  }
+
+  private resolveRuntimeSelection(
+    selection: DimensionAggregationSelection,
+    context: RuntimeContext
+  ): { dimension: Dimension; labels: string[] } {
+    const dimension = selection.resolvedDimension
+      ? this.dimensionByName(selection.resolvedDimension, context)
+      : selection.dimensionName
+        ? this.dimensionBySelectionName(selection.dimensionName, context)
+        : this.dimensionBySelectedLabels(selection, context);
+
+    if (!dimension) {
+      throw new Error(`Cannot resolve dimension selection '${selection.dimensionName ?? ''}'`);
+    }
+
+    const labels = selection.resolvedLabels ?? this.resolveRuntimeLabels(selection, dimension);
+    if (labels.length === 0) {
+      throw new Error(`Dimension selection for '${dimension.name}' is empty`);
+    }
+
+    return { dimension, labels };
+  }
+
+  private dimensionByName(name: string, context: RuntimeContext): Dimension | undefined {
+    return (context.domainModel.dimensions || []).find(
+      dimension => dimension.name.toLowerCase() === name.toLowerCase()
+    );
+  }
+
+  private dimensionBySelectionName(name: string, context: RuntimeContext): Dimension | undefined {
+    const normalized = this.normalizeDimensionName(name);
+    const matches = (context.domainModel.dimensions || []).filter(dimension =>
+      this.normalizeDimensionName(dimension.name) === normalized ||
+      this.normalizeDimensionName(dimension.plural) === normalized
+    );
+    if (matches.length > 1) {
+      throw new Error(`Ambiguous dimension '${name}'`);
+    }
+    return matches[0];
+  }
+
+  private dimensionBySelectedLabels(
+    selection: DimensionAggregationSelection,
+    context: RuntimeContext
+  ): Dimension | undefined {
+    const labels = this.labelsMentionedBySelection(selection);
+    if (labels.length === 0) {
+      return undefined;
+    }
+
+    const matches = (context.domainModel.dimensions || []).filter(dimension =>
+      labels.every(label => this.findDimensionLabel(dimension, label))
+    );
+    if (matches.length > 1) {
+      throw new Error(`Ambiguous dimension labels [${labels.join(', ')}]`);
+    }
+    return matches[0];
+  }
+
+  private resolveRuntimeLabels(selection: DimensionAggregationSelection, dimension: Dimension): string[] {
+    switch (selection.kind) {
+      case 'all':
+        return [...dimension.labels]
+          .sort((a, b) => a.position - b.position)
+          .map(label => label.label);
+      case 'range':
+        if (!selection.fromLabel || !selection.toLabel) {
+          throw new Error(`Range selection for '${dimension.name}' requires two labels`);
+        }
+        return this.labelsInRange(dimension, selection.fromLabel, selection.toLabel);
+      case 'set':
+        if (!selection.labels || selection.labels.length === 0) {
+          throw new Error(`Set selection for '${dimension.name}' requires labels`);
+        }
+        return this.resolveExplicitLabels(dimension, selection.labels);
+      default:
+        throw new Error(`Unknown dimension selection kind: ${(selection as any).kind}`);
+    }
+  }
+
+  private labelsInRange(dimension: Dimension, fromLabel: string, toLabel: string): string[] {
+    const from = this.findDimensionLabel(dimension, fromLabel);
+    const to = this.findDimensionLabel(dimension, toLabel);
+    if (!from || !to) {
+      const missing = [from ? undefined : fromLabel, to ? undefined : toLabel].filter(Boolean).join(', ');
+      throw new Error(`Unknown label(s) [${missing}] for dimension '${dimension.name}'`);
+    }
+    if (from.position > to.position) {
+      throw new Error(`Invalid range for dimension '${dimension.name}': '${from.label}' comes after '${to.label}'`);
+    }
+    return dimension.labels
+      .filter(label => label.position >= from.position && label.position <= to.position)
+      .sort((a, b) => a.position - b.position)
+      .map(label => label.label);
+  }
+
+  private resolveExplicitLabels(dimension: Dimension, labels: string[]): string[] {
+    const resolved: string[] = [];
+    const seen = new Set<string>();
+    for (const rawLabel of labels) {
+      const label = this.findDimensionLabel(dimension, rawLabel);
+      if (!label) {
+        throw new Error(`Unknown label '${rawLabel}' for dimension '${dimension.name}'`);
+      }
+      const key = label.label.toLowerCase();
+      if (seen.has(key)) {
+        throw new Error(`Duplicate label '${label.label}' in dimension selection for '${dimension.name}'`);
+      }
+      seen.add(key);
+      resolved.push(label.label);
+    }
+    return resolved;
+  }
+
+  private resolveRuntimeFixedCoordinates(
+    selection: DimensionAggregationSelection,
+    aggregationDimension: Dimension,
+    context: RuntimeContext
+  ): DimensionCoordinate[] {
+    if (selection.fixedCoordinates) {
+      return selection.fixedCoordinates;
+    }
+
+    const fixedLabels = selection.fixedLabels ?? [];
+    if (fixedLabels.length === 0) {
       return [];
     }
 
-    // Filter values based on whether they correspond to labels in the range
-    // This assumes values are structured with dimension coordinates
-    const filteredValues: Value[] = [];
+    const coordinates: DimensionCoordinate[] = [];
+    const usedDimensions = new Set<string>();
 
-    for (const value of values) {
-      // Check if this value has dimension coordinates that match our range
-      // For now, we'll handle the simple case where values are directly keyed by dimension labels
-      // In a more complete implementation, we'd need to handle complex dimensional structures
-
-      if (value.type === 'object' && value.value) {
-        // Check if the object has values for the dimension labels in range
-        const objValue = value.value as Record<string, any>;
-
-        for (const label of labelsInRange) {
-          if (label in objValue) {
-            // Found a value for this label - include it
-            const labelValue = objValue[label];
-            if (typeof labelValue === 'number') {
-              filteredValues.push({ type: 'number', value: labelValue });
-            } else if (labelValue && typeof labelValue === 'object' && 'type' in labelValue) {
-              filteredValues.push(labelValue);
-            } else if (labelValue && typeof labelValue === 'object') {
-              // Plain object leaf value (e.g., could wrap numbers) -> try to coerce numeric
-              const maybeNumber = (labelValue as any).value ?? labelValue;
-              if (typeof maybeNumber === 'number') {
-                filteredValues.push({ type: 'number', value: maybeNumber });
-              }
-            }
-          }
-        }
-      } else {
-        // For non-dimensional values, include them as-is if no filtering is needed
-        // This handles cases where the aggregation target isn't actually dimensional
-        filteredValues.push(value);
+    for (const rawLabel of fixedLabels) {
+      const matches = (context.domainModel.dimensions || []).filter(dimension =>
+        this.findDimensionLabel(dimension, rawLabel)
+      );
+      if (matches.length === 0) {
+        throw new Error(`Unknown fixed dimension label '${rawLabel}'`);
       }
+      if (matches.length > 1) {
+        throw new Error(`Ambiguous fixed dimension label '${rawLabel}'`);
+      }
+
+      const dimension = matches[0];
+      if (dimension.name.toLowerCase() === aggregationDimension.name.toLowerCase()) {
+        throw new Error(`Dimension label '${rawLabel}' fixes aggregation dimension '${aggregationDimension.name}'`);
+      }
+      if (usedDimensions.has(dimension.name.toLowerCase())) {
+        throw new Error(`Duplicate fixed dimension '${dimension.name}' in aggregation target`);
+      }
+
+      usedDimensions.add(dimension.name.toLowerCase());
+      coordinates.push({
+        dimension: dimension.name,
+        label: this.findDimensionLabel(dimension, rawLabel)!.label,
+        sourceStyle: dimension.usageStyle,
+        preposition: dimension.preposition
+      });
     }
 
-    return filteredValues;
+    return coordinates;
+  }
+
+  private selectDimensionedCells(
+    value: DimensionedRuntimeValue,
+    dimensionName: string,
+    labels: string[],
+    fixedCoordinates: DimensionCoordinate[]
+  ): Value[] {
+    const selectedLabels = new Set(labels.map(label => label.toLowerCase()));
+    return value.value
+      .filter(cell => {
+        const coordinate = Object.entries(cell.coordinates).find(
+          ([dimension]) => dimension.toLowerCase() === dimensionName.toLowerCase()
+        );
+        if (!coordinate || !selectedLabels.has(coordinate[1].toLowerCase())) {
+          return false;
+        }
+
+        return fixedCoordinates.every(fixedCoordinate =>
+          cell.coordinates[fixedCoordinate.dimension]?.toLowerCase() === fixedCoordinate.label.toLowerCase()
+        );
+      })
+      .map(cell => cell.value);
+  }
+
+  private labelsMentionedBySelection(selection: DimensionAggregationSelection): string[] {
+    if (selection.kind === 'range') {
+      return [selection.fromLabel, selection.toLabel].filter((label): label is string => !!label);
+    }
+    if (selection.kind === 'set') {
+      return selection.labels ?? [];
+    }
+    return [];
+  }
+
+  private findDimensionLabel(dimension: Dimension, rawLabel: string): { position: number; label: string } | undefined {
+    return dimension.labels.find(label => label.label.toLowerCase() === rawLabel.toLowerCase());
+  }
+
+  private normalizeDimensionName(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/^(de|het|een)\s+/, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   private aggregate(values: Value[], type: string): Value {

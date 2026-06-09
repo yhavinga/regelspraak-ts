@@ -1,4 +1,4 @@
-import { RuntimeContext, Value } from './interfaces';
+import { DimensionedRuntimeValue, RuntimeContext, Value, isDimensionedValue } from './interfaces';
 import { FeitType } from './ast/feittype';
 import { TimelineValueImpl } from './ast/timelines';
 import { DomainModel } from './ast/domain-model';
@@ -184,7 +184,7 @@ export class Context implements RuntimeContext {
       this.objects.set(type, new Map());
     }
     for (const [name, value] of Object.entries(attributes)) {
-      attributes[name] = this.applyDeclaredUnitToAttribute(type, name, value);
+      attributes[name] = this.prepareAttributeValue(type, name, value);
     }
     this.objects.get(type)!.set(id, attributes);
   }
@@ -199,10 +199,28 @@ export class Context implements RuntimeContext {
     for (const [objectType, instances] of this.objects.entries()) {
       for (const attributes of instances.values() as IterableIterator<Record<string, Value>>) {
         for (const [attributeName, value] of Object.entries(attributes)) {
-          attributes[attributeName] = this.applyDeclaredUnitToAttribute(objectType, attributeName, value);
+          attributes[attributeName] = this.prepareAttributeValue(objectType, attributeName, value);
         }
       }
     }
+  }
+
+  prepareAttributeValue(objectTypeName: string, attributeName: string, value: Value): Value {
+    const attribute = this.findAttributeSpecification(objectTypeName, attributeName);
+    if (!attribute) {
+      return value;
+    }
+
+    if (attribute.dimensions && attribute.dimensions.length > 0) {
+      return this.prepareDimensionedAttributeValue(objectTypeName, attributeName, value, attribute);
+    }
+
+    if (value.type === 'dimensioned') {
+      throw new Error(`Attribute '${attributeName}' on '${objectTypeName}' is not dimensioned`);
+    }
+
+    const unit = this.resolveDeclaredUnit(attribute.unit, attribute.unitExpression, attribute.dataType);
+    return this.applyDeclaredUnit(value, unit);
   }
 
   private applyDeclaredUnitToParameter(name: string, value: Value): Value {
@@ -215,18 +233,90 @@ export class Context implements RuntimeContext {
   }
 
   private applyDeclaredUnitToAttribute(objectTypeName: string, attributeName: string, value: Value): Value {
-    const objectType = this.domainModel.objectTypes.find(
-      candidate => this.canonicalizeTypeName(candidate.name) === this.canonicalizeTypeName(objectTypeName)
-    );
-    const attribute = objectType?.members.find(
-      (member): member is AttributeSpecification =>
-        member.type === 'AttributeSpecification' && member.name === attributeName
-    );
+    const attribute = this.findAttributeSpecification(objectTypeName, attributeName);
     if (!attribute) {
       return value;
     }
     const unit = this.resolveDeclaredUnit(attribute.unit, attribute.unitExpression, attribute.dataType);
     return this.applyDeclaredUnit(value, unit);
+  }
+
+  private findAttributeSpecification(
+    objectTypeName: string,
+    attributeName: string
+  ): AttributeSpecification | undefined {
+    const objectType = this.domainModel.objectTypes.find(
+      candidate => this.canonicalizeTypeName(candidate.name) === this.canonicalizeTypeName(objectTypeName)
+    );
+    return objectType?.members.find(
+      (member): member is AttributeSpecification =>
+        member.type === 'AttributeSpecification' && member.name === attributeName
+    );
+  }
+
+  private prepareDimensionedAttributeValue(
+    objectTypeName: string,
+    attributeName: string,
+    value: Value,
+    attribute: AttributeSpecification
+  ): DimensionedRuntimeValue {
+    if (!isDimensionedValue(value)) {
+      throw new Error(
+        `Attribute '${attributeName}' on '${objectTypeName}' is dimensioned and requires a dimensioned value`
+      );
+    }
+
+    const declaredDimensions = attribute.dimensions ?? [];
+    const declaredDimensionSet = new Set(declaredDimensions.map(dimension => dimension.toLowerCase()));
+    const unit = this.resolveDeclaredUnit(attribute.unit, attribute.unitExpression, attribute.dataType);
+
+    const cells = value.value.map((cell, index) => {
+      if (!cell || typeof cell !== 'object' || !cell.coordinates || !cell.value) {
+        throw new Error(`Invalid dimensioned cell ${index} for attribute '${attributeName}'`);
+      }
+
+      const coordinateEntries = Object.entries(cell.coordinates);
+      const coordinateDimensions = new Set(coordinateEntries.map(([dimension]) => dimension.toLowerCase()));
+
+      for (const dimension of declaredDimensions) {
+        const matchingEntry = coordinateEntries.find(
+          ([coordinateDimension]) => coordinateDimension.toLowerCase() === dimension.toLowerCase()
+        );
+        if (!matchingEntry) {
+          throw new Error(`Missing dimension '${dimension}' in cell ${index} for attribute '${attributeName}'`);
+        }
+
+        const axis = this.dimensionRegistry.getAxis(dimension);
+        if (!axis) {
+          throw new Error(`Unknown declared dimension '${dimension}' for attribute '${attributeName}'`);
+        }
+
+        const label = matchingEntry[1];
+        if (!this.dimensionRegistry.isValidLabel(dimension, label)) {
+          throw new Error(
+            `Unknown label '${label}' for dimension '${dimension}' in cell ${index} for attribute '${attributeName}'`
+          );
+        }
+      }
+
+      for (const coordinateDimension of coordinateDimensions) {
+        if (!declaredDimensionSet.has(coordinateDimension)) {
+          throw new Error(
+            `Dimension '${coordinateDimension}' is not declared on attribute '${attributeName}'`
+          );
+        }
+      }
+
+      return {
+        coordinates: cell.coordinates,
+        value: this.applyDeclaredUnit(cell.value, unit)
+      };
+    });
+
+    return {
+      ...value,
+      value: cells
+    };
   }
 
   private resolveDeclaredUnit(

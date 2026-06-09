@@ -5,6 +5,7 @@
 import { SourceLocation } from './location';
 import { ResolvedInfo } from '../resolver/types';
 import { UnitExpression } from './unit-systems';
+import { DimensionAggregationSelection } from './dimensions';
 
 export interface Expression {
   type: string;
@@ -102,6 +103,11 @@ export interface AggregationExpression extends Expression {
   type: 'AggregationExpression';
   aggregationType: 'som' | 'aantal' | 'maximum' | 'minimum' | 'eerste' | 'laatste';
   target: Expression | Expression[];
+  dimensionSelection?: DimensionAggregationSelection;
+  /**
+   * @deprecated Use dimensionSelection. Kept for compatibility with older
+   * tests/callers that constructed range aggregations manually.
+   */
   dimensionRange?: {
     dimension: string;
     from: string;

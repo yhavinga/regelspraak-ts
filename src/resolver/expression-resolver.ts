@@ -40,7 +40,12 @@ import {
 import { ParameterDefinition } from '../ast/parameters';
 import { DomainModel } from '../ast/domain-model';
 import { FeitType, Rol } from '../ast/feittype';
-import { Dimension, DimensionedAttributeReference, DimensionCoordinate } from '../ast/dimensions';
+import {
+  Dimension,
+  DimensionAggregationSelection,
+  DimensionedAttributeReference,
+  DimensionCoordinate
+} from '../ast/dimensions';
 import { ResolvedInfo, ResolvedSymbol, ResolvedPathSegment, SymbolKind, TimelineInfo } from './types';
 import { KenmerkEquivalenceRegistry } from '../kenmerk-equivalence-registry';
 
@@ -1444,6 +1449,20 @@ function resolveAggregationExpression(
     resolveExpressionInternal(expr.target, context, maps);
   }
 
+  if (!expr.dimensionSelection && expr.dimensionRange) {
+    expr.dimensionSelection = {
+      type: 'DimensionAggregationSelection',
+      kind: 'range',
+      dimensionName: expr.dimensionRange.dimension || undefined,
+      fromLabel: expr.dimensionRange.from,
+      toLabel: expr.dimensionRange.to
+    };
+  }
+
+  if (expr.dimensionSelection) {
+    resolveDimensionAggregationSelection(expr, expr.dimensionSelection, maps);
+  }
+
   // Aggregation result type depends on aggregationType
   switch (expr.aggregationType) {
     case 'som':
@@ -1471,6 +1490,271 @@ function resolveAggregationExpression(
   }
 
   return expr;
+}
+
+function resolveDimensionAggregationSelection(
+  expr: AggregationExpression,
+  selection: DimensionAggregationSelection,
+  maps: ResolutionMaps
+): void {
+  if (Array.isArray(expr.target)) {
+    throw new Error('Dimension aggregation requires a single dimensioned attribute target');
+  }
+
+  const attrSpec = getResolvedAggregationAttribute(expr.target, maps);
+  if (!attrSpec.dimensions || attrSpec.dimensions.length === 0) {
+    throw new Error(`Attribute '${attrSpec.name}' is not dimensioned`);
+  }
+
+  const dimension = selection.dimensionName
+    ? resolveSelectedDimensionByName(selection.dimensionName, attrSpec.dimensions, maps, attrSpec.name)
+    : inferSelectedDimensionFromLabels(selection, attrSpec.dimensions, maps, attrSpec.name);
+
+  const labels = resolveSelectedDimensionLabels(selection, dimension);
+  if (labels.length === 0) {
+    throw new Error(`Dimension selection for '${dimension.name}' is empty`);
+  }
+
+  selection.resolvedDimension = dimension.name;
+  selection.resolvedLabels = labels;
+  selection.fixedCoordinates = resolveFixedAggregationCoordinates(
+    selection,
+    dimension,
+    attrSpec.dimensions,
+    maps,
+    attrSpec.name
+  );
+}
+
+function getResolvedAggregationAttribute(
+  target: Expression,
+  maps: ResolutionMaps
+): AttributeSpecification {
+  const resolvedPath = target.resolved?.resolvedPath;
+  const lastPathSegment = resolvedPath?.[resolvedPath.length - 1];
+  if (!lastPathSegment) {
+    throw new Error('Cannot resolve dimension aggregation target');
+  }
+
+  const attrMap = maps.attributes.get(lastPathSegment.sourceType) ||
+    maps.attributes.get(lastPathSegment.sourceType.toLowerCase());
+  const attrSpec = attrMap?.get(lastPathSegment.resolvedName) ||
+    attrMap?.get(lastPathSegment.resolvedName.toLowerCase());
+
+  if (!attrSpec) {
+    throw new Error(`Cannot resolve attribute '${lastPathSegment.resolvedName}' for dimension aggregation`);
+  }
+
+  return attrSpec;
+}
+
+function resolveSelectedDimensionByName(
+  rawName: string,
+  declaredDimensionNames: string[],
+  maps: ResolutionMaps,
+  attributeName: string
+): Dimension {
+  const normalizedRawName = normalizeDimensionName(rawName);
+  const matches = declaredDimensionNames
+    .map(name => maps.dimensions.get(name) || maps.dimensions.get(name.toLowerCase()))
+    .filter((dimension): dimension is Dimension => !!dimension)
+    .filter(dimension =>
+      normalizeDimensionName(dimension.name) === normalizedRawName ||
+      normalizeDimensionName(dimension.plural) === normalizedRawName
+    );
+
+  if (matches.length === 0) {
+    throw new Error(
+      `Dimension '${rawName}' is not declared on attribute '${attributeName}'. ` +
+      `Declared dimensions: [${declaredDimensionNames.join(', ')}]`
+    );
+  }
+  if (matches.length > 1) {
+    throw new Error(`Ambiguous dimension '${rawName}' on attribute '${attributeName}'`);
+  }
+  return matches[0];
+}
+
+function inferSelectedDimensionFromLabels(
+  selection: DimensionAggregationSelection,
+  declaredDimensionNames: string[],
+  maps: ResolutionMaps,
+  attributeName: string
+): Dimension {
+  const labels = labelsMentionedBySelection(selection);
+  if (labels.length === 0) {
+    throw new Error(`Dimension selection for '${attributeName}' must name a dimension`);
+  }
+
+  const matches = declaredDimensionNames
+    .map(name => maps.dimensions.get(name) || maps.dimensions.get(name.toLowerCase()))
+    .filter((dimension): dimension is Dimension => !!dimension)
+    .filter(dimension => labels.every(label => findDimensionLabel(dimension, label)));
+
+  if (matches.length === 0) {
+    throw new Error(
+      `Dimension labels [${labels.join(', ')}] do not belong to any dimension declared on attribute '${attributeName}'`
+    );
+  }
+  if (matches.length > 1) {
+    throw new Error(
+      `Ambiguous dimension labels [${labels.join(', ')}] for attribute '${attributeName}'`
+    );
+  }
+  return matches[0];
+}
+
+function resolveSelectedDimensionLabels(
+  selection: DimensionAggregationSelection,
+  dimension: Dimension
+): string[] {
+  switch (selection.kind) {
+    case 'all':
+      return dimension.labels
+        .sort((a, b) => a.position - b.position)
+        .map(label => label.label);
+    case 'range':
+      if (!selection.fromLabel || !selection.toLabel) {
+        throw new Error(`Range selection for '${dimension.name}' requires two labels`);
+      }
+      return labelsInDeclaredRange(dimension, selection.fromLabel, selection.toLabel);
+    case 'set':
+      if (!selection.labels || selection.labels.length === 0) {
+        throw new Error(`Set selection for '${dimension.name}' requires labels`);
+      }
+      return resolveExplicitLabels(dimension, selection.labels);
+    default:
+      throw new Error(`Unknown dimension selection kind: ${(selection as any).kind}`);
+  }
+}
+
+function labelsInDeclaredRange(dimension: Dimension, fromLabel: string, toLabel: string): string[] {
+  const from = findDimensionLabel(dimension, fromLabel);
+  const to = findDimensionLabel(dimension, toLabel);
+  if (!from || !to) {
+    const missing = [from ? undefined : fromLabel, to ? undefined : toLabel].filter(Boolean).join(', ');
+    throw new Error(`Unknown label(s) [${missing}] for dimension '${dimension.name}'`);
+  }
+  if (from.position > to.position) {
+    throw new Error(
+      `Invalid range for dimension '${dimension.name}': '${from.label}' comes after '${to.label}'`
+    );
+  }
+
+  return dimension.labels
+    .filter(label => label.position >= from.position && label.position <= to.position)
+    .sort((a, b) => a.position - b.position)
+    .map(label => label.label);
+}
+
+function resolveExplicitLabels(dimension: Dimension, labels: string[]): string[] {
+  const resolved: string[] = [];
+  const seen = new Set<string>();
+
+  for (const rawLabel of labels) {
+    const label = findDimensionLabel(dimension, rawLabel);
+    if (!label) {
+      throw new Error(`Unknown label '${rawLabel}' for dimension '${dimension.name}'`);
+    }
+    const key = label.label.toLowerCase();
+    if (seen.has(key)) {
+      throw new Error(`Duplicate label '${label.label}' in dimension selection for '${dimension.name}'`);
+    }
+    seen.add(key);
+    resolved.push(label.label);
+  }
+
+  return resolved;
+}
+
+function resolveFixedAggregationCoordinates(
+  selection: DimensionAggregationSelection,
+  aggregationDimension: Dimension,
+  declaredDimensionNames: string[],
+  maps: ResolutionMaps,
+  attributeName: string
+): DimensionCoordinate[] {
+  const fixedLabels = selection.fixedLabels ?? [];
+  if (fixedLabels.length === 0) {
+    return [];
+  }
+
+  const coordinates: DimensionCoordinate[] = [];
+  const usedDimensions = new Set<string>();
+
+  for (const rawLabel of fixedLabels) {
+    const dimension = resolveFixedLabelDimension(rawLabel, declaredDimensionNames, maps, attributeName);
+    if (dimension.name.toLowerCase() === aggregationDimension.name.toLowerCase()) {
+      throw new Error(
+        `Dimension label '${rawLabel}' fixes aggregation dimension '${aggregationDimension.name}' on '${attributeName}'`
+      );
+    }
+    if (usedDimensions.has(dimension.name.toLowerCase())) {
+      throw new Error(`Duplicate fixed dimension '${dimension.name}' in aggregation target '${attributeName}'`);
+    }
+    const label = findDimensionLabel(dimension, rawLabel);
+    if (!label) {
+      throw new Error(`Internal error: label '${rawLabel}' not found in dimension '${dimension.name}'`);
+    }
+
+    usedDimensions.add(dimension.name.toLowerCase());
+    coordinates.push({
+      dimension: dimension.name,
+      label: label.label,
+      sourceStyle: dimension.usageStyle,
+      preposition: dimension.preposition
+    });
+  }
+
+  const dimensionOrder = new Map(declaredDimensionNames.map((name, index) => [name.toLowerCase(), index]));
+  coordinates.sort((a, b) =>
+    (dimensionOrder.get(a.dimension.toLowerCase()) ?? 999) -
+    (dimensionOrder.get(b.dimension.toLowerCase()) ?? 999)
+  );
+
+  return coordinates;
+}
+
+function resolveFixedLabelDimension(
+  rawLabel: string,
+  declaredDimensionNames: string[],
+  maps: ResolutionMaps,
+  attributeName: string
+): Dimension {
+  const matches = declaredDimensionNames
+    .map(name => maps.dimensions.get(name) || maps.dimensions.get(name.toLowerCase()))
+    .filter((dimension): dimension is Dimension => !!dimension)
+    .filter(dimension => !!findDimensionLabel(dimension, rawLabel));
+
+  if (matches.length === 0) {
+    throw new Error(`Unknown fixed dimension label '${rawLabel}' in aggregation target '${attributeName}'`);
+  }
+  if (matches.length > 1) {
+    throw new Error(`Ambiguous fixed dimension label '${rawLabel}' in aggregation target '${attributeName}'`);
+  }
+  return matches[0];
+}
+
+function labelsMentionedBySelection(selection: DimensionAggregationSelection): string[] {
+  if (selection.kind === 'range') {
+    return [selection.fromLabel, selection.toLabel].filter((label): label is string => !!label);
+  }
+  if (selection.kind === 'set') {
+    return selection.labels ?? [];
+  }
+  return [];
+}
+
+function findDimensionLabel(dimension: Dimension, rawLabel: string): { position: number; label: string } | undefined {
+  return dimension.labels.find(label => label.label.toLowerCase() === rawLabel.toLowerCase());
+}
+
+function normalizeDimensionName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/^(de|het|een)\s+/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function resolveAfrondingExpression(

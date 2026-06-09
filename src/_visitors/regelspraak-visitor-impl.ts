@@ -98,7 +98,7 @@ import { UnitSystemDefinition, UnitDefinition, UnitConversion, UnitExpression } 
 import { unitExpression, unitExpressionToString } from '../units/unit-expression';
 import { normalizeDagsoortName } from '../ast/dagsoort';
 import { createSourceLocation } from '../ast/location';
-import { Dimension, DimensionLabel, DimensionedAttributeReference } from '../ast/dimensions';
+import { Dimension, DimensionAggregationSelection, DimensionLabel, DimensionedAttributeReference } from '../ast/dimensions';
 import { FeitType, Rol, RoleCardinality } from '../ast/feittype';
 import { DomainModel } from '../ast/domain-model';
 import {
@@ -2408,6 +2408,10 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         functionName = 'maximum_van';
       } else if (text.includes('minimale')) {
         functionName = 'minimum_van';
+      } else if (text.includes('eerste')) {
+        functionName = 'eerste_van';
+      } else if (text.includes('laatste')) {
+        functionName = 'laatste_van';
       }
       // Note: 'totaal' removed - grammar doesn't allow it in dimensieAggExpr
     }
@@ -2425,18 +2429,19 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
     // Get attribute name and strip article
     const attrName = this.extractTextWithSpaces(attrMetLidwoordCtx);
-    const strippedAttrName = this._stripArticle(attrName);
+    const aggregationTarget = this.extractDimensionAggregationTarget(attrName);
 
     // Create AttributeReference for the attribute
     const attrRef: AttributeReference = {
       type: 'AttributeReference',
-      path: [strippedAttrName]
+      path: [aggregationTarget.attributeName]
     };
 
     // Look for dimensieSelectie context which contains the collection reference
     const dimensieSelectieCtx = ctx.dimensieSelectie ? ctx.dimensieSelectie() : null;
 
-    if (dimensieSelectieCtx && dimensieSelectieCtx.aggregerenOverAlleDimensies &&
+    if (dimensieSelectieCtx && this.isCollectionAggregationSelection(dimensieSelectieCtx) &&
+      dimensieSelectieCtx.aggregerenOverAlleDimensies &&
       dimensieSelectieCtx.aggregerenOverAlleDimensies()) {
       // Has "alle" pattern - get the collection name
       const aggCtx = dimensieSelectieCtx.aggregerenOverAlleDimensies();
@@ -2464,6 +2469,21 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       }
     }
 
+    if (dimensieSelectieCtx) {
+      const dimensionSelection = this.parseDimensionAggregationSelection(dimensieSelectieCtx);
+      if (aggregationTarget.fixedLabels.length > 0) {
+        dimensionSelection.fixedLabels = aggregationTarget.fixedLabels;
+      }
+      const node = {
+        type: 'AggregationExpression',
+        aggregationType: functionName.replace('_van', ''),
+        target: attrRef,
+        dimensionSelection
+      } as any;
+      this.setLocation(node, ctx);
+      return node;
+    }
+
     // No collection specified, just return function with attribute
     const node = {
       type: 'FunctionCall',
@@ -2472,6 +2492,94 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     } as FunctionCall;
     this.setLocation(node, ctx);
     return node;
+  }
+
+  private extractDimensionAggregationTarget(rawAttributeText: string): { attributeName: string; fixedLabels: string[] } {
+    let attributeName = this._stripArticle(rawAttributeText);
+    const fixedLabels: string[] = [];
+
+    for (const [label] of this.registeredDimensionLabels) {
+      const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const wordBoundaryRegex = new RegExp(`(^|\\s)${escapedLabel}(\\s|$)`, 'i');
+      if (wordBoundaryRegex.test(attributeName)) {
+        fixedLabels.push(label);
+        attributeName = this.stripDanglingDimensionPreposition(
+          attributeName.replace(wordBoundaryRegex, ' ').trim().replace(/\s+/g, ' ')
+        );
+      }
+    }
+
+    return { attributeName, fixedLabels };
+  }
+
+  private isCollectionAggregationSelection(dimensieSelectieCtx: any): boolean {
+    return !!(dimensieSelectieCtx.VAN && dimensieSelectieCtx.VAN());
+  }
+
+  private parseDimensionAggregationSelection(dimensieSelectieCtx: any): DimensionAggregationSelection {
+    const allCtx = dimensieSelectieCtx.aggregerenOverAlleDimensies
+      ? dimensieSelectieCtx.aggregerenOverAlleDimensies()
+      : null;
+    if (allCtx) {
+      if (allCtx.predicaat && allCtx.predicaat()) {
+        throw new Error('Predicates in dimension aggregation selections are not supported');
+      }
+      return {
+        type: 'DimensionAggregationSelection',
+        kind: 'all',
+        dimensionName: this.extractTextWithSpaces(allCtx.naamwoord())
+      };
+    }
+
+    const rangeCtx = dimensieSelectieCtx.aggregerenOverVerzameling
+      ? dimensieSelectieCtx.aggregerenOverVerzameling()
+      : null;
+    if (rangeCtx) {
+      const parts = this.extractNaamwoordParts(rangeCtx);
+      if (parts.length !== 3) {
+        throw new Error('Dimension range selection requires a dimension name and two labels');
+      }
+      return {
+        type: 'DimensionAggregationSelection',
+        kind: 'range',
+        dimensionName: parts[0],
+        fromLabel: parts[1],
+        toLabel: parts[2]
+      };
+    }
+
+    const setCtx = dimensieSelectieCtx.aggregerenOverBereik
+      ? dimensieSelectieCtx.aggregerenOverBereik()
+      : null;
+    if (setCtx) {
+      const parts = this.extractNaamwoordParts(setCtx);
+      if (parts.length < 2) {
+        throw new Error('Dimension set selection requires a dimension name and at least one label');
+      }
+      return {
+        type: 'DimensionAggregationSelection',
+        kind: 'set',
+        dimensionName: parts[0],
+        labels: parts.slice(1)
+      };
+    }
+
+    throw new Error('Unknown dimension aggregation selection');
+  }
+
+  private extractNaamwoordParts(ctx: any): string[] {
+    const list = ctx.naamwoord_list ? ctx.naamwoord_list() : [];
+    if (list.length > 0) {
+      return list.map((part: any) => this.extractTextWithSpaces(part));
+    }
+
+    const parts: string[] = [];
+    for (let index = 0; ; index++) {
+      const part = ctx.naamwoord ? ctx.naamwoord(index) : null;
+      if (!part) break;
+      parts.push(this.extractTextWithSpaces(part));
+    }
+    return parts;
   }
 
   visitDimensieRangeAggExpr(ctx: any): Expression {
@@ -2510,6 +2618,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const bezieldeCtx = ctx.bezieldeReferentie ? ctx.bezieldeReferentie() : null;
 
     let attrRef: AttributeReference;
+    let fixedLabels: string[] = [];
 
     if (attrRefCtx) {
       // Full attribuutReferentie: "de belasting van de persoon"
@@ -2517,6 +2626,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       const visited = this.visitAttribuutReferentie(attrRefCtx);
       if (visited.type === 'DimensionedAttributeReference') {
         attrRef = (visited as any).baseAttribute;
+        fixedLabels = (visited as any).dimensionLabels || [];
       } else if (visited.type === 'AttributeReference') {
         attrRef = visited as AttributeReference;
       } else if (visited.type === 'SubselectieExpression') {
@@ -2533,16 +2643,21 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       const naamwoordCtx = bezieldeCtx.naamwoord();
       const fullAttrText = naamwoordCtx ? this.extractTextWithSpaces(naamwoordCtx) : '';
       const cleanAttr = fullAttrText.replace(/^zijn\s+/i, '').trim();
-      attrRef = { type: 'AttributeReference', path: ['self', cleanAttr] };
+      const aggregationTarget = this.extractDimensionAggregationTarget(cleanAttr);
+      fixedLabels = aggregationTarget.fixedLabels;
+      attrRef = { type: 'AttributeReference', path: ['self', aggregationTarget.attributeName] };
     } else if (attrMetLidwoordCtx) {
       const attrName = this.extractTextWithSpaces(attrMetLidwoordCtx);
       // If starts with pronoun, treat as self-bound
       if (/^zijn\s+/i.test(attrName)) {
         const clean = attrName.replace(/^zijn\s+/i, '').trim();
-        attrRef = { type: 'AttributeReference', path: ['self', clean] };
+        const aggregationTarget = this.extractDimensionAggregationTarget(clean);
+        fixedLabels = aggregationTarget.fixedLabels;
+        attrRef = { type: 'AttributeReference', path: ['self', aggregationTarget.attributeName] };
       } else {
-        const strippedAttrName = this._stripArticle(attrName);
-        attrRef = { type: 'AttributeReference', path: [strippedAttrName] };
+        const aggregationTarget = this.extractDimensionAggregationTarget(attrName);
+        fixedLabels = aggregationTarget.fixedLabels;
+        attrRef = { type: 'AttributeReference', path: [aggregationTarget.attributeName] };
       }
     } else {
       throw new Error('Expected attribute reference in DimensieRangeAggExpr');
@@ -2575,10 +2690,21 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     }
 
     // Create the aggregation with dimension range
+    const dimensionSelection: DimensionAggregationSelection = {
+      type: 'DimensionAggregationSelection',
+      kind: 'range',
+      fromLabel,
+      toLabel
+    };
+    if (fixedLabels.length > 0) {
+      dimensionSelection.fixedLabels = fixedLabels;
+    }
+
     const node = {
       type: 'AggregationExpression',
       aggregationType: functionName.replace('_van', ''),
       target: attrRef,
+      dimensionSelection,
       dimensionRange: {
         dimension: inferredAxis || '',
         from: fromLabel,

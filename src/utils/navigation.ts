@@ -347,7 +347,11 @@ export function setValueAtPath(
 
   // Set the attribute value
   const objectData = navigationResult.targetObject.value as Record<string, Value>;
-  objectData[navigationResult.attributeName] = value;
+  const objectType = (navigationResult.targetObject as any).objectType ||
+    (navigationResult.targetObject.value as any).__type;
+  objectData[navigationResult.attributeName] = objectType
+    ? ctx.prepareAttributeValue(objectType, navigationResult.attributeName, value)
+    : value;
 
   return { success: true };
 }

@@ -248,10 +248,23 @@ export class RuleExecutor implements IRuleExecutor {
     } else {
       // Regular value - store directly
       const objData = currentObj.value as Record<string, Value>;
-      objData[attributeName] = value;
+      objData[attributeName] = this.prepareAttributeValueForObject(currentObj, attributeName, value, context);
     }
 
     return { success: true };
+  }
+
+  private prepareAttributeValueForObject(
+    objectValue: Value,
+    attributeName: string,
+    value: Value,
+    context: RuntimeContext
+  ): Value {
+    const objectType = (objectValue as any).objectType || (objectValue.value as any).__type;
+    if (!objectType || !(context as Context).prepareAttributeValue) {
+      return value;
+    }
+    return (context as Context).prepareAttributeValue(objectType, attributeName, value);
   }
 
   /**
@@ -669,7 +682,7 @@ export class RuleExecutor implements IRuleExecutor {
         } else {
           // Regular value - store directly
           const objectData = objectValue.value as Record<string, Value>;
-          objectData[attributeName] = value;
+          objectData[attributeName] = this.prepareAttributeValueForObject(objectValue, attributeName, value, context);
         }
       } else {
         // Fall back to getting all objects of this type
@@ -697,7 +710,7 @@ export class RuleExecutor implements IRuleExecutor {
             } else {
               // Regular value - store directly
               const objectData = obj.value as Record<string, Value>;
-              objectData[attributeName] = value;
+              objectData[attributeName] = this.prepareAttributeValueForObject(obj, attributeName, value, context);
             }
           }
         }
@@ -1679,7 +1692,7 @@ export class RuleExecutor implements IRuleExecutor {
         const ctx = context as Context;
         if (ctx.current_instance) {
           const objectData = ctx.current_instance.value as Record<string, Value>;
-          objectData[attrName] = value;
+          objectData[attrName] = this.prepareAttributeValueForObject(ctx.current_instance, attrName, value, context);
         }
       }
     }

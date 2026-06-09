@@ -1,4 +1,5 @@
-import { IEvaluator, Value, RuntimeContext } from '../interfaces';
+import { IEvaluator, RuntimeContext, Value, isDimensionedValue } from '../interfaces';
+import { Dimension, DimensionCoordinate } from '../ast/dimensions';
 import { Expression, NumberLiteral, StringLiteral, BinaryExpression, UnaryExpression, VariableReference, SelfReference, ParameterReference, FunctionCall, AggregationExpression, SubselectieExpression, RegelStatusExpression, AllAttributesExpression, Predicaat, KenmerkPredicaat, AttributeComparisonPredicaat, AttributeReference, SamengesteldeVoorwaarde, QuantifierType, VergelijkingInPredicaat } from '../ast/expressions';
 import { AggregationEngine } from './aggregation-engine';
 import { TimelineEvaluator } from './timeline-evaluator';
@@ -2835,66 +2836,52 @@ export class ExpressionEvaluator implements IEvaluator {
     // Access the dimensional attribute value
     const objectData = targetObject.value as Record<string, any>;
 
-    // Check if the attribute has dimensional values
     const attrValue = objectData[attributeName];
-    if (!attrValue || typeof attrValue !== 'object') {
-      // Attribute doesn't have dimensional values, return null
+    if (!attrValue) {
       return { type: 'null', value: null };
     }
 
-    // Navigate through the dimension structure based on the labels
-    // The test expects a nested structure like: inkomen['huidig jaar']['netto']
-    let currentValue = attrValue;
+    if (!isDimensionedValue(attrValue)) {
+      throw new Error(`Attribute '${attributeName}' requires a dimensioned value`);
+    }
 
-    // Process dimension labels in order using the registry to determine their axes
-    const registry = context.dimensionRegistry;
-    const processedAxes = new Set<string>();
+    const coordinates = this.resolveDimensionedReferenceCoordinates(expr, context);
+    const cell = attrValue.value.find(candidate =>
+      coordinates.every(coordinate =>
+        candidate.coordinates[coordinate.dimension]?.toLowerCase() === coordinate.label.toLowerCase()
+      )
+    );
 
-    // Sort labels by their dimension axis to ensure proper navigation order
-    // Prepositional dimensions (with preposition) usually come first, then adjectival
-    const sortedLabels = [...expr.dimensionLabels].sort((a, b) => {
-      const axisA = registry.findAxisForLabel(a);
-      const axisB = registry.findAxisForLabel(b);
+    return cell?.value ?? { type: 'null', value: null };
+  }
 
-      if (!axisA || !axisB) return 0;
+  private resolveDimensionedReferenceCoordinates(expr: any, context: RuntimeContext): DimensionCoordinate[] {
+    if (expr.coordinates && expr.coordinates.length > 0) {
+      return expr.coordinates;
+    }
 
-      // Prepositional dimensions come first (they're typically the outer structure)
-      const isPrepA = registry.isPrepositional(axisA);
-      const isPrepB = registry.isPrepositional(axisB);
-
-      if (isPrepA && !isPrepB) return -1;
-      if (!isPrepA && isPrepB) return 1;
-      return 0;
-    });
-
-    for (const label of sortedLabels) {
-      const axisName = registry.findAxisForLabel(label);
-      if (axisName && !processedAxes.has(axisName)) {
-        processedAxes.add(axisName);
-
-        if (currentValue && typeof currentValue === 'object' && label in currentValue) {
-          currentValue = currentValue[label];
-        } else {
-          // Label not found in current value structure
-          return { type: 'null', value: null };
-        }
+    const labels = expr.dimensionLabels || [];
+    return labels.map((label: string) => {
+      const dimensions = (context.domainModel.dimensions || []).filter(dimension =>
+        this.findDimensionLabel(dimension, label)
+      );
+      if (dimensions.length === 0) {
+        throw new Error(`Unknown dimension label '${label}'`);
       }
-    }
+      if (dimensions.length > 1) {
+        throw new Error(`Ambiguous dimension label '${label}'`);
+      }
+      return {
+        dimension: dimensions[0].name,
+        label: this.findDimensionLabel(dimensions[0], label)!.label,
+        sourceStyle: dimensions[0].usageStyle,
+        preposition: dimensions[0].preposition
+      };
+    });
+  }
 
-    // Convert the final value to a proper Value type
-    if (typeof currentValue === 'number') {
-      return { type: 'number', value: currentValue };
-    } else if (typeof currentValue === 'string') {
-      return { type: 'string', value: currentValue };
-    } else if (currentValue === null || currentValue === undefined) {
-      return { type: 'null', value: null };
-    } else if (currentValue && typeof currentValue === 'object' && 'type' in currentValue) {
-      // Already a proper Value object
-      return currentValue as Value;
-    } else {
-      // Return as-is for complex types
-      return { type: 'object', value: currentValue };
-    }
+  private findDimensionLabel(dimension: Dimension, label: string): { label: string } | undefined {
+    return dimension.labels.find(candidate => candidate.label.toLowerCase() === label.toLowerCase());
   }
 
   /**

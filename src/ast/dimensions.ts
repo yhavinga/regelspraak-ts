@@ -63,3 +63,23 @@ export interface DimensionedAttributeReference {
    */
   dimensionLabels?: string[]; // e.g., ["bruto", "huidig jaar"]
 }
+
+export type DimensionAggregationSelectionKind = 'all' | 'range' | 'set';
+
+export interface DimensionAggregationSelection {
+  type: 'DimensionAggregationSelection';
+  kind: DimensionAggregationSelectionKind;
+  /**
+   * Dimension name or plural exactly as written in the selection. Older
+   * range syntax without an explicit dimension leaves this undefined and is
+   * resolved from declared labels on the target attribute.
+   */
+  dimensionName?: string;
+  fromLabel?: string;
+  toLabel?: string;
+  labels?: string[];
+  fixedLabels?: string[];
+  fixedCoordinates?: DimensionCoordinate[];
+  resolvedDimension?: string;
+  resolvedLabels?: string[];
+}

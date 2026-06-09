@@ -1,4 +1,5 @@
 import { Engine, Context } from '../../src';
+import { DimensionedRuntimeValue } from '../../src/interfaces';
 
 describe('Engine - Dimension Expression Evaluation', () => {
   let engine: Engine;
@@ -33,15 +34,26 @@ De belasting van de persoon moet berekend worden als het netto inkomen van huidi
       type: 'object',
       value: {
         'inkomen': {
-          'huidig jaar': {
-            'bruto': 100000,
-            'netto': 70000
-          },
-          'vorig jaar': {
-            'bruto': 90000,
-            'netto': 63000
-          }
-        }
+          type: 'dimensioned',
+          value: [
+            {
+              coordinates: { jaardimensie: 'huidig jaar', brutonettodimensie: 'bruto' },
+              value: { type: 'number', value: 100000 }
+            },
+            {
+              coordinates: { jaardimensie: 'huidig jaar', brutonettodimensie: 'netto' },
+              value: { type: 'number', value: 70000 }
+            },
+            {
+              coordinates: { jaardimensie: 'vorig jaar', brutonettodimensie: 'bruto' },
+              value: { type: 'number', value: 90000 }
+            },
+            {
+              coordinates: { jaardimensie: 'vorig jaar', brutonettodimensie: 'netto' },
+              value: { type: 'number', value: 63000 }
+            }
+          ]
+        } as DimensionedRuntimeValue
       }
     };
     
@@ -87,9 +99,18 @@ Het verschil van de persoon moet berekend worden als het bruto salaris van de pe
       type: 'object',
       value: {
         'salaris': {
-          'bruto': 50000,
-          'netto': 35000
-        }
+          type: 'dimensioned',
+          value: [
+            {
+              coordinates: { brutonettodimensie: 'bruto' },
+              value: { type: 'number', value: 50000 }
+            },
+            {
+              coordinates: { brutonettodimensie: 'netto' },
+              value: { type: 'number', value: 35000 }
+            }
+          ]
+        } as DimensionedRuntimeValue
       }
     };
     
@@ -135,9 +156,18 @@ Het inkomen volgend jaar van de persoon moet berekend worden als 0.
       type: 'object',
       value: {
         'inkomen': {
-          'huidig jaar': 100000,
-          'vorig jaar': 90000
-        }
+          type: 'dimensioned',
+          value: [
+            {
+              coordinates: { jaardimensie: 'huidig jaar' },
+              value: { type: 'number', value: 100000 }
+            },
+            {
+              coordinates: { jaardimensie: 'vorig jaar' },
+              value: { type: 'number', value: 90000 }
+            }
+          ]
+        } as DimensionedRuntimeValue
       }
     };
     
