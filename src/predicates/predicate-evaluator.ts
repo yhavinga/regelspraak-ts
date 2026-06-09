@@ -18,10 +18,12 @@ import { QuantifierType } from '../ast/expressions';
 import { Value, RuntimeContext } from '../interfaces';
 import { Expression } from '../ast/expressions';
 import { ExpressionEvaluator } from '../evaluators/expression-evaluator';
-import Decimal from 'decimal.js';
+import { UnitRegistry } from '../units/unit-registry';
+import { compareRuntimeValues } from '../units/value-semantics';
 
 export class PredicateEvaluator {
   private expressionEvaluator: ExpressionEvaluator;
+  private unitRegistry = new UnitRegistry();
 
   constructor(expressionEvaluator: ExpressionEvaluator) {
     this.expressionEvaluator = expressionEvaluator;
@@ -198,7 +200,7 @@ export class PredicateEvaluator {
     const compValue = this.expressionEvaluator.evaluate(predicate.value, context);
 
     // Perform comparison
-    return this.compareValues(attrValue, predicate.operator, compValue);
+    return this.compareValues(attrValue, predicate.operator, compValue, context);
   }
 
   /**
@@ -212,66 +214,15 @@ export class PredicateEvaluator {
     const leftValue = this.expressionEvaluator.evaluate(predicate.left, context);
     const rightValue = this.expressionEvaluator.evaluate(predicate.right, context);
 
-    return this.compareValues(leftValue, predicate.operator, rightValue);
+    return this.compareValues(leftValue, predicate.operator, rightValue, context);
   }
 
   /**
    * Helper: Compare two values
    */
-  private compareValues(left: Value, operator: string, right: Value): boolean {
-    // Handle different value types
-    if (left.type === 'number' && right.type === 'number') {
-      const leftNum = new Decimal(left.value);
-      const rightNum = new Decimal(right.value);
-
-      switch (operator) {
-        case '==': return leftNum.equals(rightNum);
-        case '!=': return !leftNum.equals(rightNum);
-        case '>': return leftNum.greaterThan(rightNum);
-        case '<': return leftNum.lessThan(rightNum);
-        case '>=': return leftNum.greaterThanOrEqualTo(rightNum);
-        case '<=': return leftNum.lessThanOrEqualTo(rightNum);
-        default: return false;
-      }
-    }
-
-    if (left.type === 'string' && right.type === 'string') {
-      switch (operator) {
-        case '==': return left.value === right.value;
-        case '!=': return left.value !== right.value;
-        case '>': return left.value > right.value;
-        case '<': return left.value < right.value;
-        case '>=': return left.value >= right.value;
-        case '<=': return left.value <= right.value;
-        default: return false;
-      }
-    }
-
-    if (left.type === 'boolean' && right.type === 'boolean') {
-      switch (operator) {
-        case '==': return left.value === right.value;
-        case '!=': return left.value !== right.value;
-        default: return false;
-      }
-    }
-
-    if (left.type === 'date' && right.type === 'date') {
-      const leftDate = new Date(left.value);
-      const rightDate = new Date(right.value);
-      
-      switch (operator) {
-        case '==': return leftDate.getTime() === rightDate.getTime();
-        case '!=': return leftDate.getTime() !== rightDate.getTime();
-        case '>': return leftDate > rightDate;
-        case '<': return leftDate < rightDate;
-        case '>=': return leftDate >= rightDate;
-        case '<=': return leftDate <= rightDate;
-        default: return false;
-      }
-    }
-
-    // Type mismatch
-    return false;
+  private compareValues(left: Value, operator: string, right: Value, context: RuntimeContext): boolean {
+    const registry = (context as any).unitRegistry || this.unitRegistry;
+    return compareRuntimeValues(left, operator, right, registry);
   }
 
   /**

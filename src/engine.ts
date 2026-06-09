@@ -47,6 +47,7 @@ export class Engine implements IEngine {
         const rules = definitions.filter((def: any) => def.type === 'Rule');
         const objectTypes = definitions.filter((def: any) => def.type === 'ObjectTypeDefinition');
         const parameters = definitions.filter((def: any) => def.type === 'ParameterDefinition');
+        const domains = definitions.filter((def: any) => def.type === 'DomainDefinition');
         const unitSystems = definitions.filter((def: any) => def.type === 'UnitSystemDefinition');
         const dimensions = definitions.filter((def: any) => def.type === 'Dimension');
         const feittypen = definitions.filter((def: any) => def.type === 'FeitType');
@@ -60,6 +61,7 @@ export class Engine implements IEngine {
             rules,
             objectTypes,
             parameters,
+            domains,
             unitSystems,
             dimensions,
             feittypen,
@@ -556,12 +558,13 @@ export class Engine implements IEngine {
           }
         }
         // Also update the domain model reference
-        if (!ctx.domainModel || ctx.domainModel.dimensions.length === 0) {
-          ctx.domainModel = model;
-        }
+        ctx.domainModel = model;
         // Re-initialize kenmerk registries with the updated model
         if ((ctx as Context).initializeKenmerkRegistries) {
           (ctx as Context).initializeKenmerkRegistries();
+        }
+        if ((ctx as Context).applyDeclaredUnitsToLoadedValues) {
+          (ctx as Context).applyDeclaredUnitsToLoadedValues();
         }
       }
     } else {
@@ -598,6 +601,9 @@ export class Engine implements IEngine {
   }
 
   private convertToValue(value: any): Value {
+    if (value && typeof value === 'object' && typeof value.type === 'string' && 'value' in value) {
+      return value as Value;
+    }
     if (typeof value === 'number') {
       return { type: 'number', value };
     } else if (typeof value === 'string') {
@@ -647,7 +653,10 @@ export class Engine implements IEngine {
     // Second pass: compute toBaseFactor for each unit via graph traversal
     // A unit without outgoing conversion edge is a "base" unit (toBaseFactor = 1)
     // For units with conversions, walk the chain accumulating factors
-    const computeToBaseFactor = (unitName: string, visited: Set<string>): number | undefined => {
+    const computeUnitConversionBase = (
+      unitName: string,
+      visited: Set<string>
+    ): { factor: number; baseUnitName: string } | undefined => {
       // Prevent infinite loops
       if (visited.has(unitName)) {
         return undefined;
@@ -657,7 +666,7 @@ export class Engine implements IEngine {
       const conversion = conversionMap.get(unitName);
       if (!conversion) {
         // No outgoing conversion - this is a base unit
-        return 1;
+        return { factor: 1, baseUnitName: unitName };
       }
 
       // Resolve the target unit name (might be abbreviation)
@@ -668,18 +677,21 @@ export class Engine implements IEngine {
       }
 
       // Recursively compute the target's toBaseFactor
-      const targetFactor = computeToBaseFactor(targetUnit.name, visited);
-      if (targetFactor === undefined) {
+      const targetBase = computeUnitConversionBase(targetUnit.name, visited);
+      if (targetBase === undefined) {
         return undefined;
       }
 
       // Our toBaseFactor = conversion.factor * targetFactor
-      return conversion.factor * targetFactor;
+      return {
+        factor: conversion.factor * targetBase.factor,
+        baseUnitName: targetBase.baseUnitName
+      };
     };
 
     // Third pass: set toBaseFactor for all units
     for (const unitDef of unitSystemDef.units) {
-      const toBaseFactor = computeToBaseFactor(unitDef.name, new Set());
+      const conversionBase = computeUnitConversionBase(unitDef.name, new Set());
 
       // Re-add the unit with toBaseFactor computed
       const updatedUnit: BaseUnit = {
@@ -687,7 +699,8 @@ export class Engine implements IEngine {
         plural: unitDef.plural,
         abbreviation: unitDef.abbreviation,
         symbol: unitDef.symbol,
-        toBaseFactor: toBaseFactor ?? 1,
+        toBaseFactor: conversionBase?.factor ?? 1,
+        baseUnitName: conversionBase?.baseUnitName ?? unitDef.name,
         // Keep legacy fields for backward compatibility
         conversionFactor: unitDef.conversion?.factor,
         conversionToUnit: unitDef.conversion ? system.findUnit(unitDef.conversion.toUnit)?.name : undefined

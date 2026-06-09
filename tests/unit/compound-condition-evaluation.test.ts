@@ -26,7 +26,7 @@ Regel Geschiktheid
       const result = engine.evaluate(code, {
         'minimum leeftijd': 18,
         'maximum leeftijd': 65,
-        'leeftijd': 30,
+        'leeftijd': { type: 'number', value: 30, unit: 'jr' },
         'nationaliteit': 'NL'
       });
 
@@ -51,7 +51,7 @@ Regel Geschiktheid
       const result = engine.evaluate(code, {
         'minimum leeftijd': 18,
         'maximum leeftijd': 65,
-        'leeftijd': 30,
+        'leeftijd': { type: 'number', value: 30, unit: 'jr' },
         'nationaliteit': 'US'  // This condition fails
       });
 
@@ -253,7 +253,7 @@ Regel SpecialeStatus
         'pensioen leeftijd': 65,
         'nationaliteit': 'NL',
         'is student': true,
-        'leeftijd': 25
+        'leeftijd': { type: 'number', value: 25, unit: 'jr' }
       });
 
       expect(result.success).toBe(true);
@@ -279,7 +279,7 @@ Regel SpecialeStatus
         'pensioen leeftijd': 65,
         'nationaliteit': 'US',  // Outer condition fails
         'is student': true,
-        'leeftijd': 25
+        'leeftijd': { type: 'number', value: 25, unit: 'jr' }
       });
 
       expect(result.success).toBe(true);

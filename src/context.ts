@@ -5,7 +5,9 @@ import { DomainModel } from './ast/domain-model';
 import { Dimension } from './ast/dimensions';
 import { DimensionRegistry } from './model/dimensions';
 import { KenmerkEquivalenceRegistry } from './kenmerk-equivalence-registry';
-import { KenmerkSpecification } from './ast/object-types';
+import { AttributeSpecification, KenmerkSpecification } from './ast/object-types';
+import { UnitExpression } from './ast/unit-systems';
+import { unitExpressionToString } from './units/unit-expression';
 
 /**
  * Structured trace entry for explainability
@@ -153,7 +155,7 @@ export class Context implements RuntimeContext {
 
   setVariable(name: string, value: Value): void {
     // Set in current scope
-    this.scopes[this.scopes.length - 1].set(name, value);
+    this.scopes[this.scopes.length - 1].set(name, this.applyDeclaredUnitToParameter(name, value));
   }
 
   pushScope(): void {
@@ -180,7 +182,96 @@ export class Context implements RuntimeContext {
     if (!this.objects.has(type)) {
       this.objects.set(type, new Map());
     }
+    for (const [name, value] of Object.entries(attributes)) {
+      attributes[name] = this.applyDeclaredUnitToAttribute(type, name, value);
+    }
     this.objects.get(type)!.set(id, attributes);
+  }
+
+  applyDeclaredUnitsToLoadedValues(): void {
+    for (const scope of this.scopes) {
+      for (const [name, value] of scope.entries()) {
+        scope.set(name, this.applyDeclaredUnitToParameter(name, value));
+      }
+    }
+
+    for (const [objectType, instances] of this.objects.entries()) {
+      for (const attributes of instances.values() as IterableIterator<Record<string, Value>>) {
+        for (const [attributeName, value] of Object.entries(attributes)) {
+          attributes[attributeName] = this.applyDeclaredUnitToAttribute(objectType, attributeName, value);
+        }
+      }
+    }
+  }
+
+  private applyDeclaredUnitToParameter(name: string, value: Value): Value {
+    const parameter = this.domainModel.parameters.find(param => param.name === name);
+    if (!parameter) {
+      return value;
+    }
+    const unit = this.resolveDeclaredUnit(parameter.unit, parameter.unitExpression, parameter.dataType);
+    return this.applyDeclaredUnit(value, unit);
+  }
+
+  private applyDeclaredUnitToAttribute(objectTypeName: string, attributeName: string, value: Value): Value {
+    const objectType = this.domainModel.objectTypes.find(
+      candidate => this.canonicalizeTypeName(candidate.name) === this.canonicalizeTypeName(objectTypeName)
+    );
+    const attribute = objectType?.members.find(
+      (member): member is AttributeSpecification =>
+        member.type === 'AttributeSpecification' && member.name === attributeName
+    );
+    if (!attribute) {
+      return value;
+    }
+    const unit = this.resolveDeclaredUnit(attribute.unit, attribute.unitExpression, attribute.dataType);
+    return this.applyDeclaredUnit(value, unit);
+  }
+
+  private resolveDeclaredUnit(
+    unit: string | undefined,
+    unitExpression: UnitExpression | undefined,
+    dataType: unknown
+  ): { unit?: string; unitExpression?: UnitExpression } | undefined {
+    if (unit || unitExpression) {
+      return { unit, unitExpression };
+    }
+    if (
+      dataType &&
+      typeof dataType === 'object' &&
+      (dataType as { type?: string }).type === 'DomainReference'
+    ) {
+      const domainName = (dataType as { domain?: string }).domain;
+      const domain = (this.domainModel.domains ?? []).find(candidate => candidate.name === domainName);
+      if (domain?.unit || domain?.unitExpression) {
+        return { unit: domain.unit, unitExpression: domain.unitExpression };
+      }
+    }
+    return undefined;
+  }
+
+  private applyDeclaredUnit(
+    value: Value,
+    declaredUnit: { unit?: string; unitExpression?: UnitExpression } | undefined
+  ): Value {
+    if (!declaredUnit || value.type !== 'number') {
+      return value;
+    }
+    if (value.unit || value.unitExpression || (value as any).compositeUnit) {
+      return value;
+    }
+
+    const unitName = declaredUnit.unit ??
+      (declaredUnit.unitExpression ? unitExpressionToString(declaredUnit.unitExpression) : undefined);
+    if (!unitName && !declaredUnit.unitExpression) {
+      return value;
+    }
+
+    return {
+      ...value,
+      unit: unitName ? { name: unitName } : undefined,
+      unitExpression: declaredUnit.unitExpression
+    };
   }
 
   /**

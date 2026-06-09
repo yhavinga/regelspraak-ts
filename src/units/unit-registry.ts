@@ -24,63 +24,72 @@ export class UnitRegistry {
       name: "seconde",
       plural: "seconden",
       abbreviation: "s",
-      toBaseFactor: 1  // Base unit
+      toBaseFactor: 1,  // Base unit
+      baseUnitName: "seconde"
     });
 
     timeSystem.addUnit({
       name: "milliseconde",
       plural: "milliseconden",
       abbreviation: "ms",
-      toBaseFactor: 0.001  // 1 ms = 0.001 s
+      toBaseFactor: 0.001,  // 1 ms = 0.001 s
+      baseUnitName: "seconde"
     });
 
     timeSystem.addUnit({
       name: "minuut",
       plural: "minuten",
       abbreviation: "minuut",
-      toBaseFactor: 60  // 1 min = 60 s
+      toBaseFactor: 60,  // 1 min = 60 s
+      baseUnitName: "seconde"
     });
 
     timeSystem.addUnit({
       name: "uur",
       plural: "uren",
       abbreviation: "u",
-      toBaseFactor: 3600  // 1 hr = 3600 s
+      toBaseFactor: 3600,  // 1 hr = 3600 s
+      baseUnitName: "seconde"
     });
 
     timeSystem.addUnit({
       name: "dag",
       plural: "dagen",
       abbreviation: "dg",
-      toBaseFactor: 86400  // 1 day = 86400 s
+      toBaseFactor: 86400,  // 1 day = 86400 s
+      baseUnitName: "seconde"
     });
 
     timeSystem.addUnit({
       name: "week",
       plural: "weken",
       abbreviation: "wk",
-      toBaseFactor: 604800  // 7 days = 604800 s
+      toBaseFactor: 604800,  // 7 days = 604800 s
+      baseUnitName: "seconde"
     });
 
     timeSystem.addUnit({
       name: "maand",
       plural: "maanden",
       abbreviation: "mnd",
-      toBaseFactor: 2629746  // Average month (30.44 days)
+      toBaseFactor: 2629746,  // Average month (30.44 days)
+      baseUnitName: "seconde"
     });
 
     timeSystem.addUnit({
       name: "kwartaal",
       plural: "kwartalen",
       abbreviation: "kw",
-      toBaseFactor: 7889238  // 3 months
+      toBaseFactor: 7889238,  // 3 months
+      baseUnitName: "seconde"
     });
 
     timeSystem.addUnit({
       name: "jaar",
       plural: "jaren",
       abbreviation: "jr",
-      toBaseFactor: 31556952  // Average year (365.25 days)
+      toBaseFactor: 31556952,  // Average year (365.25 days)
+      baseUnitName: "seconde"
     });
 
     this.systems.set("Tijd", timeSystem);
@@ -94,7 +103,8 @@ export class UnitRegistry {
       plural: "euros",
       abbreviation: "EUR",
       symbol: "€",
-      toBaseFactor: 1  // Base for euro
+      toBaseFactor: 1,  // Base for euro
+      baseUnitName: "euro"
     });
 
     currencySystem.addUnit({
@@ -102,7 +112,8 @@ export class UnitRegistry {
       plural: "dollars",
       abbreviation: "USD",
       symbol: "$",
-      toBaseFactor: 1  // Base for dollar (no cross-currency conversion)
+      toBaseFactor: 1,  // Base for dollar (no cross-currency conversion)
+      baseUnitName: "dollar"
     });
 
     this.systems.set("Valuta", currencySystem);
@@ -146,7 +157,8 @@ export class UnitRegistry {
       return false;
     }
 
-    return result1.system.name === result2.system.name;
+    return result1.system.name === result2.system.name &&
+      (result1.unit.baseUnitName ?? result1.unit.name) === (result2.unit.baseUnitName ?? result2.unit.name);
   }
 
   /**
@@ -166,4 +178,71 @@ export class UnitRegistry {
 
     return result1.system.convert(value, fromUnit, toUnit);
   }
+
+  areCompositeUnitsCompatible(unit1: CompositeUnit, unit2: CompositeUnit): boolean {
+    const normalized1 = this.normalizeCompositeUnit(unit1);
+    const normalized2 = this.normalizeCompositeUnit(unit2);
+    return normalized1 !== undefined &&
+      normalized2 !== undefined &&
+      haveSameSignature(normalized1.signature, normalized2.signature);
+  }
+
+  convertComposite(value: number, fromUnit: CompositeUnit, toUnit: CompositeUnit): number | undefined {
+    const from = this.normalizeCompositeUnit(fromUnit);
+    const to = this.normalizeCompositeUnit(toUnit);
+
+    if (!from || !to || !haveSameSignature(from.signature, to.signature)) {
+      return undefined;
+    }
+
+    return value * from.factor / to.factor;
+  }
+
+  private normalizeCompositeUnit(unit: CompositeUnit): {
+    signature: Map<string, number>;
+    factor: number;
+  } | undefined {
+    const signature = new Map<string, number>();
+    let factor = 1;
+
+    for (const [unitName, exponent] of unit.numerator) {
+      const result = this.findUnit(unitName);
+      if (!result) {
+        return undefined;
+      }
+      const component = `${result.system.name}:${result.unit.baseUnitName ?? result.unit.name}`;
+      signature.set(component, (signature.get(component) ?? 0) + exponent);
+      factor *= Math.pow(result.unit.toBaseFactor ?? 1, exponent);
+    }
+
+    for (const [unitName, exponent] of unit.denominator) {
+      const result = this.findUnit(unitName);
+      if (!result) {
+        return undefined;
+      }
+      const component = `${result.system.name}:${result.unit.baseUnitName ?? result.unit.name}`;
+      signature.set(component, (signature.get(component) ?? 0) - exponent);
+      factor /= Math.pow(result.unit.toBaseFactor ?? 1, exponent);
+    }
+
+    for (const [system, exponent] of signature.entries()) {
+      if (exponent === 0) {
+        signature.delete(system);
+      }
+    }
+
+    return { signature, factor };
+  }
+}
+
+function haveSameSignature(left: Map<string, number>, right: Map<string, number>): boolean {
+  if (left.size !== right.size) {
+    return false;
+  }
+  for (const [system, exponent] of left.entries()) {
+    if (right.get(system) !== exponent) {
+      return false;
+    }
+  }
+  return true;
 }

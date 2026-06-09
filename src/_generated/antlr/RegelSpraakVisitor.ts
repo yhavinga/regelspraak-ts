@@ -57,6 +57,7 @@ import { EenheidEntryContext } from "./RegelSpraakParser";
 import { UnitIdentifierContext } from "./RegelSpraakParser";
 import { UnitIdentifierWithTimeContext } from "./RegelSpraakParser";
 import { EenheidExpressieContext } from "./RegelSpraakParser";
+import { UnitProductContext } from "./RegelSpraakParser";
 import { EenheidMachtContext } from "./RegelSpraakParser";
 import { DimensieDefinitionContext } from "./RegelSpraakParser";
 import { VoorzetselSpecificatieContext } from "./RegelSpraakParser";
@@ -610,6 +611,12 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitEenheidExpressie?: (ctx: EenheidExpressieContext) => Result;
+	/**
+	 * Visit a parse tree produced by `RegelSpraakParser.unitProduct`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUnitProduct?: (ctx: UnitProductContext) => Result;
 	/**
 	 * Visit a parse tree produced by `RegelSpraakParser.eenheidMacht`.
 	 * @param ctx the parse tree

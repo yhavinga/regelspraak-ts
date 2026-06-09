@@ -132,6 +132,48 @@ geldig altijd
         unit: { name: 'euro' }
       });
     });
+
+    test('should compare convertible units in conditions', () => {
+      const model = `
+Eenheidsysteem afstand
+de meter m
+de kilometer km = 1000 m
+
+Beslistabel Afstand klasse
+geldig altijd
+|   | de klasse moet gesteld worden op | indien afstand gelijk is aan |
+|---|----------------------------------|------------------------------|
+| 1 | 'lang'                           | 1000 m                       |`;
+
+      const context = new Context();
+      context.setVariable('afstand', { type: 'number', value: 1, unit: { name: 'kilometer' } });
+
+      const result = engine.run(model, context);
+
+      expect(result.success).toBe(true);
+      expect(context.getVariable('klasse')).toEqual({ type: 'string', value: 'lang' });
+    });
+
+    test('should reject incompatible units in conditions', () => {
+      const model = `
+Eenheidsysteem afstand
+de meter m
+de kilometer km = 1000 m
+
+Beslistabel Afstand klasse
+geldig altijd
+|   | de klasse moet gesteld worden op | indien afstand gelijk is aan |
+|---|----------------------------------|------------------------------|
+| 1 | 'lang'                           | 1 EUR                        |`;
+
+      const context = new Context();
+      context.setVariable('afstand', { type: 'number', value: 1, unit: { name: 'kilometer' } });
+
+      const result = engine.runStrict(model, context);
+
+      expect(result.success).toBe(false);
+      expect(result.error?.message).toContain('Cannot convert from');
+    });
   });
 
   describe('decision table with percentage literals', () => {

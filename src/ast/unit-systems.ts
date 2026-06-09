@@ -20,3 +20,13 @@ export interface UnitConversion {
   factor: number;
   toUnit: string;
 }
+
+export interface UnitExpression {
+  type: 'UnitExpression';
+  factors: UnitFactor[];
+}
+
+export interface UnitFactor {
+  unit: string;
+  exponent: number;
+}

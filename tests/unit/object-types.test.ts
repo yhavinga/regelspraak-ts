@@ -188,9 +188,6 @@ describe('Engine - Object Type Definitions', () => {
     });
 
     test('should parse attribute with unit', () => {
-      // The grammar actually DOES support complex units like km/h through eenheidExpressie
-      // However, attribuutSpecificatie uses a simplified unit form (single IDENTIFIER)
-      // For now, test with simple unit until we update the grammar
       const source = `Objecttype auto
   snelheid Numeriek (getal) met eenheid km;`;
 
@@ -201,7 +198,8 @@ describe('Engine - Object Type Definitions', () => {
         type: 'AttributeSpecification',
         name: 'snelheid',
         dataType: { type: 'Numeriek', numericSpec: { format: 'getal', signConstraint: undefined, decimals: undefined } },
-        unit: 'km'
+        unit: 'km',
+        unitExpression: { type: 'UnitExpression', factors: [{ unit: 'km', exponent: 1 }] }
       });
     });
 
@@ -216,7 +214,8 @@ describe('Engine - Object Type Definitions', () => {
         type: 'AttributeSpecification',
         name: 'prijs',
         dataType: { type: 'DomainReference', domain: 'Bedrag' },
-        unit: '€'
+        unit: '€',
+        unitExpression: { type: 'UnitExpression', factors: [{ unit: '€', exponent: 1 }] }
       });
     });
 
@@ -319,6 +318,7 @@ describe('Engine - Object Type Definitions', () => {
             name: 'inkomen',
             dataType: { type: 'DomainReference', domain: 'Bedrag' },
             unit: '€',
+            unitExpression: { type: 'UnitExpression', factors: [{ unit: '€', exponent: 1 }] },
             timelineGranularity: 'jaar'
           }
         ]

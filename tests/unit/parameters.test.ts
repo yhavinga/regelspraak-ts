@@ -55,7 +55,8 @@ describe('Engine - Parameter Definitions', () => {
         type: 'ParameterDefinition',
         name: 'volwassenleeftijd',
         dataType: { type: 'Numeriek', numericSpec: { format: 'geheel getal', signConstraint: undefined, decimals: undefined } },
-        unit: 'jr'
+        unit: 'jr',
+        unitExpression: { type: 'UnitExpression', factors: [{ unit: 'jr', exponent: 1 }] }
       });
     });
 
@@ -170,7 +171,8 @@ describe('Engine - Parameter Definitions', () => {
         type: 'ParameterDefinition',
         name: 'initiele belasting',
         dataType: { type: 'DomainReference', domain: 'Bedrag' },
-        unit: '€'
+        unit: '€',
+        unitExpression: { type: 'UnitExpression', factors: [{ unit: '€', exponent: 1 }] }
       });
     });
 
@@ -188,7 +190,8 @@ describe('Engine - Parameter Definitions', () => {
         type: 'ParameterDefinition',
         name: 'volwassenleeftijd',
         dataType: { type: 'Numeriek', numericSpec: { format: 'geheel getal', signConstraint: undefined, decimals: undefined } },
-        unit: 'jr'
+        unit: 'jr',
+        unitExpression: { type: 'UnitExpression', factors: [{ unit: 'jr', exponent: 1 }] }
       });
     });
   });

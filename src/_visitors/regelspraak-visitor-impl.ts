@@ -94,7 +94,8 @@ import {
 } from '../ast/object-types';
 import { ParameterDefinition } from '../ast/parameters';
 import { PeriodDefinition } from '../ast/timelines';
-import { UnitSystemDefinition, UnitDefinition, UnitConversion } from '../ast/unit-systems';
+import { UnitSystemDefinition, UnitDefinition, UnitConversion, UnitExpression } from '../ast/unit-systems';
+import { unitExpression, unitExpressionToString } from '../units/unit-expression';
 import { createSourceLocation } from '../ast/location';
 import { Dimension, DimensionLabel, DimensionedAttributeReference } from '../ast/dimensions';
 import { FeitType, Rol, RoleCardinality } from '../ast/feittype';
@@ -723,13 +724,14 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       const normalizedText = text.replace(',', '.');
       const value = parseFloat(normalizedText);
 
-      const unitCtx = ctx.unitIdentifier ? ctx.unitIdentifier() : null;
+      const unitCtx = ctx.eenheidExpressie ? ctx.eenheidExpressie() : null;
       if (unitCtx) {
-        const unit = unitCtx.getText();
+        const parsedUnit = this.buildUnitExpression(unitCtx);
         const node = {
           type: 'NumberLiteral',
           value,
-          unit
+          unit: unitExpressionToString(parsedUnit),
+          unitExpression: parsedUnit
         } as NumberLiteral;
         this.setLocation(node, ctx);
         return node;
@@ -1307,13 +1309,14 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const value = parseFloat(normalizedText);
 
     // Check for optional unit
-    const unitCtx = ctx.unitIdentifier();
+    const unitCtx = ctx.eenheidExpressie();
     if (unitCtx) {
-      const unit = unitCtx.getText();
+      const parsedUnit = this.buildUnitExpression(unitCtx);
       const node = {
         type: 'NumberLiteral',
         value,
-        unit
+        unit: unitExpressionToString(parsedUnit),
+        unitExpression: parsedUnit
       } as NumberLiteral;
       this.setLocation(node, ctx);
       return node;
@@ -1340,6 +1343,53 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     } as NumberLiteral;
     this.setLocation(node, ctx);
     return node;
+  }
+
+  private buildUnitExpression(ctx: any): UnitExpression {
+    if (ctx.PERCENT_SIGN && ctx.PERCENT_SIGN()) {
+      return unitExpression([{ unit: '%', exponent: 1 }]);
+    }
+    if (ctx.EURO_SYMBOL && ctx.EURO_SYMBOL()) {
+      return unitExpression([{ unit: '€', exponent: 1 }]);
+    }
+    if (ctx.DOLLAR_SYMBOL && ctx.DOLLAR_SYMBOL()) {
+      return unitExpression([{ unit: '$', exponent: 1 }]);
+    }
+
+    if (ctx.NUMBER && ctx.NUMBER()) {
+      const numericText = ctx.NUMBER().getText().replace(',', '.');
+      const numericValue = Number(numericText);
+      if (numericValue !== 1) {
+        throw new Error(`Numeric unit expression must be 1, got ${ctx.NUMBER().getText()}`);
+      }
+      return unitExpression([]);
+    }
+
+    const products = ctx.unitProduct_list ? ctx.unitProduct_list() : [];
+    const factors: Array<{ unit: string; exponent: number }> = [];
+
+    products.forEach((product: any, productIndex: number) => {
+      const sign = productIndex === 0 ? 1 : -1;
+      const powers = product.eenheidMacht_list ? product.eenheidMacht_list() : [];
+      for (const power of powers) {
+        const unitCtx = power.unitIdentifier();
+        const unitName = this.extractText(unitCtx);
+        const exponentToken = power.NUMBER && power.NUMBER();
+        const exponent = exponentToken
+          ? Number(exponentToken.getText().replace(',', '.'))
+          : 1;
+        if (!Number.isInteger(exponent)) {
+          throw new Error(`Unit exponent must be an integer: ${exponentToken.getText()}`);
+        }
+        factors.push({ unit: unitName, exponent: sign * exponent });
+      }
+    });
+
+    if (factors.length === 0) {
+      throw new Error(`Invalid unit expression: ${this.extractText(ctx)}`);
+    }
+
+    return unitExpression(factors);
   }
 
   visitDatumLiteralExpr(ctx: any): Expression {
@@ -4317,17 +4367,12 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
     // Get unit if specified
     let unit: string | undefined;
+    let unitExpr: UnitExpression | undefined;
     if (ctx.MET_EENHEID && ctx.MET_EENHEID()) {
-      // Check for named unit using unitIdentifier() accessor
-      const unitIdCtx = ctx.unitIdentifier ? ctx.unitIdentifier() : null;
-      if (unitIdCtx) {
-        unit = unitIdCtx.getText();
-      } else if (ctx.PERCENT_SIGN && ctx.PERCENT_SIGN()) {
-        unit = '%';
-      } else if (ctx.EURO_SYMBOL && ctx.EURO_SYMBOL()) {
-        unit = '€';
-      } else if (ctx.DOLLAR_SYMBOL && ctx.DOLLAR_SYMBOL()) {
-        unit = '$';
+      const unitCtx = ctx.eenheidExpressie ? ctx.eenheidExpressie() : null;
+      if (unitCtx) {
+        unitExpr = this.buildUnitExpression(unitCtx);
+        unit = unitExpressionToString(unitExpr);
       }
     }
 
@@ -4353,6 +4398,9 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     // Only add optional properties when they have values
     if (unit !== undefined) {
       node.unit = unit;
+    }
+    if (unitExpr !== undefined) {
+      node.unitExpression = unitExpr;
     }
     if (dimensions.length > 0) {
       node.dimensions = dimensions;
@@ -4539,11 +4587,13 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
     // Get unit if specified
     let unit: string | undefined;
+    let unitExpr: UnitExpression | undefined;
     if (ctx.MET_EENHEID && ctx.MET_EENHEID()) {
-      // Use eenheidExpressie which supports complex units
-      const unitExpr = ctx.eenheidExpressie();
-      if (unitExpr) {
-        unit = this.extractText(unitExpr);
+      const unitCtx = ctx.eenheidExpressie();
+      if (unitCtx) {
+        const parsedUnit = this.buildUnitExpression(unitCtx);
+        unit = unitExpressionToString(parsedUnit);
+        unitExpr = parsedUnit;
       }
     }
 
@@ -4561,6 +4611,9 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
     if (unit) {
       result.unit = unit;
+    }
+    if (unitExpr !== undefined) {
+      result.unitExpression = unitExpr;
     }
 
     if (timelineGranularity) {
@@ -4779,8 +4832,10 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
     // Extract unit if present: "met eenheid m"
     let unit: string | undefined;
+    let unitExpr: UnitExpression | undefined;
     if (ctx.MET_EENHEID() && ctx.eenheidExpressie()) {
-      unit = this.extractTextWithSpaces(ctx.eenheidExpressie());
+      unitExpr = this.buildUnitExpression(ctx.eenheidExpressie());
+      unit = unitExpressionToString(unitExpr);
     }
 
     const node: DomainDefinition = {
@@ -4791,6 +4846,9 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       decimals,
       enumerationValues
     };
+    if (unitExpr !== undefined) {
+      node.unitExpression = unitExpr;
+    }
     this.setLocation(node, ctx);
     return node;
   }
@@ -6928,6 +6986,14 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     let plural: string | undefined;
     if (ctx._pluralName) {
       plural = this.extractText(ctx._pluralName);
+    }
+
+    if (!symbol && !(ctx.EQUALS && ctx.EQUALS())) {
+      const unitParts = ctx.unitIdentifierWithTime_list ? ctx.unitIdentifierWithTime_list() : [];
+      const symbolIndex = plural ? 3 : 2;
+      if (unitParts.length > symbolIndex) {
+        symbol = this.extractText(unitParts[symbolIndex]);
+      }
     }
 
     // Check for conversion specification - labeled as _value and _targetUnit

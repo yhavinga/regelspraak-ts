@@ -4,3 +4,11 @@ export { CompositeUnit } from './composite-unit';
 export { UnitRegistry } from './unit-registry';
 export type { UnitValue } from './unit-arithmetic';
 export { createUnitValue, performUnitArithmetic } from './unit-arithmetic';
+export {
+  unitExpression,
+  unitExpressionFromUnit,
+  unitExpressionToString,
+  unitExpressionToCompositeUnit,
+  compositeUnitToUnitExpression
+} from './unit-expression';
+export { compareRuntimeValues, getValueCompositeUnit } from './value-semantics';

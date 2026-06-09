@@ -77,7 +77,7 @@ Regel Bepaal kandidaat
 `;
       const result = engine.evaluate(code, {
         'minimum leeftijd': 18,
-        leeftijd: 25,
+        leeftijd: { type: 'number', value: 25, unit: 'jr' },
         nationaliteit: 'NL'
       });
 
@@ -98,7 +98,7 @@ Regel Bepaal kandidaat
 `;
       const result = engine.evaluate(code, {
         'minimum leeftijd': 18,
-        leeftijd: 16,  // Too young - fails the first condition
+        leeftijd: { type: 'number', value: 16, unit: 'jr' },  // Too young - fails the first condition
         nationaliteit: 'NL'
       });
 
@@ -233,7 +233,7 @@ Regel Bepaal gekwalificeerd
       // Age OK, score high enough
       const result1 = engine.evaluate(code, {
         'pensioen leeftijd': 65,
-        leeftijd: 25,
+        leeftijd: { type: 'number', value: 25, unit: 'jr' },
         score: 85,
         'is gecertificeerd': false,
         'is getraind': false
@@ -244,7 +244,7 @@ Regel Bepaal gekwalificeerd
       // Age OK, has certification (satisfies nested condition)
       const result2 = engine.evaluate(code, {
         'pensioen leeftijd': 65,
-        leeftijd: 25,
+        leeftijd: { type: 'number', value: 25, unit: 'jr' },
         score: 50,
         'is gecertificeerd': true,
         'is getraind': false
@@ -255,7 +255,7 @@ Regel Bepaal gekwalificeerd
       // Age too low - outer condition fails
       const result3 = engine.evaluate(code, {
         'pensioen leeftijd': 65,
-        leeftijd: 16,
+        leeftijd: { type: 'number', value: 16, unit: 'jr' },
         score: 90,
         'is gecertificeerd': true,
         'is getraind': true

@@ -353,7 +353,8 @@ geldig altijd
         type: 'ParameterDefinition',
         name: 'afstand tot bestemming',
         dataType: { type: 'Numeriek' },
-        unit: 'km'
+        unit: 'km',
+        unitExpression: { type: 'UnitExpression', factors: [{ unit: 'km', exponent: 1 }] }
       });
     });
 

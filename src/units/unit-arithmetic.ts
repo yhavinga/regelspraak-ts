@@ -1,6 +1,12 @@
 import { Value } from '../interfaces/value';
 import { CompositeUnit } from './composite-unit';
 import { UnitRegistry } from './unit-registry';
+import { UnitExpression } from '../ast/unit-systems';
+import {
+  unitExpressionFromUnit,
+  unitExpressionToCompositeUnit
+} from './unit-expression';
+import { getValueCompositeUnit } from './value-semantics';
 
 /**
  * Extended value interface with composite unit support
@@ -14,27 +20,35 @@ export interface UnitValue extends Value {
  */
 export function createUnitValue(
   value: number,
-  unit?: string,
+  unit?: string | UnitExpression,
   registry?: UnitRegistry
 ): UnitValue {
   if (!unit) {
     return { type: 'number', value };
   }
 
-  // Parse composite unit
-  const compositeUnit = CompositeUnit.parse(unit);
-  
+  const unitExpression = typeof unit === 'string'
+    ? unitExpressionFromUnit(unit)
+    : unit;
+  const compositeUnit = unitExpressionToCompositeUnit(unitExpression);
+
   // For simple units, also store the unit info
-  if (compositeUnit.numerator.length === 1 && 
+  if (compositeUnit.numerator.length === 1 &&
       compositeUnit.denominator.length === 0 &&
       compositeUnit.numerator[0][1] === 1) {
     const unitName = compositeUnit.numerator[0][0];
     const unitInfo = registry?.findUnit(unitName);
-    
+
     return {
       type: 'number',
       value,
-      unit: unitInfo ? { name: unitInfo.unit.name, symbol: unitInfo.unit.symbol } : { name: unitName },
+      unit: unitInfo
+        ? {
+          name: unitInfo.unit.name,
+          symbol: unitInfo.unit.symbol,
+          system: unitInfo.system.name
+        }
+        : { name: unitName },
       compositeUnit
     };
   }
@@ -72,53 +86,36 @@ function performAdditionSubtraction(
   right: UnitValue,
   registry: UnitRegistry
 ): UnitValue {
-  // Both must have compatible units or no units
-  const leftUnit = getSimpleUnit(left);
-  const rightUnit = getSimpleUnit(right);
+  const leftUnit = getCompositeUnit(left);
+  const rightUnit = getCompositeUnit(right);
 
   if (!leftUnit && !rightUnit) {
-    // No units, simple arithmetic
     const value = operation === '+' ? left.value + right.value : left.value - right.value;
     return { type: 'number', value };
   }
 
-  // Allow mixed unit/unitless arithmetic - treat unitless as compatible
-  // This handles cases like: currency_amount - (rate × distance) where rate is dimensionless
   if (!leftUnit || !rightUnit) {
-    const value = operation === '+' ? left.value + right.value : left.value - right.value;
-    // Preserve the unit from whichever side has one
-    if (leftUnit) {
-      return { type: 'number', value, unit: left.unit, compositeUnit: left.compositeUnit };
-    } else if (rightUnit) {
-      // When subtracting, the result inherits the left side's (lack of) unit
-      // When adding, we could inherit the right side's unit
-      return { type: 'number', value };
-    }
-    return { type: 'number', value };
+    throw new Error(`Cannot ${operation === '+' ? 'add' : 'subtract'} unit-bearing and unitless numbers`);
   }
 
-  // Check if units are compatible
-  if (!registry.areUnitsCompatible(leftUnit, rightUnit)) {
-    throw new Error(`Cannot ${operation === '+' ? 'add' : 'subtract'} incompatible units: ${leftUnit} and ${rightUnit}`);
+  const converted = registry.convertComposite(right.value, rightUnit, leftUnit);
+  if (converted === undefined) {
+    throw new Error(
+      `Cannot ${operation === '+' ? 'add' : 'subtract'} incompatible units: ` +
+      `${leftUnit.toString()} and ${rightUnit.toString()}`
+    );
   }
 
-  // Convert right to left's unit if needed
-  let rightValue = right.value;
-  if (leftUnit !== rightUnit) {
-    const converted = registry.convert(right.value, rightUnit, leftUnit);
-    if (converted === undefined) {
-      throw new Error(`Cannot convert from ${rightUnit} to ${leftUnit}`);
-    }
-    rightValue = converted;
-  }
-
-  const value = operation === '+' ? left.value + rightValue : left.value - rightValue;
-  return {
+  const value = operation === '+' ? left.value + converted : left.value - converted;
+  const result: UnitValue = {
     type: 'number',
     value,
-    unit: left.unit,
-    compositeUnit: left.compositeUnit
+    unit: left.unit
   };
+  if (left.compositeUnit) {
+    result.compositeUnit = left.compositeUnit;
+  }
+  return result;
 }
 
 function performMultiplication(left: UnitValue, right: UnitValue): UnitValue {
@@ -135,10 +132,14 @@ function performMultiplication(left: UnitValue, right: UnitValue): UnitValue {
 
   // One has unit
   if (!leftComposite) {
+    const unit = rightComposite;
+    if (!unit) {
+      throw new Error('Right operand must have a unit');
+    }
     return {
       type: 'number',
       value,
-      compositeUnit: rightComposite
+      compositeUnit: unit
     };
   }
   if (!rightComposite) {
@@ -151,7 +152,7 @@ function performMultiplication(left: UnitValue, right: UnitValue): UnitValue {
 
   // Both have units - multiply them
   const compositeUnit = leftComposite.multiply(rightComposite);
-  
+
   return {
     type: 'number',
     value,
@@ -181,7 +182,7 @@ function performDivision(left: UnitValue, right: UnitValue): UnitValue {
 
   // Divide units
   const compositeUnit = leftUnit.divide(rightUnit);
-  
+
   return {
     type: 'number',
     value,
@@ -193,32 +194,5 @@ function performDivision(left: UnitValue, right: UnitValue): UnitValue {
  * Get composite unit from a value, creating it from simple unit if needed
  */
 function getCompositeUnit(value: UnitValue): CompositeUnit | undefined {
-  if (value.compositeUnit) {
-    return value.compositeUnit;
-  }
-  
-  if (value.unit) {
-    // Create composite unit from simple unit
-    return new CompositeUnit([[value.unit.name, 1]], []);
-  }
-  
-  return undefined;
-}
-
-/**
- * Get simple unit name from a value (if it has one)
- */
-function getSimpleUnit(value: UnitValue): string | undefined {
-  if (value.unit) {
-    return value.unit.name;
-  }
-  
-  if (value.compositeUnit &&
-      value.compositeUnit.numerator.length === 1 &&
-      value.compositeUnit.denominator.length === 0 &&
-      value.compositeUnit.numerator[0][1] === 1) {
-    return value.compositeUnit.numerator[0][0];
-  }
-  
-  return undefined;
+  return getValueCompositeUnit(value);
 }

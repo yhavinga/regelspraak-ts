@@ -12,6 +12,7 @@ import {
   fromLegacyAttributeComparison
 } from '../predicates/predicate-types';
 import { UnitRegistry, performUnitArithmetic, UnitValue, createUnitValue } from '../units';
+import { compareRuntimeValues, getValueCompositeUnit } from '../units/value-semantics';
 import { Context } from '../context';
 import { stripUnitSuffix } from '../utils/navigation';
 
@@ -19,7 +20,7 @@ import { stripUnitSuffix } from '../utils/navigation';
  * Evaluator for expression nodes
  */
 export class ExpressionEvaluator implements IEvaluator {
-  private builtInFunctions: Record<string, (args: Value[], unitConversion?: string) => Value> = {
+  private builtInFunctions: Record<string, (args: Value[], unitConversion?: string, context?: RuntimeContext) => Value> = {
     'sqrt': this.sqrt.bind(this),
     'abs': this.abs.bind(this),
     'aantal': this.aantal.bind(this),
@@ -133,7 +134,7 @@ export class ExpressionEvaluator implements IEvaluator {
       // Use context's unit registry if available (for custom unit systems)
       const registry = (context as any).unitRegistry || this.unitRegistry;
       // Create a unit value using the unit registry
-      return createUnitValue(expr.value, expr.unit, registry);
+      return createUnitValue(expr.value, expr.unitExpression ?? expr.unit, registry);
     }
     return {
       type: 'number',
@@ -264,7 +265,7 @@ export class ExpressionEvaluator implements IEvaluator {
     // Check if this is a comparison operator
     const comparisonOps = ['==', '!=', '>', '<', '>=', '<='];
     if (comparisonOps.includes(expr.operator)) {
-      return this.evaluateComparisonExpression(expr, left, right);
+      return this.evaluateComparisonExpression(expr, left, right, context);
     }
 
     // Type check - both must be numbers for arithmetic
@@ -364,75 +365,14 @@ export class ExpressionEvaluator implements IEvaluator {
     };
   }
 
-  private evaluateComparisonExpression(expr: BinaryExpression, left: Value, right: Value): Value {
-    // Check if types are compatible for comparison
-    if (left.type !== right.type &&
-      !(left.type === 'null' || right.type === 'null')) {
-      throw new Error(`Cannot compare ${left.type} with ${right.type}`);
-    }
-
-    let result: boolean;
-
-    // Handle equality/inequality for all types
-    if (expr.operator === '==' || expr.operator === '!=') {
-      const equal = left.value === right.value;
-      result = expr.operator === '==' ? equal : !equal;
-    }
-    // Handle ordering comparisons
-    else if (expr.operator === '>' || expr.operator === '<' ||
-      expr.operator === '>=' || expr.operator === '<=') {
-
-      // Numbers, strings, and dates support ordering
-      if (left.type !== 'number' && left.type !== 'string' && left.type !== 'date') {
-        throw new Error(`Cannot use ${expr.operator} with ${left.type}`);
-      }
-
-      // For dates, compare using getTime() for proper ordering
-      if (left.type === 'date') {
-        const leftTime = (left.value as Date).getTime();
-        const rightTime = (right.value as Date).getTime();
-
-        switch (expr.operator) {
-          case '>':
-            result = leftTime > rightTime;
-            break;
-          case '<':
-            result = leftTime < rightTime;
-            break;
-          case '>=':
-            result = leftTime >= rightTime;
-            break;
-          case '<=':
-            result = leftTime <= rightTime;
-            break;
-          default:
-            throw new Error(`Unknown comparison operator: ${expr.operator}`);
-        }
-      } else {
-        const leftVal = left.value as number | string;
-        const rightVal = right.value as number | string;
-
-        switch (expr.operator) {
-          case '>':
-            result = leftVal > rightVal;
-            break;
-          case '<':
-            result = leftVal < rightVal;
-            break;
-          case '>=':
-            result = leftVal >= rightVal;
-            break;
-          case '<=':
-            result = leftVal <= rightVal;
-            break;
-          default:
-            throw new Error(`Unknown comparison operator: ${expr.operator}`);
-        }
-      }
-    } else {
-      throw new Error(`Unknown comparison operator: ${expr.operator}`);
-    }
-
+  private evaluateComparisonExpression(
+    expr: BinaryExpression,
+    left: Value,
+    right: Value,
+    context: RuntimeContext
+  ): Value {
+    const registry = (context as any).unitRegistry || this.unitRegistry;
+    const result = compareRuntimeValues(left, expr.operator, right, registry);
     return {
       type: 'boolean',
       value: result
@@ -775,7 +715,7 @@ export class ExpressionEvaluator implements IEvaluator {
     // Check if it's a built-in function
     const builtInFunc = this.builtInFunctions[expr.functionName];
     if (builtInFunc) {
-      return builtInFunc(evaluatedArgs, expr.unitConversion);
+      return builtInFunc(evaluatedArgs, expr.unitConversion, context);
     }
 
     // Unknown function
@@ -1181,7 +1121,7 @@ export class ExpressionEvaluator implements IEvaluator {
     }
   }
 
-  private maximum_van(args: Value[]): Value {
+  private maximum_van(args: Value[], unitConversion?: string, context?: RuntimeContext): Value {
     // Maximum aggregation - should receive an array of values
     if (args.length !== 1) {
       throw new Error('maximum_van expects exactly 1 argument (an array of values)');
@@ -1192,22 +1132,10 @@ export class ExpressionEvaluator implements IEvaluator {
       throw new Error(`maximum_van expects an array argument, got ${arg.type}`);
     }
 
-    const values = arg.value as Value[];
-    let maxValue = -Infinity;
-
-    for (const val of values) {
-      if (val.type === 'number') {
-        maxValue = Math.max(maxValue, val.value as number);
-      }
-    }
-
-    return {
-      type: 'number',
-      value: maxValue === -Infinity ? 0 : maxValue
-    };
+    return this.selectExtremeNumericValue(arg.value as Value[], 'maximum', context);
   }
 
-  private minimum_van(args: Value[]): Value {
+  private minimum_van(args: Value[], unitConversion?: string, context?: RuntimeContext): Value {
     // Minimum aggregation - should receive an array of values
     if (args.length !== 1) {
       throw new Error('minimum_van expects exactly 1 argument (an array of values)');
@@ -1218,56 +1146,68 @@ export class ExpressionEvaluator implements IEvaluator {
       throw new Error(`minimum_van expects an array argument, got ${arg.type}`);
     }
 
-    const values = arg.value as Value[];
-    let minValue = Infinity;
-
-    for (const val of values) {
-      if (val.type === 'number') {
-        minValue = Math.min(minValue, val.value as number);
-      }
-    }
-
-    return {
-      type: 'number',
-      value: minValue === Infinity ? 0 : minValue
-    };
+    return this.selectExtremeNumericValue(arg.value as Value[], 'minimum', context);
   }
 
-  private maximum_van_values(args: Value[]): Value {
+  private maximum_van_values(args: Value[], unitConversion?: string, context?: RuntimeContext): Value {
     // Maximum of explicit values: "de maximale waarde van a, b en c"
     if (args.length < 2) {
       throw new Error('maximum_van_values expects at least 2 arguments');
     }
 
-    let maxValue = -Infinity;
-    for (const val of args) {
-      if (val.type === 'number') {
-        maxValue = Math.max(maxValue, val.value as number);
-      }
-    }
-
-    return {
-      type: 'number',
-      value: maxValue === -Infinity ? 0 : maxValue
-    };
+    return this.selectExtremeNumericValue(args, 'maximum', context);
   }
 
-  private minimum_van_values(args: Value[]): Value {
+  private minimum_van_values(args: Value[], unitConversion?: string, context?: RuntimeContext): Value {
     // Minimum of explicit values: "de minimale waarde van a, b en c"
     if (args.length < 2) {
       throw new Error('minimum_van_values expects at least 2 arguments');
     }
 
-    let minValue = Infinity;
-    for (const val of args) {
-      if (val.type === 'number') {
-        minValue = Math.min(minValue, val.value as number);
+    return this.selectExtremeNumericValue(args, 'minimum', context);
+  }
+
+  private selectExtremeNumericValue(
+    values: Value[],
+    mode: 'minimum' | 'maximum',
+    context?: RuntimeContext
+  ): Value {
+    const numericValues = values.filter(value => value.type === 'number');
+    if (numericValues.length === 0) {
+      return { type: 'number', value: 0 };
+    }
+
+    const registry = context ? ((context as any).unitRegistry || this.unitRegistry) : this.unitRegistry;
+    const reference = numericValues[0];
+    const referenceUnit = getValueCompositeUnit(reference);
+    let extremeValue = reference.value as number;
+
+    for (const value of numericValues.slice(1)) {
+      const valueUnit = getValueCompositeUnit(value);
+      let comparableValue = value.value as number;
+
+      if (referenceUnit || valueUnit) {
+        if (!referenceUnit || !valueUnit) {
+          throw new Error(`Cannot compare unit-bearing and unitless numbers in ${mode}_van`);
+        }
+        const converted = registry.convertComposite(comparableValue, valueUnit, referenceUnit);
+        if (converted === undefined) {
+          throw new Error(`Cannot convert from ${valueUnit.toString()} to ${referenceUnit.toString()}`);
+        }
+        comparableValue = converted;
+      }
+
+      const isMoreExtreme = mode === 'maximum'
+        ? comparableValue > extremeValue
+        : comparableValue < extremeValue;
+      if (isMoreExtreme) {
+        extremeValue = comparableValue;
       }
     }
 
     return {
-      type: 'number',
-      value: minValue === Infinity ? 0 : minValue
+      ...reference,
+      value: extremeValue
     };
   }
 

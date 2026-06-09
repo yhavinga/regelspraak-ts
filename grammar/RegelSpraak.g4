@@ -242,7 +242,7 @@ kenmerkSpecificatie
 // §13.3.2 Attribuut Specificatie
 attribuutSpecificatie
     : naamwoordWithNumbers ( datatype | domeinRef | objectTypeRef )
-      (MET_EENHEID unitIdentifier)?
+      (MET_EENHEID eenheidExpressie)?
       (GEDIMENSIONEERD_MET dimensieRef (EN dimensieRef)*)?
       tijdlijn? 
     ;
@@ -347,13 +347,17 @@ unitIdentifierWithTime
 
 // Eenheid expressions
 eenheidExpressie // Corresponds to unit structure in §13.3.3.2/3. Simplified based on original G4 & spec.
-    : eenheidMacht ( SLASH eenheidMacht )?
+    : unitProduct ( SLASH unitProduct )*
     | NUMBER
     | PERCENT_SIGN // Added % as a unit alternative
     | EURO_SYMBOL | DOLLAR_SYMBOL
     ;
 
-eenheidMacht // EBNF 13.3.5.5. Simplified based on original G4 & spec.
+unitProduct
+    : eenheidMacht ( ASTERISK eenheidMacht )*
+    ;
+
+eenheidMacht // EBNF 13.3.5.5
     : unitIdentifier ( CARET NUMBER )? // Use unitIdentifier rule here too
     ;
 
@@ -883,7 +887,7 @@ comparisonExpression
 literalValue
     : ENUM_LITERAL
     | STRING_LITERAL
-    | NUMBER unitIdentifier?
+    | NUMBER eenheidExpressie?
     | PERCENTAGE_LITERAL
     | datumLiteral
     | identifier  // For simple parameter/constant references
@@ -985,7 +989,7 @@ primaryExpression : // Corresponds roughly to terminals/functions/references in 
     | (getalAggregatieFunctie | datumAggregatieFunctie) (bezieldeReferentie | attribuutReferentie) VANAF naamwoord TM naamwoord DOT? # DimensieRangeAggExpr
     
     // Literals & Keywords (moved before references to prioritize literal parsing)
-    | NUMBER unitIdentifier?                                        # NumberLiteralExpr
+    | NUMBER eenheidExpressie?                                      # NumberLiteralExpr
     | REKENDATUM                                                    # RekendatumKeywordExpr
     | identifier                                                    # IdentifierExpr // Bare identifier as expression?
     

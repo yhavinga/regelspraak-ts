@@ -4,6 +4,7 @@
 
 import { SourceLocation } from './location';
 import { ResolvedInfo } from '../resolver/types';
+import { UnitExpression } from './unit-systems';
 
 export interface Expression {
   type: string;
@@ -21,6 +22,7 @@ export interface NumberLiteral extends Expression {
   type: 'NumberLiteral';
   value: number;
   unit?: string;
+  unitExpression?: UnitExpression;
 }
 
 export interface StringLiteral extends Expression {

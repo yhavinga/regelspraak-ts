@@ -62,6 +62,65 @@ De totale afstand van een berekening moet berekend worden als de afstand plus 30
     });
   });
 
+  test('should apply declared parameter units to values loaded before the model is parsed', () => {
+    const model = `
+Eenheidsysteem Valuta
+de euro EUR €
+
+Domein Bedrag is van het type Numeriek (getal) met eenheid EUR
+Parameter het inkomen : Bedrag
+
+Regel vergelijk inkomen
+geldig altijd
+Het resultaat van een berekening moet berekend worden als waar
+indien het inkomen gelijk is aan 100 €.
+`;
+
+    const context = new Context();
+    context.setVariable('inkomen', { type: 'number', value: 100 });
+
+    const result = engine.run(model, context);
+
+    expect(result.success).toBe(true);
+    expect(result.value).toEqual({ type: 'boolean', value: true });
+    expect(context.getVariable('inkomen')).toMatchObject({
+      type: 'number',
+      value: 100,
+      unit: { name: 'EUR' }
+    });
+  });
+
+  test('should apply declared object units to objects loaded before the model is parsed', () => {
+    const model = `
+Eenheidsysteem Valuta
+de euro EUR €
+
+Domein Bedrag is van het type Numeriek (getal) met eenheid EUR
+Objecttype Persoon
+  inkomen Bedrag;
+
+Regel vergelijk inkomen
+geldig altijd
+Het resultaat van een Persoon moet berekend worden als waar
+indien zijn inkomen gelijk is aan 100 €.
+`;
+
+    const context = new Context();
+    context.createObject('Persoon', 'p1', {
+      inkomen: { type: 'number', value: 100 }
+    });
+
+    const result = engine.run(model, context);
+
+    expect(result.success).toBe(true);
+    expect(result.value).toEqual({ type: 'boolean', value: true });
+    expect(context.getObject('Persoon', 'p1')?.inkomen).toMatchObject({
+      type: 'number',
+      value: 100,
+      unit: { name: 'EUR' }
+    });
+  });
+
   test('should handle unit system with symbols', () => {
     const unitSystem = `
 Eenheidsysteem temperatuur

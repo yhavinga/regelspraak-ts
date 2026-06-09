@@ -3,6 +3,7 @@
  */
 
 import { SourceLocation } from './location';
+import { UnitExpression } from './unit-systems';
 
 export interface ObjectTypeDefinition {
   type: 'ObjectTypeDefinition';
@@ -39,6 +40,7 @@ export interface AttributeSpecification {
   name: string;
   dataType: DataType | DomainReference;
   unit?: string;
+  unitExpression?: UnitExpression;
   dimensions?: string[];
   /**
    * Timeline granularity from RegelSpraak §3.8.
@@ -91,6 +93,7 @@ export interface DomainDefinition {
   // Base types match exact lexer token texts from RegelSpraakLexer.g4
   baseType: 'Numeriek' | 'Tekst' | 'Boolean' | 'Datum in dagen' | 'Datum en tijd in millisecondes' | 'Enumeratie';
   unit?: string;
+  unitExpression?: UnitExpression;
   decimals?: number;
   enumerationValues?: string[];
   location?: SourceLocation;
