@@ -377,10 +377,10 @@ export class SemanticAnalyzer {
     for (const feitType of this.feitTypes.values()) {
       for (const rol of feitType.rollen || []) {
         const feitRoleClean = this.normalizeRoleName(rol.naam || '');
-        // Check exact match or partial match (role name may be abbreviated)
-        if (feitRoleClean === roleClean ||
-            feitRoleClean.includes(roleClean) ||
-            roleClean.includes(feitRoleClean)) {
+        // Exact (article-/case-normalized) match only — role names are matched
+        // structurally, the same way the parser and resolver match them, not by
+        // substring overlap.
+        if (feitRoleClean === roleClean) {
           return feitType;
         }
       }
@@ -432,17 +432,13 @@ export class SemanticAnalyzer {
     for (const rol of feitType.rollen || []) {
       const feitRoleClean = this.normalizeRoleName(rol.naam || '');
 
-      // If this is the matching role, check if any OTHER role has the subject type
-      if (feitRoleClean === roleClean ||
-          feitRoleClean.includes(roleClean) ||
-          roleClean.includes(feitRoleClean)) {
-        // This is the target role; now check other roles for subject type match
+      // Exact (normalized) role match, then check that another role of the same
+      // FeitType is the subject type — both matched exactly, not by substring.
+      if (feitRoleClean === roleClean) {
         for (const otherRol of feitType.rollen) {
           if (otherRol !== rol) {
             const otherObjectType = (otherRol.objectType || '').toLowerCase().trim();
-            if (otherObjectType === subjectClean ||
-                otherObjectType.includes(subjectClean) ||
-                subjectClean.includes(otherObjectType)) {
+            if (otherObjectType === subjectClean) {
               return true;
             }
           }
