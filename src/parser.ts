@@ -22,6 +22,63 @@ export interface ParseResult {
 export class AntlrParser {
 
   /**
+   * Unary function keywords that take a single argument. Used only to turn a
+   * parse failure into a function-specific diagnostic; the function name is
+   * read from the token stream (the grammar's view of the input) rather than
+   * from the raw source text.
+   */
+  private static readonly UNARY_FUNCTION_KEYWORDS: ReadonlyArray<{ type: number; name: string }> = [
+    { type: RegelSpraakParser.DE_WORTEL_VAN, name: 'de wortel van' },
+    { type: RegelSpraakParser.DE_ABSOLUTE_WAARDE_VAN, name: 'de absolute waarde van' },
+  ];
+
+  /**
+   * Build a lexer/parser for `source` with a single error listener attached to
+   * BOTH the lexer and the parser.
+   *
+   * The parser boundary is a conservation law: a lexical token-recognition
+   * error must fail here, not silently vanish and let a later phase operate on
+   * a partial token stream. Every entry point constructs its parser through
+   * this method so that contract holds uniformly and is defined in exactly one
+   * place.
+   */
+  private createParser(source: string): {
+    parser: RegelSpraakParser;
+    errorListener: CollectingErrorListener;
+  } {
+    const errorListener = new CollectingErrorListener();
+
+    const chars = new CharStream(source);
+    const lexer = new RegelSpraakLexer(chars);
+    lexer.removeErrorListeners();
+    lexer.addErrorListener(errorListener);
+
+    const tokens = new CommonTokenStream(lexer);
+    const parser = new RegelSpraakParser(tokens);
+    parser.removeErrorListeners();
+    parser.addErrorListener(errorListener);
+
+    return { parser, errorListener };
+  }
+
+  /**
+   * If the token stream contains a unary function keyword, return its display
+   * name. Lets a failed expression parse report which function was malformed
+   * without inspecting the raw source string.
+   */
+  private findUnaryFunctionKeyword(parser: RegelSpraakParser): string | undefined {
+    const stream = parser.getTokenStream() as CommonTokenStream;
+    stream.fill();
+    for (const token of stream.tokens) {
+      const match = AntlrParser.UNARY_FUNCTION_KEYWORDS.find(fn => fn.type === token.type);
+      if (match) {
+        return match.name;
+      }
+    }
+    return undefined;
+  }
+
+  /**
    * Parse RegelSpraak source code and return array of definitions (backward compatibility)
    */
   parse(source: string): any {
@@ -87,15 +144,7 @@ export class AntlrParser {
    * Parse RegelSpraak source code and return both model and location map
    */
   parseWithLocations(source: string): ParseResult {
-    const chars = new CharStream(source);
-    const lexer = new RegelSpraakLexer(chars);
-    const tokens = new CommonTokenStream(lexer);
-    const parser = new RegelSpraakParser(tokens);
-
-    // Set up custom error listener
-    const errorListener = new CollectingErrorListener();
-    parser.removeErrorListeners();
-    parser.addErrorListener(errorListener);
+    const { parser, errorListener } = this.createParser(source);
 
     // Parse starting from the root rule
     const tree = parser.regelSpraakDocument();
@@ -103,36 +152,21 @@ export class AntlrParser {
     // Check for parse errors
     const errors = errorListener.getErrors();
     if (errors.length > 0) {
-      const firstError = errors[0];
-      throw new Error(firstError);
+      throw new Error(errors[0]);
     }
 
     // Visit the tree to build our AST
-    try {
-      const visitor = new RegelSpraakVisitorImpl();
-      const model = visitor.visit(tree);
-      // LocationMap removed - locations are now stored directly on nodes
-      return { model, locationMap: new WeakMap() }; // Empty map for compatibility
-    } catch (error) {
-      console.error('Visitor error:', error);
-      console.error('Stack:', (error as Error).stack);
-      throw error;
-    }
+    const visitor = new RegelSpraakVisitorImpl();
+    const model = visitor.visit(tree);
+    // LocationMap removed - locations are now stored directly on nodes
+    return { model, locationMap: new WeakMap() }; // Empty map for compatibility
   }
 
   /**
    * Parse RegelSpraak source code and return a DomainModel
    */
   parseModel(source: string): DomainModel {
-    const chars = new CharStream(source);
-    const lexer = new RegelSpraakLexer(chars);
-    const tokens = new CommonTokenStream(lexer);
-    const parser = new RegelSpraakParser(tokens);
-
-    // Set up custom error listener
-    const errorListener = new CollectingErrorListener();
-    parser.removeErrorListeners();
-    parser.addErrorListener(errorListener);
+    const { parser, errorListener } = this.createParser(source);
 
     // Parse starting from the root rule
     const tree = parser.regelSpraakDocument();
@@ -140,19 +174,12 @@ export class AntlrParser {
     // Check for parse errors
     const errors = errorListener.getErrors();
     if (errors.length > 0) {
-      const firstError = errors[0];
-      throw new Error(firstError);
+      throw new Error(errors[0]);
     }
 
     // Visit the tree to build our AST
-    try {
-      const visitor = new RegelSpraakVisitorImpl();
-      return visitor.visit(tree);
-    } catch (error) {
-      console.error('Visitor error:', error);
-      console.error('Stack:', (error as Error).stack);
-      throw error;
-    }
+    const visitor = new RegelSpraakVisitorImpl();
+    return visitor.visit(tree);
   }
 
   /**
@@ -173,15 +200,7 @@ export class AntlrParser {
    */
   parseExpression(source: string): Expression {
     try {
-      const chars = new CharStream(source);
-      const lexer = new RegelSpraakLexer(chars);
-      const tokens = new CommonTokenStream(lexer);
-      const parser = new RegelSpraakParser(tokens);
-
-      // Set up custom error listener
-      const errorListener = new CollectingErrorListener();
-      parser.removeErrorListeners();
-      parser.addErrorListener(errorListener);
+      const { parser, errorListener } = this.createParser(source);
 
       // Parse just an expression
       const tree = parser.expressie();
@@ -190,12 +209,13 @@ export class AntlrParser {
       const errors = errorListener.getErrors();
       if (errors.length > 0) {
         const firstError = errors[0];
-        // Map ANTLR errors to user-friendly messages
-        if (firstError.includes('no viable alternative') && source.includes('de wortel van')) {
-          throw new Error('Missing argument for "de wortel van"');
-        }
-        if (firstError.includes('no viable alternative') && source.includes('de absolute waarde van')) {
-          throw new Error('Missing argument for "de absolute waarde van"');
+        // Map a missing-argument parse failure to a function-specific message,
+        // identifying the function from the token stream rather than the source.
+        if (firstError.includes('no viable alternative')) {
+          const fn = this.findUnaryFunctionKeyword(parser);
+          if (fn) {
+            throw new Error(`Missing argument for "${fn}"`);
+          }
         }
         throw new Error(firstError);
       }
@@ -203,12 +223,11 @@ export class AntlrParser {
       // Check if there's unparsed input (multiple arguments)
       const currentToken = parser.getCurrentToken();
       if (currentToken && currentToken.type !== RegelSpraakParser.EOF) {
-        // Check specific patterns for better error messages
-        if (source.includes('de wortel van') && currentToken.text === ',') {
-          throw new Error('Multiple arguments not supported for "de wortel van"');
-        }
-        if (source.includes('de absolute waarde van') && currentToken.text === ',') {
-          throw new Error('Multiple arguments not supported for "de absolute waarde van"');
+        if (currentToken.text === ',') {
+          const fn = this.findUnaryFunctionKeyword(parser);
+          if (fn) {
+            throw new Error(`Multiple arguments not supported for "${fn}"`);
+          }
         }
         // Generic error for other cases
         throw new Error(`Unexpected input after expression: ${currentToken.text}`);
@@ -238,15 +257,7 @@ export class AntlrParser {
    */
   parseRule(source: string): Rule {
     try {
-      const chars = new CharStream(source);
-      const lexer = new RegelSpraakLexer(chars);
-      const tokens = new CommonTokenStream(lexer);
-      const parser = new RegelSpraakParser(tokens);
-
-      // Set up custom error listener
-      const errorListener = new CollectingErrorListener();
-      parser.removeErrorListeners();
-      parser.addErrorListener(errorListener);
+      const { parser, errorListener } = this.createParser(source);
 
       // Parse a regel (rule definition)
       const tree = parser.regel();
@@ -289,15 +300,7 @@ export class AntlrParser {
    */
   parseObjectType(source: string): ObjectTypeDefinition {
     try {
-      const chars = new CharStream(source);
-      const lexer = new RegelSpraakLexer(chars);
-      const tokens = new CommonTokenStream(lexer);
-      const parser = new RegelSpraakParser(tokens);
-
-      // Set up custom error listener
-      const errorListener = new CollectingErrorListener();
-      parser.removeErrorListeners();
-      parser.addErrorListener(errorListener);
+      const { parser, errorListener } = this.createParser(source);
 
       // Parse an objectTypeDefinition
       const tree = parser.objectTypeDefinition();
@@ -324,15 +327,7 @@ export class AntlrParser {
    */
   parseParameter(source: string): ParameterDefinition {
     try {
-      const chars = new CharStream(source);
-      const lexer = new RegelSpraakLexer(chars);
-      const tokens = new CommonTokenStream(lexer);
-      const parser = new RegelSpraakParser(tokens);
-
-      // Set up custom error listener
-      const errorListener = new CollectingErrorListener();
-      parser.removeErrorListeners();
-      parser.addErrorListener(errorListener);
+      const { parser, errorListener } = this.createParser(source);
 
       // Parse a parameterDefinition
       const tree = parser.parameterDefinition();
@@ -359,15 +354,7 @@ export class AntlrParser {
    */
   parseDecisionTable(source: string): DecisionTable {
     try {
-      const chars = new CharStream(source);
-      const lexer = new RegelSpraakLexer(chars);
-      const tokens = new CommonTokenStream(lexer);
-      const parser = new RegelSpraakParser(tokens);
-
-      // Set up custom error listener
-      const errorListener = new CollectingErrorListener();
-      parser.removeErrorListeners();
-      parser.addErrorListener(errorListener);
+      const { parser, errorListener } = this.createParser(source);
 
       // Parse a beslistabel
       const tree = parser.beslistabel();
