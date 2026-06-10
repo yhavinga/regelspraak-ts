@@ -506,4 +506,25 @@ Regel MaakKlant
     expect(result.success).toBe(true);
     expect(result.diagnostics).toEqual([]);
   });
+
+  test('decision-table condition columns resolve against the conclusion object type', () => {
+    const parser = new AntlrParser();
+    const result = parser.parseResolvedModel(`
+Objecttype de Persoon (bezield)
+    is volwassen kenmerk (bijvoeglijk);
+    de leeftijd Numeriek;
+
+Beslistabel Volwassenheid
+geldig altijd
+|   | een Persoon is volwassen | indien leeftijd groter of gelijk is aan |
+|---|--------------------------|-----------------------------------------|
+| 1 | waar                     | 18                                      |
+`);
+
+    // "leeftijd" in the condition column only resolves because the table is
+    // scoped to Persoon (the conclusion subject); without that scope it has no
+    // navigation root.
+    expect(result.success).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+  });
 });

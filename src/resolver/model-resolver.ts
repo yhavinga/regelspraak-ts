@@ -560,6 +560,28 @@ class DomainModelResolver {
     });
   }
 
+  /**
+   * A decision table's columns are scoped to the object type named by its
+   * conclusion subject: "een Persoon is volwassen" and "de factor van een
+   * Persoon ..." both scope to Persoon. Derive that binding so the condition and
+   * conclusion columns resolve against the table's object — the same way a rule's
+   * body resolves against its subject — instead of in an empty global scope where
+   * a bare attribute like `leeftijd` has no root.
+   */
+  private deduceDecisionTableBinding(
+    results: ReadonlyArray<DecisionTableResult | undefined>
+  ): ObjectBinding | undefined {
+    for (const result of results) {
+      if (result?.targetExpression) {
+        const binding = this.inferBindingFromExpression(result.targetExpression);
+        if (binding) {
+          return binding;
+        }
+      }
+    }
+    return undefined;
+  }
+
   private resolveDecisionTables(tables: DecisionTable[]): void {
     tables.forEach((table, tableIndex) => {
       const tablePath = `beslistabels[${tableIndex}]`;
@@ -567,7 +589,10 @@ class DomainModelResolver {
 
       if (versions) {
         versions.forEach((version, versionIndex) => {
-          const context = this.createContext();
+          const binding = this.deduceDecisionTableBinding(
+            version.conclusionColumns.map(column => column.result)
+          );
+          const context = this.createContext(binding);
           const versionPath = `${tablePath}.versions[${versionIndex}]`;
 
           version.conclusionColumns.forEach((column, columnIndex) =>
@@ -585,7 +610,9 @@ class DomainModelResolver {
         return;
       }
 
-      const context = this.createContext();
+      const context = this.createContext(
+        this.deduceDecisionTableBinding([table.parsedResult])
+      );
       if (table.parsedResult) {
         this.resolveDecisionTableResult(table.parsedResult, context, `${tablePath}.parsedResult`);
       }
