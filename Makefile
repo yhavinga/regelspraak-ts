@@ -38,4 +38,7 @@ parser: $(ANTLR4_JAR)
 	cd grammar && $(ANTLR4) -Dlanguage=TypeScript -visitor -no-listener \
 		-o ../src/_generated/antlr \
 		RegelSpraak.g4
+	node scripts/normalize-generated-parser.js \
+		src/_generated/antlr/RegelSpraakLexer.ts \
+		src/_generated/antlr/RegelSpraakParser.ts
 	node scripts/extract-multiword.js
