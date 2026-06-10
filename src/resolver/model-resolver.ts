@@ -51,7 +51,9 @@ import { ResolvedInfo } from './types';
 import {
   createResolutionContext,
   createResolutionMaps,
+  findFeitTypesForRole,
   pushScope,
+  resolveOnderwerpketenSubject,
   ResolutionContext,
   ResolutionMaps,
   ResolvedVariable,
@@ -380,8 +382,72 @@ class DomainModelResolver {
   }
 
   private resolveFeitCreatie(result: FeitCreatie, context: ResolutionContext, path: string): void {
-    this.resolveExpression(result.subject1, context, `${path}.subject1`);
-    this.resolveExpression(result.subject2, context, `${path}.subject2`);
+    this.resolveFeitCreatieSubject(result.subject1, context, `${path}.subject1`);
+    this.resolveFeitCreatieSubject(result.subject2, context, `${path}.subject2`);
+    this.resolveFeitCreatieRole(result.role1, `${path}.role1`, result.location);
+    this.resolveFeitCreatieRole(result.role2, `${path}.role2`, result.location);
+  }
+
+  /**
+   * Resolve a FeitCreatie subject. The parser still carries each subject as one opaque
+   * `<onderwerpketen>` string (finding G7), so decompose it per the spec and resolve it
+   * structurally, attaching the navigation metadata to the subject node. The opaque path is kept
+   * intact so the existing engine/transpiler consumers are unaffected. Unknown roots, unnavigable
+   * hops and ambiguity become diagnostics instead of throws from the generic navigation resolver.
+   */
+  private resolveFeitCreatieSubject(
+    subject: Expression,
+    context: ResolutionContext,
+    path: string
+  ): void {
+    const phrase = this.feitCreatieSubjectPhrase(subject);
+    if (phrase === undefined) {
+      // Already structural (e.g. a future grammar fix) — resolve it the normal way.
+      this.resolveExpression(subject, context, path);
+      return;
+    }
+    try {
+      subject.resolved = resolveOnderwerpketenSubject(phrase, context, this.maps);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.addDiagnostic(message, path, subject.location);
+    }
+  }
+
+  /**
+   * Extract the opaque onderwerpketen phrase from a FeitCreatie subject node, or undefined if the
+   * subject is already structural and should go through the generic resolver.
+   */
+  private feitCreatieSubjectPhrase(subject: Expression): string | undefined {
+    if (subject?.type !== 'AttributeReference') {
+      return undefined;
+    }
+    const attributePath = (subject as AttributeReference).path;
+    if (attributePath?.length === 1 && typeof attributePath[0] === 'string') {
+      return attributePath[0];
+    }
+    return undefined;
+  }
+
+  /**
+   * Validate a FeitCreatie role (`<rolnaam>`) against the declared FeitTypes. The resolver owns
+   * this check now: an unknown role and a role that is ambiguous across FeitTypes are diagnostics.
+   */
+  private resolveFeitCreatieRole(roleName: string, path: string, location?: SourceLocation): void {
+    if (!roleName) {
+      this.addDiagnostic('FeitCreatie role is empty', path, location);
+      return;
+    }
+    const feitTypes = findFeitTypesForRole(roleName, this.maps);
+    if (feitTypes.length === 0) {
+      this.addDiagnostic(`Unknown FeitCreatie role '${roleName}'`, path, location);
+    } else if (feitTypes.length > 1) {
+      this.addDiagnostic(
+        `Ambiguous FeitCreatie role '${roleName}' (declared in FeitTypes: ${feitTypes.join(', ')})`,
+        path,
+        location
+      );
+    }
   }
 
   private resolveDagsoortDefinitions(definitions: DagsoortDefinitie[]): void {

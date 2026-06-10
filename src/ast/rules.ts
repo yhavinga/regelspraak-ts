@@ -136,6 +136,7 @@ export interface FeitCreatie {
   subject1: Expression;  // Left side subject reference
   role2: string;  // Right side role name (e.g., "passagier")
   subject2: Expression;  // Right side subject reference (navigation pattern)
+  location?: SourceLocation;  // Set by visitor
 }
 
 export interface RegelGroep {

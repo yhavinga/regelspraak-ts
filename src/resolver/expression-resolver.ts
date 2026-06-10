@@ -1188,6 +1188,137 @@ function resolveAttributeReference(
 }
 
 /**
+ * Decompose a FeitCreatie subject phrase (an `<onderwerpketen>`, spec §9.4 / L1615) into
+ * navigation segments, root first.
+ *
+ * The FeitCreatie grammar (initial scaffold) still carries each subject as one opaque string
+ * (e.g. "een club met pas", "de club van de vereniging met pas") instead of a structural
+ * `onderwerpketen`. This implements the spec production literally:
+ *
+ *   <onderwerpketen> ::= (<lidwoord> (<objecttypenaam> | <rolnaam>)) | (<selector> "van" <onderwerpketen>)
+ *
+ * - A single leading `<lidwoord>` (de/het/een) is a determiner and is stripped.
+ * - The chain is right-recursive on `van <lidwoord>` boundaries; the rightmost element is the
+ *   root subject, elements to its left are `selector` hops. We return segments root-first so the
+ *   resolver navigates left-to-right from the root.
+ * - Other prepositions inside a segment (e.g. "met" in "club met pas") stay part of the name.
+ *
+ * NOTE: This is the fallback (Option A) of PLAN_FEITCREATIE_SUBJECTS_20260610. It is the single
+ * spec-decomposition for subject phrases and is exported so the transpiler's parallel
+ * `parseVanNavigationChain` can be retired against it later (finding G2).
+ */
+export function decomposeOnderwerpketenPhrase(phrase: string): string[] {
+  const stripped = phrase.replace(/^\s*(?:de|het|een)\s+/i, '').trim();
+  if (!stripped) {
+    return [];
+  }
+  const segments = stripped
+    .split(/\s+van\s+(?:de|het|een)\s+/i)
+    .map(segment => segment.trim())
+    .filter(segment => segment.length > 0);
+  return segments.reverse();
+}
+
+/**
+ * Resolve a FeitCreatie subject phrase to navigation metadata.
+ *
+ * Root resolution follows the spec precedence (objecttypenaam OR rolnaam): an `<objecttypenaam>`
+ * is tried first, then a `<rolnaam>` via FeitType roles. Trying the object type first avoids a
+ * false ambiguity when a name is both an object type and a role (e.g. "club"). `selector` hops are
+ * resolved right-to-left as FeitType navigations. Unknown roots, unnavigable hops and genuine
+ * ambiguity throw, so the model resolver can surface them as diagnostics.
+ */
+export function resolveOnderwerpketenSubject(
+  phrase: string,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): ResolvedInfo {
+  const segments = decomposeOnderwerpketenPhrase(phrase);
+  if (segments.length === 0) {
+    throw new Error(`Empty FeitCreatie subject '${phrase}'`);
+  }
+
+  const resolvedPath: ResolvedPathSegment[] = [];
+  let hasCollectionNavigation = false;
+
+  const rootName = segments[0];
+  let currentType: string | undefined;
+
+  const objectType = lookupObjectType(rootName, maps);
+  if (objectType) {
+    resolvedPath.push({
+      sourceName: rootName,
+      resolvedName: objectType.name,
+      kind: 'variable',
+      sourceType: 'context',
+      targetType: objectType.name,
+      cardinality: '1',
+    });
+    currentType = objectType.name;
+  } else {
+    const rootCandidates = resolveFeitTypeRole(rootName, maps.feitTypes, maps.objectTypes);
+    const root = selectSingleCandidate(
+      rootCandidates,
+      rootCandidates.length > 1
+        ? `Ambiguous FeitCreatie subject root '${rootName}' in '${phrase}'`
+        : `Unknown FeitCreatie subject root '${rootName}' in '${phrase}'`
+    );
+    resolvedPath.push(root.segment);
+    currentType = root.nextType;
+    if (root.segment.cardinality === 'N') {
+      hasCollectionNavigation = true;
+    }
+  }
+
+  for (let i = 1; i < segments.length; i++) {
+    const segment = segments[i];
+    if (!currentType) {
+      throw new Error(
+        `Cannot navigate FeitCreatie subject hop '${segment}' through a scalar in '${phrase}'`
+      );
+    }
+    const hopCandidates = resolveFeitTypeNavigation(segment, currentType, maps.feitTypes, maps.objectTypes);
+    const hop = selectSingleCandidate(
+      hopCandidates,
+      hopCandidates.length > 1
+        ? `Ambiguous FeitCreatie subject hop '${segment}' from '${currentType}' in '${phrase}'`
+        : `Cannot navigate FeitCreatie subject hop '${segment}' from '${currentType}' in '${phrase}'`
+    );
+    resolvedPath.push(hop.segment);
+    currentType = hop.nextType;
+    if (hop.segment.cardinality === 'N') {
+      hasCollectionNavigation = true;
+    }
+  }
+
+  const finalType = resolvedPath[resolvedPath.length - 1].targetType;
+  return {
+    resolvedPath,
+    resolvedType: resolveFinalType(finalType, maps),
+    hasCollectionNavigation,
+  };
+}
+
+/**
+ * Return the names of FeitTypes that declare a role matching `roleName` (singular or plural).
+ * Used to validate FeitCreatie `role1`/`role2`: zero matches is an unknown role, more than one is
+ * an ambiguous role.
+ */
+export function findFeitTypesForRole(roleName: string, maps: ResolutionMaps): string[] {
+  const target = roleName.toLowerCase();
+  const matches: string[] = [];
+  for (const [, feitType] of maps.feitTypes) {
+    const hasRole = feitType.rollen.some(
+      role => role.naam.toLowerCase() === target || role.meervoud?.toLowerCase() === target
+    );
+    if (hasRole) {
+      matches.push(feitType.naam);
+    }
+  }
+  return matches;
+}
+
+/**
  * Resolve a DimensionedAttributeReference.
  *
  * This validates that:
