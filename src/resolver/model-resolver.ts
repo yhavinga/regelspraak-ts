@@ -411,44 +411,40 @@ class DomainModelResolver {
     this.resolveExpression(result.targetCollection, context, `${path}.targetCollection`);
     this.resolveOptionalExpression(result.remainderTarget, context, `${path}.remainderTarget`);
 
+    // §9.7: the verdeler attribute (verdeelplafond) and the remainder target belong
+    // to the verdeler, so they resolve in the rule's own context. The per-receiver
+    // criteria (naar rato / op volgorde / maximum, and the tie-break criterion),
+    // however, are always an attribute of the *ontvanger* (§9.7.1/§9.7.2/§9.7.3 all
+    // state "een attribuut van de ontvanger"). Resolve them in a context scoped to
+    // the receiver object type — the type the share is distributed over — so a bare
+    // attribute binds to the receiver instead of failing against the verdeler.
+    const receiverContext = this.receiverContextFor(result.targetCollection, context);
+
     result.distributionMethods.forEach((method, index) => {
-      const methodPath = `${path}.distributionMethods[${index}]`;
-      switch (method.type) {
-        case 'VerdelingNaarRato':
-          this.resolveExpression((method as VerdelingNaarRato).ratioExpression, context, `${methodPath}.ratioExpression`);
-          return;
-        case 'VerdelingOpVolgorde':
-          this.resolveExpression((method as VerdelingOpVolgorde).orderExpression, context, `${methodPath}.orderExpression`);
-          return;
-        case 'VerdelingMaximum':
-          this.resolveExpression((method as VerdelingMaximum).maxExpression, context, `${methodPath}.maxExpression`);
-          return;
-        case 'VerdelingTieBreak':
-          this.resolveVerdelingMethod((method as VerdelingTieBreak).tieBreakMethod, context, `${methodPath}.tieBreakMethod`);
-          return;
-        case 'VerdelingGelijkeDelen':
-        case 'VerdelingAfronding':
-          return;
-        default:
-          this.addDiagnostic(`Unsupported distribution method '${method.type}'`, methodPath);
-      }
+      this.resolveVerdelingMethod(method, receiverContext, `${path}.distributionMethods[${index}]`);
     });
   }
 
   private resolveVerdelingMethod(
-    method: VerdelingTieBreak['tieBreakMethod'] | VerdelingAfronding,
+    method:
+      | VerdelingNaarRato
+      | VerdelingOpVolgorde
+      | VerdelingMaximum
+      | VerdelingTieBreak
+      | VerdelingAfronding
+      | { type: string },
     context: ResolutionContext,
     path: string
   ): void {
     switch (method.type) {
       case 'VerdelingNaarRato':
-        this.resolveExpression((method as VerdelingNaarRato).ratioExpression, context, `${path}.ratioExpression`);
+        this.resolveReceiverCriterion((method as VerdelingNaarRato).ratioExpression, context, `${path}.ratioExpression`);
         return;
       case 'VerdelingOpVolgorde':
-        this.resolveExpression((method as VerdelingOpVolgorde).orderExpression, context, `${path}.orderExpression`);
+        this.resolveReceiverCriterion((method as VerdelingOpVolgorde).orderExpression, context, `${path}.orderExpression`);
         return;
       case 'VerdelingMaximum':
-        this.resolveExpression((method as VerdelingMaximum).maxExpression, context, `${path}.maxExpression`);
+        this.resolveReceiverCriterion((method as VerdelingMaximum).maxExpression, context, `${path}.maxExpression`);
         return;
       case 'VerdelingTieBreak':
         this.resolveVerdelingMethod((method as VerdelingTieBreak).tieBreakMethod, context, `${path}.tieBreakMethod`);
@@ -457,8 +453,93 @@ class DomainModelResolver {
       case 'VerdelingAfronding':
         return;
       default:
-        this.addDiagnostic(`Unsupported distribution method '${(method as any).type}'`, path);
+        this.addDiagnostic(`Unsupported distribution method '${(method as { type: string }).type}'`, path);
     }
+  }
+
+  /**
+   * Build a resolution context scoped to the verdeling's receiver (ontvanger)
+   * object type, so a per-receiver criterion attribute resolves against the
+   * receiver rather than the verdeler that scopes the rule. Falls back to the
+   * verdeler context when the receiver type cannot be derived (e.g. the target
+   * collection itself did not resolve — already reported elsewhere).
+   *
+   * `rootResolution: 'relative-only'` forces a bare attribute name to bind to the
+   * receiver type instead of being looked up as a global root.
+   */
+  private receiverContextFor(
+    targetCollection: Expression,
+    fallback: ResolutionContext
+  ): ResolutionContext {
+    const receiverType = this.receiverObjectType(targetCollection);
+    if (!receiverType) {
+      return fallback;
+    }
+    const variableName = receiverType.charAt(0).toLowerCase() + receiverType.slice(1);
+    return {
+      ...createResolutionContext(this.model, receiverType, variableName),
+      rootResolution: 'relative-only',
+    };
+  }
+
+  /**
+   * Derive the receiver (ontvanger) object type from the resolved target
+   * collection. The collection is "de <aandeel> van alle <ontvangers> ..."; its
+   * terminal segment is the share attribute, whose declaring type is the
+   * receiver. Fall back to the last to-many FeitType hop's target type.
+   */
+  private receiverObjectType(targetCollection: Expression): string | undefined {
+    const segments = (targetCollection.resolved?.resolvedPath ?? []) as Array<{
+      kind: string;
+      cardinality: '1' | 'N';
+      sourceType: string;
+      targetType: string;
+    }>;
+    if (segments.length === 0) {
+      return undefined;
+    }
+    const terminal = segments[segments.length - 1];
+    if (terminal.kind === 'attribute' && terminal.sourceType && terminal.sourceType !== 'context') {
+      return terminal.sourceType;
+    }
+    for (let i = segments.length - 1; i >= 0; i--) {
+      const segment = segments[i];
+      if (segment.kind === 'feittype' && segment.cardinality === 'N') {
+        return segment.targetType;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Resolve a per-receiver criterion expression of a verdeling (the naar-rato /
+   * op-volgorde / maximum attribute). Per the §9.7.7 grammar this is always an
+   * `<attribuutmetlidwoord>` — a single attribute of the ontvanger. The parser is
+   * inconsistent about how it lowers that production: "met een maximum van de X"
+   * arrives as an AttributeReference, but "naar rato van de X" / "op volgorde van
+   * ... de X" arrive as a bare VariableReference. Bind the latter as a
+   * single-segment attribute of the receiver so the criterion carries navigation
+   * metadata (and strict resolution succeeds), keeping both forms uniform for
+   * downstream consumers.
+   */
+  private resolveReceiverCriterion(
+    expression: Expression,
+    context: ResolutionContext,
+    path: string
+  ): void {
+    if (expression.type === 'VariableReference') {
+      const attributeReference: AttributeReference = {
+        type: 'AttributeReference',
+        path: [(expression as VariableReference).variableName],
+        location: expression.location,
+      };
+      this.resolveExpression(attributeReference, context, path);
+      if (attributeReference.resolved) {
+        expression.resolved = attributeReference.resolved;
+      }
+      return;
+    }
+    this.resolveExpression(expression, context, path);
   }
 
   private resolveFeitCreatie(result: FeitCreatie, context: ResolutionContext, path: string): void {
