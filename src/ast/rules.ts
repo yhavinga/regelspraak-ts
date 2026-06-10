@@ -7,6 +7,7 @@ import { SourceLocation } from './location';
 import { DagsoortDefinitie } from './dagsoort';
 import { PeriodDefinition } from './timelines';
 import { DimensionedAttributeReference } from './dimensions';
+import type { ResolvedInfo } from '../resolver/types';
 
 export interface Rule {
   type: 'Rule';
@@ -60,6 +61,12 @@ export interface ObjectCreation {
     attribute: string;
     value: Expression;
   }>;
+  /**
+   * Navigation metadata attached by the resolver: the subject→role→objectType
+   * relation, as a single `feittype` ResolvedPathSegment. Lets the transpiler map
+   * the created relation to schema field names without re-resolving the FeitType.
+   */
+  resolved?: ResolvedInfo;
 }
 
 export interface MultipleResults {

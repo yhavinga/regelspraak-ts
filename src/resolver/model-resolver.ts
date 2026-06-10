@@ -53,6 +53,7 @@ import {
   createResolutionMaps,
   findFeitTypesForRole,
   pushScope,
+  resolveObjectCreationRelationSegment,
   resolveOnderwerpketenSubject,
   ResolutionContext,
   ResolutionMaps,
@@ -309,6 +310,24 @@ class DomainModelResolver {
     result.attributeInits.forEach((init, index) =>
       this.resolveExpression(init.value, context, `${path}.attributeInits[${index}].value`)
     );
+
+    // Resolve the asserted subject→role→objectType relation and attach it as
+    // navigation metadata, so the transpiler maps it to schema field names
+    // without re-searching the FeitTypes. Best-effort: an unresolvable or
+    // ambiguous relation is left to the transpiler's existing fail-fast (it is
+    // not re-diagnosed here, to keep this gate's behaviour unchanged).
+    const subjectBinding = this.inferBindingFromExpression(result.subject);
+    if (subjectBinding && result.role && result.objectType) {
+      const segment = resolveObjectCreationRelationSegment(
+        result.role,
+        subjectBinding.objectType,
+        result.objectType,
+        this.maps
+      );
+      if (segment) {
+        result.resolved = { resolvedPath: [segment] };
+      }
+    }
   }
 
   private resolveConsistentieregel(

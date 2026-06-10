@@ -696,6 +696,11 @@ function resolveFeitTypeNavigation(
               sourceType,
               targetType: targetObjectType.name,
               cardinality,
+              feitType: {
+                feitTypeName: feitType.naam,
+                sourceRoleName: viableSourceRoles[0].naam,
+                targetRoleName: targetRole.naam,
+              },
             },
             nextType: targetObjectType.name,
             description: `FeitType '${feitType.naam}' role '${resolvedName}' -> '${targetObjectType.name}'`,
@@ -743,6 +748,11 @@ function resolveFeitTypeRole(
               sourceType: 'context',
               targetType: targetObjectType.name,
               cardinality: resolveRoleCardinality(role, feitType.naam),
+              feitType: {
+                feitTypeName: feitType.naam,
+                sourceRoleName: role.naam,
+                targetRoleName: role.naam,
+              },
             },
             nextType: targetObjectType.name,
             description: `FeitType '${feitType.naam}' root role ` +
@@ -767,6 +777,30 @@ function resolveRoleCardinality(role: Rol, feitTypeName: string): '1' | 'N' {
     `Missing cardinality for role '${role.naam}' in FeitType '${feitTypeName}'. ` +
     `Cardinality must come from the FeitType cardinality line, not from plural aliases.`
   );
+}
+
+/**
+ * Resolve the relation an ObjectCreation asserts: from `subjectType`, navigate the
+ * created `role` to an object of `createdType`. Returns the single enriched
+ * `feittype` navigation segment, or `undefined` when the navigation is unknown or
+ * ambiguous. This is the resolver's authority for ObjectCreation relations; the
+ * Drools transpiler reads it instead of re-searching the FeitTypes.
+ */
+export function resolveObjectCreationRelationSegment(
+  role: string,
+  subjectType: string,
+  createdType: string,
+  maps: ResolutionMaps
+): ResolvedPathSegment | undefined {
+  const createdLower = createdType.toLowerCase();
+  const matches = resolveFeitTypeNavigation(
+    role,
+    subjectType,
+    maps.feitTypes,
+    maps.objectTypes
+  ).filter(candidate => candidate.segment.targetType.toLowerCase() === createdLower);
+
+  return matches.length === 1 ? matches[0].segment : undefined;
 }
 
 function formatPath(path: string[]): string {

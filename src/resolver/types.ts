@@ -71,6 +71,23 @@ export interface ResolvedPathSegment {
 
   /** Relationship cardinality: '1' for 1:1, 'N' for 1:N */
   cardinality: '1' | 'N';
+
+  /**
+   * For `kind: 'feittype'` segments: the structured identity of the FeitType hop.
+   * Carries the canonical (singular) FeitType and role names so downstream
+   * consumers (e.g. the Drools transpiler) can map a navigation hop to schema
+   * field names without re-resolving which FeitType the hop traverses.
+   *
+   * - `feitTypeName`: the navigated FeitType (FeitType.naam).
+   * - `sourceRoleName`: canonical name of the role we navigate FROM.
+   * - `targetRoleName`: canonical name of the role we navigate TO (independent of
+   *   whether the source used the singular or a plural alias).
+   */
+  feitType?: {
+    feitTypeName: string;
+    sourceRoleName: string;
+    targetRoleName: string;
+  };
 }
 
 export type ResolvedType =
