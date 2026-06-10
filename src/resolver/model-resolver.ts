@@ -307,9 +307,14 @@ class DomainModelResolver {
     path: string
   ): void {
     this.resolveExpression(result.subject, context, `${path}.subject`);
-    result.attributeInits.forEach((init, index) =>
-      this.resolveExpression(init.value, context, `${path}.attributeInits[${index}].value`)
-    );
+    result.attributeInits.forEach((init, index) => {
+      this.resolveExpression(init.value, context, `${path}.attributeInits[${index}].value`);
+      this.validateObjectCreationInit(
+        result.objectType,
+        init.attribute,
+        `${path}.attributeInits[${index}].attribute`
+      );
+    });
 
     // Resolve the asserted subject→role→objectType relation and attach it as
     // navigation metadata, so the transpiler maps it to schema field names
@@ -328,6 +333,62 @@ class DomainModelResolver {
         result.resolved = { resolvedPath: [segment] };
       }
     }
+  }
+
+  /**
+   * Validate that an ObjectCreation initializer targets a real attribute or
+   * kenmerk of the created ObjectType. An unknown target is a model error: left
+   * unchecked it makes the transpiler emit a setter for a field that does not
+   * exist, pushing a domain error into Java compilation. Reported as a
+   * diagnostic so it fails at the resolution boundary instead.
+   */
+  private validateObjectCreationInit(
+    objectTypeName: string | undefined,
+    attribute: string,
+    path: string
+  ): void {
+    if (!objectTypeName || !attribute) {
+      return;
+    }
+    const attrMap =
+      this.maps.attributes.get(objectTypeName) ||
+      this.maps.attributes.get(objectTypeName.toLowerCase());
+    const kenmerkMap =
+      this.maps.kenmerken.get(objectTypeName) ||
+      this.maps.kenmerken.get(objectTypeName.toLowerCase());
+    if (!attrMap && !kenmerkMap) {
+      // Unknown ObjectType — reported where the subject/role is resolved.
+      return;
+    }
+
+    const lower = attribute.toLowerCase();
+    if (attrMap?.get(attribute) || attrMap?.get(lower)) {
+      return;
+    }
+    if (kenmerkMap?.get(attribute) || kenmerkMap?.get(lower)) {
+      return;
+    }
+    const registry =
+      this.maps.kenmerkRegistries.get(objectTypeName) ||
+      this.maps.kenmerkRegistries.get(objectTypeName.toLowerCase());
+    if (registry && kenmerkMap) {
+      const canonical = registry.getCanonicalLabel(attribute);
+      if (kenmerkMap.get(canonical) || kenmerkMap.get(canonical.toLowerCase())) {
+        return;
+      }
+    }
+
+    const objectType =
+      this.maps.objectTypes.get(objectTypeName) ||
+      this.maps.objectTypes.get(objectTypeName.toLowerCase());
+    const known = (objectType?.members ?? [])
+      .filter(m => m.type === 'AttributeSpecification' || m.type === 'KenmerkSpecification')
+      .map(m => m.name);
+    this.addDiagnostic(
+      `Unknown attribute or kenmerk '${attribute}' on ObjectType '${objectTypeName}' in ObjectCreation` +
+        (known.length ? ` (known: ${known.join(', ')})` : ''),
+      path
+    );
   }
 
   private resolveConsistentieregel(

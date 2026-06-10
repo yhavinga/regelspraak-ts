@@ -458,4 +458,52 @@ De toeslag van een Persoon moet berekend worden als zijn leeftijd.
       diagnostic.message.includes("Cannot resolve navigation segment 'leeftijd'")
     )).toBe(true);
   });
+
+  test('ObjectCreation with an unknown initializer attribute is a diagnostic', () => {
+    const parser = new AntlrParser();
+    const result = parser.parseResolvedModel(`
+Objecttype de Bedrijf (mv: bedrijven)
+    de naam Tekst;
+
+Objecttype de Klant (mv: klanten)
+    de naam Tekst;
+
+Feittype klantrelatie
+    de leverancier\tBedrijf
+    de klant (mv: klanten)\tKlant
+één leverancier heeft meerdere klanten
+
+Regel MaakKlant
+    geldig altijd
+        Een bedrijf heeft een klant met kleur gelijk aan "rood".
+`);
+
+    expect(result.success).toBe(false);
+    expect(result.diagnostics.some(d =>
+      /Unknown attribute or kenmerk 'kleur' on ObjectType 'Klant'/.test(d.message)
+    )).toBe(true);
+  });
+
+  test('ObjectCreation with a known initializer attribute resolves', () => {
+    const parser = new AntlrParser();
+    const result = parser.parseResolvedModel(`
+Objecttype de Bedrijf (mv: bedrijven)
+    de naam Tekst;
+
+Objecttype de Klant (mv: klanten)
+    de naam Tekst;
+
+Feittype klantrelatie
+    de leverancier\tBedrijf
+    de klant (mv: klanten)\tKlant
+één leverancier heeft meerdere klanten
+
+Regel MaakKlant
+    geldig altijd
+        Een bedrijf heeft een klant met naam gelijk aan "Jan".
+`);
+
+    expect(result.success).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+  });
 });
