@@ -346,7 +346,16 @@ L_ANGLE_QUOTE: '«';
 R_ANGLE_QUOTE: '»';
 CARET: '^';
 DOUBLE_DOT: '..';
-// TAB is a visible token for FeitType role definitions (spec §3.11)
+// Line-leading whitespace is layout. The spec's layout EBNF *mandates* tab
+// indentation (e.g. <enumeratiespecificatie> ::= "Enumeratie" \n (\t
+// <enumeratiewaarde> \n)+, and the same \t in <attribuut> and the feittype
+// role lines), so tabs after a newline must lex exactly like spaces there —
+// hidden. Matching the newline run plus any following spaces/tabs as ONE
+// hidden token is what keeps a line-leading tab out of the parser while a
+// TAB *inside* a line stays visible: that interior tab is the structural
+// separator of a feittype role line (rolnaam \t objecttype, spec §3.11),
+// which rolDefinition anchors on.
+LINE_WS: [\r\n]+ [ \t]* -> channel(HIDDEN);
 TAB: '\t';
 WS: [ \r\n]+ -> channel(HIDDEN);
 LINE_COMMENT: '//' ~[\r\n]* -> skip;
