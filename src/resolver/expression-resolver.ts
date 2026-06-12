@@ -652,7 +652,10 @@ function resolveFeitTypeNavigation(
     forceCollectionCardinality = true;
   }
 
-  for (const [, feitType] of feitTypes) {
+  // The map double-keys each FeitType (original + lowercase name) for lookup, so
+  // iterate distinct values — visiting a capitalized-name FeitType twice would
+  // manufacture a false "ambiguous navigation" from two identical candidates.
+  for (const feitType of new Set(feitTypes.values())) {
     const sourceRoles = feitType.rollen.filter(
       (r) => r.objectType?.toLowerCase() === sourceTypeLower
     );
@@ -727,7 +730,8 @@ function resolveFeitTypeRole(
   const segmentLower = segment.toLowerCase();
   const candidates: NavigationCandidate[] = [];
 
-  for (const [, feitType] of feitTypes) {
+  // Iterate distinct values: the map double-keys each FeitType for lookup.
+  for (const feitType of new Set(feitTypes.values())) {
     for (const role of feitType.rollen) {
       if (!role.objectType) continue;
 
@@ -1341,7 +1345,8 @@ export function resolveOnderwerpketenSubject(
 export function findFeitTypesForRole(roleName: string, maps: ResolutionMaps): string[] {
   const target = roleName.toLowerCase();
   const matches: string[] = [];
-  for (const [, feitType] of maps.feitTypes) {
+  // Iterate distinct values: the map double-keys each FeitType for lookup.
+  for (const feitType of new Set(maps.feitTypes.values())) {
     const hasRole = feitType.rollen.some(
       role => role.naam.toLowerCase() === target || role.meervoud?.toLowerCase() === target
     );
@@ -1374,7 +1379,11 @@ function resolveDimensionedAttributeReference(
   // Build a set of dimension labels for fast lookup (case-insensitive)
   const dimensionLabelSet = new Set(rawLabels.map(l => l.toLowerCase()));
 
-  // Clean the base attribute path by removing dimension labels from path segments
+  // Clean the base attribute path by removing dimension labels from path segments.
+  // The parser-produced path keeps its source form — the resolver annotates, never
+  // rewrites (see Expression.resolved) — so the label-free path is resolved on a
+  // clone and carried in the annotation as `cleanedPath` for consumers that
+  // navigate by path text.
   if (expr.baseAttribute?.type === 'AttributeReference') {
     const baseAttr = expr.baseAttribute as AttributeReference;
     const cleanedPath: string[] = [];
@@ -1403,13 +1412,9 @@ function resolveDimensionedAttributeReference(
       }
     }
 
-    // Update the path for resolution
-    baseAttr.path = cleanedPath;
-  }
-
-  // Now resolve the cleaned base attribute
-  if (expr.baseAttribute?.type === 'AttributeReference') {
-    resolveAttributeReference(expr.baseAttribute as AttributeReference, context, maps);
+    const probe: AttributeReference = { ...baseAttr, path: cleanedPath };
+    resolveAttributeReference(probe, context, maps);
+    baseAttr.resolved = { ...probe.resolved, cleanedPath };
   } else if (expr.baseAttribute?.type === 'SubselectieExpression') {
     resolveSubselectieExpression(expr.baseAttribute as SubselectieExpression, context, maps);
   }
@@ -1934,7 +1939,9 @@ function resolveSelectedDimensionLabels(
 ): string[] {
   switch (selection.kind) {
     case 'all':
-      return dimension.labels
+      // Copy before sorting — `dimension` is the model's definition node, and
+      // expression resolution must not reorder it in place.
+      return [...dimension.labels]
         .sort((a, b) => a.position - b.position)
         .map(label => label.label);
     case 'range':

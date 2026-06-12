@@ -146,4 +146,11 @@ export interface ResolvedInfo {
    * compatibility between time-dependent operands and targets.
    */
   timeline?: TimelineInfo;
+
+  /**
+   * For the base attribute of a dimensioned reference (§3.6): the path with the
+   * dimension labels stripped out. The parser-produced `path` keeps its source
+   * form; consumers that navigate by path text should prefer this when present.
+   */
+  cleanedPath?: string[];
 }

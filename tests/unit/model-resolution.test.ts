@@ -528,3 +528,109 @@ geldig altijd
     expect(result.diagnostics).toEqual([]);
   });
 });
+
+describe('FeitType resolution is case-insensitive without false ambiguity', () => {
+  // The resolution maps double-key each FeitType (original + lowercase name) for
+  // lookup. Navigation used to iterate the map's entries, visiting a
+  // capitalized-name FeitType twice and reporting a false "Ambiguous navigation"
+  // with two identical candidates.
+  const sourceWithFeitType = (feitTypeName: string) => `
+Objecttype de Vlucht (mv: vluchten)
+  de vluchtdatum Datum in dagen;
+
+Objecttype de Natuurlijk persoon (mv: Natuurlijke personen) (bezield)
+  de geboortedatum Datum in dagen;
+  de leeftijd Numeriek;
+
+Feittype ${feitTypeName}
+  de reis	Vlucht
+  de passagier (mv: passagiers)	Natuurlijk persoon
+één reis betreft de verplaatsing van meerdere passagiers
+
+Regel bepaal leeftijd
+geldig altijd
+De leeftijd van een Natuurlijk persoon moet berekend worden als de tijdsduur van zijn geboortedatum tot de vluchtdatum van zijn reis in hele jaren.
+`;
+
+  function resolveAndGetHop(feitTypeName: string) {
+    const parser = new AntlrParser();
+    const model = parser.parseModel(sourceWithFeitType(feitTypeName));
+    const result = resolveModel(model, { strict: true });
+    expect(result.diagnostics).toEqual([]);
+    expect(result.success).toBe(true);
+    const hop = findNode(model.regels, (n: any) =>
+      n?.kind === 'feittype' && n?.sourceName === 'reis');
+    expect(hop).toBeDefined();
+    return hop;
+  }
+
+  test('a capitalized FeitType name resolves without false ambiguity', () => {
+    resolveAndGetHop('Vlucht van natuurlijke personen');
+  });
+
+  test('capitalized and lowercase FeitType names yield identical navigation metadata', () => {
+    const upper = resolveAndGetHop('Vlucht van natuurlijke personen');
+    const lower = resolveAndGetHop('vlucht van natuurlijke personen');
+    const normalize = (hop: any) => ({
+      ...hop,
+      feitType: { ...hop.feitType, feitTypeName: hop.feitType.feitTypeName.toLowerCase() },
+    });
+    expect(normalize(upper)).toEqual(normalize(lower));
+  });
+});
+
+describe('dimensioned reference resolution is non-destructive', () => {
+  const dimensionedSource = (reference: string) => `
+Dimensie de jaardimensie, bestaande uit de jaardimensies (na het attribuut met voorzetsel van):
+  1. vorig jaar
+  2. huidig jaar
+
+Dimensie de brutonettodimensie, bestaande uit de brutonettodimensies (voor het attribuut zonder voorzetsel):
+  1. bruto
+  2. netto
+
+Objecttype de Natuurlijk persoon (mv: Natuurlijke personen) (bezield)
+  het inkomen Numeriek (geheel getal) gedimensioneerd met jaardimensie en brutonettodimensie;
+  de belasting Numeriek (geheel getal);
+
+Regel bereken belasting
+geldig altijd
+De belasting van een Natuurlijk persoon moet berekend worden als ${reference} maal 0,3.
+`;
+
+  test('the parser-produced base path survives resolution; cleanedPath is annotated', () => {
+    const parser = new AntlrParser();
+    const model = parser.parseModel(
+      dimensionedSource('het netto inkomen van huidig jaar van de Natuurlijk persoon'));
+    const dimRef = findNode(model.regels, (n: any) => n?.type === 'DimensionedAttributeReference');
+    const sourcePath = [...dimRef.baseAttribute.path];
+
+    const result = resolveModel(model, { strict: true });
+    expect(result.success).toBe(true);
+
+    // The resolver annotates; the parser field keeps its source form.
+    expect(dimRef.baseAttribute.path).toEqual(sourcePath);
+    expect(dimRef.baseAttribute.resolved?.cleanedPath).toBeDefined();
+    expect(dimRef.baseAttribute.resolved?.resolvedPath?.at(-1)).toMatchObject({
+      resolvedName: 'inkomen',
+      sourceType: 'Natuurlijk persoon',
+    });
+    // Coordinates bound and ordered by the attribute's declared dimension order.
+    expect(dimRef.coordinates.map((c: any) => c.dimension))
+      .toEqual(['jaardimensie', 'brutonettodimensie']);
+  });
+
+  test('a failed dimension validation leaves the parser-produced path untouched', () => {
+    const parser = new AntlrParser();
+    // belasting is not dimensioned: resolution must fail without rewriting the AST.
+    const model = parser.parseModel(
+      dimensionedSource('de netto belasting van huidig jaar van de Natuurlijk persoon'));
+    const dimRef = findNode(model.regels, (n: any) => n?.type === 'DimensionedAttributeReference');
+    const sourcePath = [...dimRef.baseAttribute.path];
+
+    const result = resolveModel(model, { strict: true });
+    expect(result.success).toBe(false);
+    expect(result.diagnostics.some(d => /not dimensioned/.test(d.message))).toBe(true);
+    expect(dimRef.baseAttribute.path).toEqual(sourcePath);
+  });
+});
