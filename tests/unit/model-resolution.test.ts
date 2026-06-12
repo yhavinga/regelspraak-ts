@@ -634,3 +634,45 @@ De belasting van een Natuurlijk persoon moet berekend worden als ${reference} ma
     expect(dimRef.baseAttribute.path).toEqual(sourcePath);
   });
 });
+
+describe('kenmerk member names are article-free (canonical)', () => {
+  // The bezittelijk declaration form carries a leading article in its naamwoord
+  // ("het recht op korting kenmerk (bezittelijk)") while references drop it
+  // ("hij een recht op korting heeft"). The canonical member name — and so the
+  // resolvedName every reference reports — must be the article-free form, like
+  // attribute names.
+  const source = `
+Objecttype de Passagier (mv: passagiers)
+  is volwassen kenmerk (bijvoeglijk);
+  het recht op korting kenmerk (bezittelijk);
+  de korting Numeriek (geheel getal);
+
+Regel geef korting
+geldig altijd
+De korting van een Passagier moet gesteld worden op 1
+indien hij een recht op korting heeft.
+`;
+
+  test('declared kenmerk names drop the leading article', () => {
+    const parser = new AntlrParser();
+    const model = parser.parseModel(source);
+    const names = model.objectTypes[0].members
+      .filter((m: any) => m.type === 'KenmerkSpecification')
+      .map((m: any) => m.name);
+    expect(names).toEqual(['volwassen', 'recht op korting']);
+  });
+
+  test('a reference resolves to the article-free member name', () => {
+    const parser = new AntlrParser();
+    const model = parser.parseModel(source);
+    const result = resolveModel(model, { strict: true });
+    expect(result.success).toBe(true);
+    const read = findNode(model.regels, (n: any) =>
+      n?.type === 'AttributeReference' &&
+      n.resolved?.resolvedPath?.at(-1)?.targetType === 'Boolean');
+    expect(read.resolved.resolvedPath.at(-1)).toMatchObject({
+      resolvedName: 'recht op korting',
+      sourceType: 'Passagier',
+    });
+  });
+});

@@ -4451,6 +4451,16 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       name = this.extractTextWithSpaces(naamwoordCtx);
     }
 
+    // Canonical member name is article-free, like attribute names (which go
+    // through extractParameterName). The bezittelijk declaration form keeps a
+    // leading article in its naamwoord ("het recht op korting kenmerk
+    // (bezittelijk)") while references drop it ("hij een recht op korting
+    // heeft"); without stripping, the declared name — and so the resolver's
+    // resolvedName — disagrees with every reference, forcing downstream
+    // consumers to re-normalize. Only a *spaced* article is stripped; a
+    // single word like "eenzaam" is name content.
+    name = name.replace(/^(de|het|een)\s+/i, '');
+
     // Check for type (bijvoeglijk or bezittelijk)
     let kenmerkType: 'bijvoeglijk' | 'bezittelijk' | undefined;
     if (ctx.BIJVOEGLIJK && ctx.BIJVOEGLIJK()) {
