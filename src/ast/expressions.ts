@@ -66,6 +66,13 @@ export interface BinaryExpression extends Expression {
   'is een dagsoort' | 'zijn een dagsoort' | 'is geen dagsoort' | 'zijn geen dagsoort' |
   'is numeriek met exact' | 'is niet numeriek met exact' |
   'zijn numeriek met exact' | 'zijn niet numeriek met exact';
+  /**
+   * The operator as written in the source. "min" and "verminderd met" both
+   * normalize to '-' but carry different lege-waarde semantics (§6.1 Tabel 7
+   * vs Tabel 8), so consumers that implement those tables need the surface
+   * form.
+   */
+  sourceOperator?: string;
   left: Expression;
   right: Expression;
 }

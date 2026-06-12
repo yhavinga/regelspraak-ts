@@ -1088,6 +1088,10 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       result = {
         type: 'BinaryExpression',
         operator: operator as '+' | '-',
+        // §6.1: "min" (Tabel 7) and "verminderd met" (Tabel 8) both map to '-'
+        // but differ in lege-waarde semantics — keep the surface operator so
+        // consumers can tell them apart.
+        sourceOperator: opText,
         left: result,
         right
       } as BinaryExpression;
@@ -5303,6 +5307,9 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       result = {
         type: 'BinaryExpression',
         operator: normalizedOp,
+        // Keep the surface operator (see visitAdditiveExpression): "min" and
+        // "verminderd met" share '-' but differ in lege-waarde semantics.
+        sourceOperator: operatorText,
         left: result,
         right: rightExpr
       } as BinaryExpression;
