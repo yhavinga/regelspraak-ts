@@ -3623,27 +3623,15 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const attrNaamCtx = ctx.naamwoord ? ctx.naamwoord() : ctx._attribuutNaam;
     const attrName = this.extractTextWithSpaces(attrNaamCtx).trim();
 
-    // Get comparison operator
+    // Get comparison operator. mapOperator carries the full Dutch→symbol table
+    // (the elementary comparisonOperator rule accepts the ordering and (on)gelijk
+    // forms), so reuse it rather than a second, narrower copy; a text it cannot
+    // map to a known relational symbol is a genuine fail-fast.
     const compOpCtx = ctx.comparisonOperator();
     const opText = compOpCtx.getText();
-
-    // Map operator text to standard operator
-    let operator: string;
-    switch (opText) {
-      case 'kleiner dan':
-      case 'kleiner is dan':
-        operator = '<';
-        break;
-      case 'groter dan':
-      case 'groter is dan':
-        operator = '>';
-        break;
-      case 'gelijk aan':
-      case 'is gelijk aan':
-        operator = '==';
-        break;
-      default:
-        throw new Error(`Unsupported comparison operator in predicaat: ${opText}`);
+    const operator = this.mapOperator(opText);
+    if (!['<', '>', '==', '>=', '<=', '!='].includes(operator)) {
+      throw new Error(`Unsupported comparison operator in predicaat: ${opText}`);
     }
 
     // Get the expression
