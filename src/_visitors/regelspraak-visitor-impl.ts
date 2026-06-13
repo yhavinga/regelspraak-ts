@@ -6906,21 +6906,21 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
   }
 
   private parseDecisionTableColumn(headerText: string, columnIndex: number): DecisionTableColumn {
-    const resultTree = this.parseDecisionTableHeaderContext(
+    const resultAttempt = this.parseDecisionTableHeaderContext(
       headerText,
       parser => parser.beslistabelResultaatHeader()
     );
-    const conditionTree = this.parseDecisionTableHeaderContext(
+    const conditionAttempt = this.parseDecisionTableHeaderContext(
       headerText,
       parser => parser.beslistabelVoorwaardeHeader()
     );
 
-    if (resultTree && conditionTree) {
+    if (resultAttempt.tree && conditionAttempt.tree) {
       throw new Error(`Ambiguous decision table column header: ${headerText}`);
     }
 
-    if (resultTree) {
-      const result = this.visit(resultTree) as DecisionTableResult;
+    if (resultAttempt.tree) {
+      const result = this.visit(resultAttempt.tree) as DecisionTableResult;
       result.headerText = headerText;
       result.columnIndex = columnIndex;
       return {
@@ -6931,8 +6931,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       };
     }
 
-    if (conditionTree) {
-      const condition = this.visit(conditionTree) as DecisionTableCondition;
+    if (conditionAttempt.tree) {
+      const condition = this.visit(conditionAttempt.tree) as DecisionTableCondition;
       condition.headerText = headerText;
       condition.columnIndex = columnIndex;
       return {
@@ -6943,13 +6943,20 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       };
     }
 
-    throw new Error(`Invalid decision table column header: ${headerText}`);
+    // Parses as neither header shape. Surface why — the sub-parser swallows its
+    // own errors, so "Invalid" with no reason was the only signal a malformed
+    // header gave (e.g. a typo'd operator or attribute looked simply rejected).
+    const why = (errors: string[]) => errors.length > 0 ? errors.join('; ') : 'no match';
+    throw new Error(
+      `Invalid decision table column header '${headerText}': not a result header ` +
+      `(${why(resultAttempt.errors)}) nor a condition header (${why(conditionAttempt.errors)})`
+    );
   }
 
   private parseDecisionTableHeaderContext(
     headerText: string,
     parse: (parser: RegelSpraakParser) => any
-  ): any | undefined {
+  ): { tree: any | undefined; errors: string[] } {
     const chars = new CharStream(headerText.trim());
     const lexer = new RegelSpraakLexer(chars);
     const tokens = new CommonTokenStream(lexer);
@@ -6961,7 +6968,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     parser.addErrorListener(errorListener);
 
     const tree = parse(parser);
-    return errorListener.getErrors().length === 0 ? tree : undefined;
+    const errors = errorListener.getErrors();
+    return { tree: errors.length === 0 ? tree : undefined, errors };
   }
 
   visitBeslistabelGelijkstellingHeader(ctx: any): DecisionTableResult {

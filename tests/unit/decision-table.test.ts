@@ -220,6 +220,21 @@ geldig altijd
   });
 
   describe('error handling', () => {
+    test('an unparseable column header surfaces the sub-parse reason', () => {
+      // The header is sub-parsed as a result header and a condition header; both
+      // attempts swallow their own ANTLR errors, so a malformed header used to
+      // fail with a bare "Invalid" and no clue. The message now carries why.
+      const parser = new AntlrParser();
+      expect(() => parser.parseModel(`Objecttype de Persoon (mv: personen)
+  de korting Numeriek;
+Beslistabel t
+geldig altijd
+| | de korting van een Persoon zomaar iets |
+|---|---|
+| 1 | 5 |
+`)).toThrow(/Invalid decision table column header.*not a result header.*nor a condition header.*expecting 'indien'/s);
+    });
+
     test('should fail on invalid syntax', () => {
       const invalidTable = `Beslistabel Test
 geldig altijd
