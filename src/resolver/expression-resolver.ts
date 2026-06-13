@@ -53,7 +53,7 @@ import {
   DimensionCoordinate
 } from '../ast/dimensions';
 import { ResolvedInfo, ResolvedSymbol, ResolvedPathSegment, SymbolKind, TimelineInfo } from './types';
-import { UnitRegistry, buildUnitRegistry, classifyOperands, unitMismatchMessage } from './unit-compatibility';
+import { UnitRegistry, buildUnitRegistry, classifyOperands, unitMismatchMessage, aggregateResultUnit } from './unit-compatibility';
 import { KenmerkEquivalenceRegistry } from '../kenmerk-equivalence-registry';
 import { PeriodDefinition, TimelineExpression } from '../ast/timelines';
 
@@ -1851,12 +1851,21 @@ function resolveAggregationExpression(
   switch (expr.aggregationType) {
     case 'som':
     case 'maximum':
-    case 'minimum':
+    case 'minimum': {
+      // Carry the aggregated members' unit and reject incompatible members
+      // (§4.10/§4.12/§4.13), matching the FunctionCall aggregate form.
+      const memberUnits = Array.isArray(expr.target)
+        ? expr.target.map(t => t.resolved?.unit)
+        : [expr.target.resolved?.unit];
+      const aggUnit = aggregateResultUnit(maps.units, memberUnits);
       expr.resolved = {
         resolvedType: { type: 'Numeriek' },
+        ...(aggUnit !== undefined ? { unit: aggUnit } : {}),
       };
       break;
+    }
     case 'aantal':
+      // A count is dimensionless regardless of the counted element's unit.
       expr.resolved = {
         resolvedType: { type: 'Numeriek' },
       };
@@ -2397,8 +2406,16 @@ function resolveFunctionCall(
   const firstArgumentFunctions = ['eerste_van', 'laatste_van'];
 
   if (numericFunctions.includes(functionName)) {
+    // som/min/max carry the aggregated members' unit (§4.10/§4.12/§4.13) and
+    // reject incompatible members; the other numeric functions (aantal — a
+    // dimensionless count — sqrt, tijdsduur, ...) produce a bare Numeriek.
+    const aggregators = ['som', 'som_van', 'maximum', 'maximum_van', 'minimum', 'minimum_van'];
+    const aggUnit = aggregators.includes(functionName)
+      ? aggregateResultUnit(maps.units, expr.arguments.map(a => a.resolved?.unit))
+      : undefined;
     expr.resolved = {
       resolvedType: { type: 'Numeriek' },
+      ...(aggUnit !== undefined ? { unit: aggUnit } : {}),
     };
   } else if (dateFunctions.includes(functionName)) {
     expr.resolved = {
@@ -2450,7 +2467,10 @@ function resolveCollectionAggregateFunction(
     resolvedType: isSelectorTypedCollectionAggregate(functionName)
       ? selector.resolved?.resolvedType
       : { type: 'Numeriek' },
-    unit: isSelectorTypedCollectionAggregate(functionName) ? selector.resolved?.unit : undefined,
+    // The aggregated field is the selector, so the result is in the selector's
+    // unit for eerste/laatste AND for som/min/max (sum of km values is km). Carry
+    // it so a unit-bearing aggregation feeding a later operation is unit-checked.
+    unit: selector.resolved?.unit,
     timeline: isSelectorTypedCollectionAggregate(functionName) ? selector.resolved?.timeline : undefined,
   };
 

@@ -146,6 +146,36 @@ export function classifyOperands(
   };
 }
 
+/**
+ * The unit of an aggregation result (som/minimale/maximale waarde van, §4.10/§4.12/
+ * §4.13): every member must be equal or convertible to the first; the result takes
+ * the first member's unit. A single-field aggregation over a collection has one
+ * member and simply inherits its unit. Incompatible members throw; convertible-
+ * but-unequal members in a multi-member form throw a deferral — the list-form
+ * lowering does not yet convert per member, so summing them raw would be wrong.
+ */
+export function aggregateResultUnit(
+  reg: UnitRegistry,
+  memberUnits: Array<string | undefined>,
+): string | undefined {
+  const withUnit = memberUnits.filter((u): u is string => u !== undefined);
+  if (withUnit.length === 0) return undefined;
+  const first = withUnit[0];
+  for (const other of withUnit.slice(1)) {
+    const cls = classifyOperands(reg, first, other);
+    if (cls.kind === 'incompatible') {
+      throw new Error(unitMismatchMessage('aggregatie', cls.left, cls.right));
+    }
+    if (cls.kind === 'convertible') {
+      throw new Error(
+        `Aggregatie over convertible-but-unequal units ('${first}' and '${other}') ` +
+        `not yet supported — declare the members in one unit (§4.10)`,
+      );
+    }
+  }
+  return first;
+}
+
 /** Diagnostic for two numeric operands whose units neither match nor convert. */
 export function unitMismatchMessage(context: string, left: string, right: string): string {
   return (

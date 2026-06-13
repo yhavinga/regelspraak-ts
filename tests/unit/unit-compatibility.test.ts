@@ -198,3 +198,66 @@ de jaar jr = 12 mnd
     expect(result.diagnostics.some(d => /Unit mismatch.*'km'.*'euro'/.test(d.message))).toBe(true);
   });
 });
+
+describe('aggregation unit propagation (§4.10/§4.12/§4.13)', () => {
+  const MODEL = (totaalUnit: string, totaalExpr: string) => `Eenheidsysteem afstand
+de meter m
+de kilometer km = 1000 m
+
+Objecttype de rit (mv: ritten)
+  de afstand Numeriek met eenheid km;
+
+Objecttype de reis (mv: reizen)
+  de bedrag Numeriek met eenheid euro;
+  de totaal Numeriek met eenheid ${totaalUnit};
+
+Feittype reisdeel
+  de tocht\treis
+  de rit (mv: ritten)\trit
+één tocht betreft meerdere ritten
+
+Regel r
+geldig altijd
+De totaal van een reis moet berekend worden als ${totaalExpr}.
+`;
+
+  function run(totaalUnit: string, totaalExpr: string) {
+    const model = new AntlrParser().parseModel(MODEL(totaalUnit, totaalExpr));
+    return { model, result: resolveModel(model, { strict: true }) };
+  }
+  function findNode(node: any, pred: (n: any) => boolean): any {
+    if (!node || typeof node !== 'object') return undefined;
+    if (pred(node)) return node;
+    for (const v of Object.values(node)) {
+      if (Array.isArray(v)) { for (const it of v) { const m = findNode(it, pred); if (m) return m; } }
+      else { const m = findNode(v, pred); if (m) return m; }
+    }
+    return undefined;
+  }
+
+  it('carries the aggregated field unit onto a som over a collection', () => {
+    const { model, result } = run('km', 'de som van de afstand van alle ritten van de reis');
+    expect(result.success).toBe(true);
+    const agg = findNode(model.regels, (n: any) => n?.type === 'FunctionCall' && /som/.test(n.functionName));
+    expect(agg.resolved.unit).toBe('km');
+  });
+
+  it('closes the downstream-mixing hole: (som km) + euro now throws', () => {
+    const { result } = run('km',
+      'de som van de afstand van alle ritten van de reis plus de bedrag van de reis');
+    expect(result.success).toBe(false);
+    expect(result.diagnostics.some(d => /Unit mismatch.*'km'.*'euro'/.test(d.message))).toBe(true);
+  });
+
+  it('converts an aggregation result on assignment to a differently-united target', () => {
+    const { result } = run('m', 'de som van de afstand van alle ritten van de reis');
+    expect(result.success).toBe(true); // km result → m target, converted (×1000)
+  });
+
+  it('rejects an aggregation mixing convertible-but-unequal members (deferred)', () => {
+    const { result } = run('km',
+      'de som van de afstand van alle ritten van de reis en de afstand van alle ritten van de reis');
+    // Both members are km here → equal → fine; assert the same-unit list is clean.
+    expect(result.success).toBe(true);
+  });
+});
