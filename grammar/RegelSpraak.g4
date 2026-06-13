@@ -790,7 +790,7 @@ elementaireVoorwaardeInPredicaat
     ;
 
 vergelijkingInPredicaat
-    : attribuutReferentie comparisonOperator expressie    // "zijn leeftijd is groter dan 65"
+    : (attribuutReferentie | bezieldeReferentie) comparisonOperator expressie    // "zijn leeftijd is groter dan 65" / "de leeftijd van hij is groter dan 65"
     | onderwerpReferentie eenzijdigeObjectVergelijking    // "hij is een passagier"
     | attribuutReferentie (IS | ZIJN) kenmerkNaam        // "zijn reis is duurzaam"
     ;

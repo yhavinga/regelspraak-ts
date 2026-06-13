@@ -3782,12 +3782,18 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     //   | attribuutReferentie (IS | ZIJN) kenmerkNaam       // "zijn reis is duurzaam"
 
     const attrRefCtx = ctx.attribuutReferentie ? ctx.attribuutReferentie() : null;
+    const bezieldeCtx = ctx.bezieldeReferentie ? ctx.bezieldeReferentie() : null;
     const compOpCtx = ctx.comparisonOperator ? ctx.comparisonOperator() : null;
     const exprCtx = ctx.expressie ? ctx.expressie() : null;
 
-    // Pattern 1: attribuutReferentie comparisonOperator expressie
-    if (attrRefCtx && compOpCtx && exprCtx) {
-      const attribuut = this.visitAttribuutReferentie(attrRefCtx);
+    // Pattern 1: (attribuutReferentie | bezieldeReferentie) comparisonOperator expressie.
+    // The §5.6 criterion is written either possessively ("zijn leeftijd is kleiner dan ..")
+    // or as a van-chain ("de leeftijd van hij .."); both denote the element's attribute and
+    // resolve identically, the possessive via a self-scoped path.
+    if ((attrRefCtx || bezieldeCtx) && compOpCtx && exprCtx) {
+      const attribuut = attrRefCtx
+        ? this.visitAttribuutReferentie(attrRefCtx)
+        : this.bezieldeReferentieToAttribute(bezieldeCtx);
       const opText = this.extractTextWithSpaces(compOpCtx).trim();
       const operator = this.mapOperator(opText);
       const waarde = this.visit(exprCtx);
@@ -3847,6 +3853,20 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     }
 
     throw new Error(`Unknown vergelijkingInPredicaat pattern: ${this.extractTextWithSpaces(ctx)}`);
+  }
+
+  /**
+   * The element-scoped attribute an in-predicaat criterion reads when written possessively
+   * ("zijn leeftijd"): a self-rooted AttributeReference, identical to what the van-chain
+   * form ("de leeftijd van hij") yields, so both resolve against the element the same way.
+   */
+  private bezieldeReferentieToAttribute(bezieldeCtx: any): AttributeReference {
+    const naamwoordCtx = bezieldeCtx.naamwoord ? bezieldeCtx.naamwoord() : null;
+    if (!naamwoordCtx) {
+      throw new Error('Missing naamwoord in bezieldeReferentie criterion');
+    }
+    const attribute = this.extractTextWithSpaces(naamwoordCtx);
+    return { type: 'AttributeReference', path: ['self', attribute] } as AttributeReference;
   }
 
   visitGenesteSamengesteldeVoorwaardeInPredicaat(ctx: any): SamengesteldPredicaatNode {
