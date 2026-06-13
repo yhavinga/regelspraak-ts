@@ -194,4 +194,43 @@ describe('Begrenzing (Bounds)', () => {
             expect(result.value?.value).toBe(50);
         });
     });
+
+    describe('maximum and two-sided bounds', () => {
+        it('should apply the maximum bound when value is above', () => {
+            context.setVariable('waarde', { type: 'number', value: 150 });
+
+            const result = engine.run('de waarde, met een maximum van 100', context);
+
+            expect(result.success).toBe(true);
+            expect(result.value?.value).toBe(100);
+        });
+
+        // Regression: a two-sided bound must apply BOTH bounds. The visitor read
+        // the minimum and dropped the maximum (an else-if over two independent
+        // grammar contexts of `begrenzingMinimum EN begrenzingMaximum`).
+        it('should apply both bounds of a two-sided begrenzing', () => {
+            const expr = 'de waarde, met een minimum van 0 en met een maximum van 100';
+
+            context.setVariable('waarde', { type: 'number', value: 150 });
+            expect(engine.run(expr, context).value?.value).toBe(100);
+
+            context.setVariable('waarde', { type: 'number', value: -5 });
+            expect(engine.run(expr, context).value?.value).toBe(0);
+
+            context.setVariable('waarde', { type: 'number', value: 42 });
+            expect(engine.run(expr, context).value?.value).toBe(42);
+        });
+
+        it('should apply the maximum when a two-sided bound is combined with afronding', () => {
+            context.setVariable('waarde', { type: 'number', value: 150.7 });
+
+            const result = engine.run(
+                'de waarde, met een minimum van 0 en met een maximum van 100 naar beneden afgerond op 0 decimalen',
+                context,
+            );
+
+            expect(result.success).toBe(true);
+            expect(result.value?.value).toBe(100);
+        });
+    });
 });

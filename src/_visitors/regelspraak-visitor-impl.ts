@@ -521,15 +521,16 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     let minimum: Expression | undefined;
     let maximum: Expression | undefined;
 
-    // Check for minimum
+    // Minimum and maximum are independent: the grammar's
+    // `begrenzingMinimum EN begrenzingMaximum` alternative sets both contexts, so
+    // an `else if` would silently drop the maximum of a two-sided bound.
     if (begrenzingCtx.begrenzingMinimum && begrenzingCtx.begrenzingMinimum()) {
       const minCtx = begrenzingCtx.begrenzingMinimum();
       if (minCtx.expressie && minCtx.expressie()) {
         minimum = this.visit(minCtx.expressie());
       }
     }
-    // Check for maximum
-    else if (begrenzingCtx.begrenzingMaximum && begrenzingCtx.begrenzingMaximum()) {
+    if (begrenzingCtx.begrenzingMaximum && begrenzingCtx.begrenzingMaximum()) {
       const maxCtx = begrenzingCtx.begrenzingMaximum();
       if (maxCtx.expressie && maxCtx.expressie()) {
         maximum = this.visit(maxCtx.expressie());
@@ -558,15 +559,16 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     let maximum: Expression | undefined;
     const begrenzingCtx = (ctx as any).begrenzing ? (ctx as any).begrenzing() : null;
     if (begrenzingCtx) {
-      // Check for minimum
+      // Minimum and maximum are independent: the grammar's
+      // `begrenzingMinimum EN begrenzingMaximum` alternative sets both contexts, so
+      // an `else if` would silently drop the maximum of a two-sided bound.
       if (begrenzingCtx.begrenzingMinimum && begrenzingCtx.begrenzingMinimum()) {
         const minCtx = begrenzingCtx.begrenzingMinimum();
         if (minCtx.expressie && minCtx.expressie()) {
           minimum = this.visit(minCtx.expressie());
         }
       }
-      // Check for maximum
-      else if (begrenzingCtx.begrenzingMaximum && begrenzingCtx.begrenzingMaximum()) {
+      if (begrenzingCtx.begrenzingMaximum && begrenzingCtx.begrenzingMaximum()) {
         const maxCtx = begrenzingCtx.begrenzingMaximum();
         if (maxCtx.expressie && maxCtx.expressie()) {
           maximum = this.visit(maxCtx.expressie());
