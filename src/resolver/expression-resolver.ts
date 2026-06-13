@@ -53,6 +53,7 @@ import {
   DimensionCoordinate
 } from '../ast/dimensions';
 import { ResolvedInfo, ResolvedSymbol, ResolvedPathSegment, SymbolKind, TimelineInfo } from './types';
+import { UnitRegistry, buildUnitRegistry, classifyOperands, unitMismatchMessage } from './unit-compatibility';
 import { KenmerkEquivalenceRegistry } from '../kenmerk-equivalence-registry';
 import { PeriodDefinition, TimelineExpression } from '../ast/timelines';
 
@@ -113,6 +114,8 @@ export interface ResolutionMaps {
   labelToDimension: Map<string, string>;
   /** canonical day type name → Dagsoort declaration */
   dagsoorten: Map<string, Dagsoort>;
+  /** unit (eenheid) compatibility/conversion over declared eenheidsystemen */
+  units: UnitRegistry;
 }
 
 /**
@@ -254,6 +257,7 @@ function buildMaps(model: DomainModel): ResolutionMaps {
     dimensions,
     labelToDimension,
     dagsoorten,
+    units: buildUnitRegistry(model.unitSystems),
   };
 }
 
@@ -1647,10 +1651,25 @@ function resolveBinaryExpression(
       logicalOps.includes(expr.operator) ||
       predicateOps.includes(expr.operator)) {
     // Comparisons produce Boolean, but may still be time-dependent
-    // if operands are time-dependent (result is Boolean timeline)
+    // if operands are time-dependent (result is Boolean timeline). A numeric
+    // comparison over units requires its operands to be equal-or-convertible
+    // (§5.1-5.6); a convertible pair carries the conversion the transpiler must
+    // apply to the right operand before comparing. Logical/predicate operators
+    // carry no units, so the check is scoped to true comparison operators.
+    let unitConversion: ResolvedInfo['unitConversion'];
+    if (comparisonOps.includes(expr.operator)) {
+      const cls = classifyOperands(maps.units, expr.left.resolved?.unit, expr.right.resolved?.unit);
+      if (cls.kind === 'incompatible') {
+        throw new Error(unitMismatchMessage(`operator '${expr.operator}'`, cls.left, cls.right));
+      }
+      if (cls.kind === 'convertible') {
+        unitConversion = { operand: 'right', multiplyBy: cls.multiplyBy, divideBy: cls.divideBy };
+      }
+    }
     expr.resolved = {
       resolvedType: { type: 'Boolean' },
       timeline: combinedTimeline,
+      ...(unitConversion ? { unitConversion } : {}),
     };
   } else if (arithmeticOps.includes(expr.operator)) {
     // Type-aware arithmetic: Datum ± Numeriek → Datum
@@ -1684,9 +1703,41 @@ function resolveBinaryExpression(
         timeline: combinedTimeline,
       };
     } else {
+      // Numeriek arithmetic. Unit semantics per typeringen §4:
+      //  +,- : operands must be equal or convertible (§4.1/§4.2/§4.3); the result
+      //        takes the left operand's unit (Eenheid1) and a convertible right
+      //        operand carries the conversion the transpiler folds in.
+      //  *,/ : no restriction (§4.4/§4.5); unit × scalar keeps the unit, while
+      //        unit × unit forms a composite this scalar `unit` field cannot name,
+      //        so it is dropped (the transpiler erases units at the Drools boundary
+      //        and additive/comparison checks are where mixing actually matters).
+      const lu = expr.left.resolved?.unit;
+      const ru = expr.right.resolved?.unit;
+      let resultUnit: string | undefined;
+      let unitConversion: ResolvedInfo['unitConversion'];
+      if (expr.operator === '+' || expr.operator === '-') {
+        const cls = classifyOperands(maps.units, lu, ru);
+        if (cls.kind === 'incompatible') {
+          throw new Error(unitMismatchMessage(`operator '${expr.operator}'`, cls.left, cls.right));
+        }
+        if (cls.kind !== 'both-unitless') {
+          resultUnit = cls.unit;
+        }
+        if (cls.kind === 'convertible') {
+          unitConversion = { operand: 'right', multiplyBy: cls.multiplyBy, divideBy: cls.divideBy };
+        }
+      } else if (lu !== undefined && ru === undefined) {
+        // unit (×|÷) scalar → keep the unit.
+        resultUnit = lu;
+      } else if (lu === undefined && ru !== undefined && expr.operator === '*') {
+        // scalar × unit → unit (scalar ÷ unit is a reciprocal this field can't name).
+        resultUnit = ru;
+      }
       expr.resolved = {
         resolvedType: { type: 'Numeriek' },
         timeline: combinedTimeline,
+        ...(resultUnit !== undefined ? { unit: resultUnit } : {}),
+        ...(unitConversion ? { unitConversion } : {}),
       };
     }
   }
@@ -1744,9 +1795,13 @@ function resolveUnaryExpression(
   const operandTimeline = expr.operand.resolved?.timeline;
 
   if (expr.operator === '-') {
+    // Negation preserves the numeric type and the unit (−5 km is still km). The
+    // unit must carry through, or a negated unit-bearing operand of an additive
+    // op or comparison would look unitless and slip past the §3.7 mixing check.
     expr.resolved = {
       resolvedType: { type: 'Numeriek' },
       timeline: operandTimeline,
+      ...(expr.operand.resolved?.unit ? { unit: expr.operand.resolved.unit } : {}),
     };
   } else if (expr.operator === '!' ||
       expr.operator === 'niet' ||
@@ -2118,8 +2173,12 @@ function resolveBegrenzingExpression(
     resolveExpressionInternal(expr.maximum, context, maps);
   }
 
+  // The bounded result is in the bounded expression's unit (like afronding); carry
+  // it so a begrenzing feeding an additive op or comparison is still unit-checked.
+  // The min/max bound's own unit compatibility (§4) is a separate, deferred check.
   expr.resolved = {
     resolvedType: { type: 'Numeriek' },
+    ...(expr.expression.resolved?.unit ? { unit: expr.expression.resolved.unit } : {}),
   };
 
   return expr;
@@ -2139,8 +2198,11 @@ function resolveBegrenzingAfrondingExpression(
     resolveExpressionInternal(expr.maximum, context, maps);
   }
 
+  // As resolveBegrenzingExpression: the rounded-and-bounded result keeps the
+  // bounded expression's unit so downstream mixing checks still see it.
   expr.resolved = {
     resolvedType: { type: 'Numeriek' },
+    ...(expr.expression.resolved?.unit ? { unit: expr.expression.resolved.unit } : {}),
   };
 
   return expr;

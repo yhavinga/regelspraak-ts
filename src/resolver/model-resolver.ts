@@ -48,6 +48,7 @@ import { DagsoortDefinitie } from '../ast/dagsoort';
 import { DimensionedAttributeReference } from '../ast/dimensions';
 import { PeriodDefinition, TimelineExpression } from '../ast/timelines';
 import { ResolvedInfo } from './types';
+import { classifyOperands, unitMismatchMessage } from './unit-compatibility';
 import {
   createResolutionContext,
   createResolutionMaps,
@@ -290,6 +291,35 @@ class DomainModelResolver {
     this.resolveExpression(result.target as Expression, context, `${path}.target`);
     this.resolveExpression(result.expression, context, `${path}.expression`);
     this.resolveOptionalExpression(result.temporalCondition, context, `${path}.temporalCondition`);
+    this.checkAssignmentUnits(result, path);
+  }
+
+  /**
+   * Assignment unit rule (§6.1): the value's unit must equal or convert into the
+   * target attribute's declared unit. A convertible value is annotated on the
+   * target with the factor (value → target unit) for the transpiler to fold in
+   * before the setter. Either side unitless means no conversion is required.
+   */
+  private checkAssignmentUnits(result: Gelijkstelling, path: string): void {
+    const target = result.target as Expression;
+    const targetUnit = target.resolved?.unit;
+    const valueUnit = result.expression.resolved?.unit;
+    if (targetUnit === undefined || valueUnit === undefined) {
+      return;
+    }
+    const cls = classifyOperands(this.maps.units, targetUnit, valueUnit);
+    if (cls.kind === 'incompatible') {
+      this.addDiagnostic(
+        unitMismatchMessage('toekenning', cls.left, cls.right),
+        `${path}.expression`,
+        result.expression.location,
+      );
+    } else if (cls.kind === 'convertible' && target.resolved) {
+      target.resolved.unitConversion = {
+        multiplyBy: cls.multiplyBy,
+        divideBy: cls.divideBy,
+      };
+    }
   }
 
   private resolveKenmerktoekenning(

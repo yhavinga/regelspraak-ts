@@ -140,6 +140,24 @@ export interface ResolvedInfo {
   unit?: string;
 
   /**
+   * Unit conversion (§3.7) the resolver proved necessary on a binary expression
+   * whose operands carry different-but-convertible units. The spec converts the
+   * right operand into the left operand's unit before the standard rule applies
+   * (§4.1/§5.x "worden eerst omgerekend"); this records the exact factor for the
+   * transpiler to fold into generated arithmetic. To express the right operand in
+   * the left's unit: value × Π(multiplyBy) ÷ Π(divideBy), each factor an exact
+   * decimal string from the eenheidsysteem's omrekenspecificatie. Absent when
+   * operands share a unit or only one is unit-bearing.
+   */
+  unitConversion?: {
+    /** Present on a binary expression (the right operand is converted). Absent on
+     * an assignment target, where the whole right-hand value is converted. */
+    operand?: 'right';
+    multiplyBy: string[];
+    divideBy: string[];
+  };
+
+  /**
    * Timeline metadata from RegelSpraak §3.8.
    * Present when this expression evaluates to a time-dependent value.
    * The transpiler uses this to determine result granularity and validate

@@ -1,0 +1,155 @@
+/**
+ * Unit (eenheid) compatibility and conversion, derived from a model's declared
+ * eenheidsystemen (§3.7).
+ *
+ * RegelSpraak attributes, parameters and numeric literals may carry a unit. The
+ * typeringen specification governs how units combine: additive operators
+ * (optellen/aftrekken/verminderd met), comparisons and assignment require their
+ * numeric operands to be "gelijk aan elkaar of in elkaar om te rekenen"
+ * (§4.1/§4.2/§5.1-5.6/§6.1); when convertible, the spec is prescriptive that the
+ * values "worden eerst omgerekend" — conversion is mandatory, not optional.
+ * Multiplicative operators (maal/gedeeld door) impose no such restriction and
+ * produce composite units (§4.4/§4.5).
+ *
+ * This module answers two questions over the *declared* eenheidsystemen:
+ *  - are two units equal, convertible, or incompatible?
+ *  - if convertible, what exact factor converts one to the other?
+ *
+ * Convertibility is connectivity in the per-system conversion graph, not mere
+ * same-system membership: §3.7 forbids converting maand/jaar to dagen ("het
+ * aantal dagen van een maand of jaar niet altijd gelijk is"), which surfaces here
+ * naturally as two units reaching *different* base units within one system — they
+ * are reported incompatible without any special case.
+ *
+ * Conversion factors are carried as the chains of declared edge factors (strings,
+ * exactly as written) rather than a single pre-multiplied number, so the consumer
+ * can fold them in exact decimal arithmetic. Units not mentioned by any declared
+ * eenheidsysteem are opaque labels: equal to themselves, incompatible with any
+ * other — never silently combined.
+ */
+
+import { UnitSystemDefinition } from '../ast/unit-systems';
+
+interface UnitNode {
+  /** Stable lowercased id (the abbreviation, or name when none). */
+  canonical: string;
+  /** The eenheidsysteem this unit belongs to. */
+  system: string;
+  /** Edge toward the system base: this unit = factor × toUnit. */
+  conversion?: { factor: number; toUnit: string };
+}
+
+export interface UnitRegistry {
+  /** name / abbreviation / symbol (all lowercased) → node. */
+  byToken: Map<string, UnitNode>;
+}
+
+export function buildUnitRegistry(
+  systems: UnitSystemDefinition[] | undefined,
+): UnitRegistry {
+  const byToken = new Map<string, UnitNode>();
+  for (const sys of systems ?? []) {
+    for (const u of sys.units ?? []) {
+      const node: UnitNode = {
+        canonical: (u.abbreviation ?? u.name).toLowerCase(),
+        system: sys.name,
+        conversion: u.conversion,
+      };
+      for (const token of [u.name, u.abbreviation, u.symbol]) {
+        if (token) byToken.set(token.toLowerCase(), node);
+      }
+    }
+  }
+  return { byToken };
+}
+
+/** The chain of edge factors from a unit to its system base, and that base's id. */
+interface BaseChain {
+  base: string;
+  factors: string[];
+}
+
+/**
+ * Walk conversion edges to the system base, collecting each declared factor as a
+ * string (exactly as parsed). Returns null for an unknown unit. A malformed
+ * (cyclic) declaration is bounded by the unit count so resolution still terminates.
+ */
+function chainToBase(reg: UnitRegistry, token: string): BaseChain | null {
+  let node = reg.byToken.get(token.toLowerCase());
+  if (!node) return null;
+  const factors: string[] = [];
+  const guard = reg.byToken.size + 1;
+  for (let i = 0; i < guard; i++) {
+    if (!node.conversion) return { base: node.canonical, factors };
+    factors.push(String(node.conversion.factor));
+    const next = reg.byToken.get(node.conversion.toUnit.toLowerCase());
+    if (!next) return { base: node.conversion.toUnit.toLowerCase(), factors };
+    node = next;
+  }
+  // Cyclic conversion graph — treat as its own base so callers fail loud rather
+  // than loop. (A well-formed eenheidsysteem is acyclic.)
+  return { base: node.canonical, factors };
+}
+
+export type UnitClassification =
+  | { kind: 'both-unitless' }
+  /** Exactly one operand carries a unit; the result takes that unit. */
+  | { kind: 'one-unit'; unit: string }
+  /** Identical units (possibly written via different tokens); no conversion. */
+  | { kind: 'equal'; unit: string }
+  /**
+   * Convertible within one eenheidsystem. To express the right operand in the
+   * left operand's unit, multiply it by every factor in `multiplyBy` and divide
+   * by every factor in `divideBy` (value × Π(right→base) ÷ Π(left→base)).
+   */
+  | { kind: 'convertible'; unit: string; multiplyBy: string[]; divideBy: string[] }
+  | { kind: 'incompatible'; left: string; right: string };
+
+/**
+ * Classify a left/right unit pair for an operation whose result unit is the left
+ * operand's unit (additive operators and comparisons — the spec converts the
+ * right operand into the left's unit). `undefined` means the operand is unitless.
+ */
+export function classifyOperands(
+  reg: UnitRegistry,
+  left: string | undefined,
+  right: string | undefined,
+): UnitClassification {
+  if (left === undefined && right === undefined) return { kind: 'both-unitless' };
+  if (left === undefined) return { kind: 'one-unit', unit: right! };
+  if (right === undefined) return { kind: 'one-unit', unit: left };
+
+  const leftChain = chainToBase(reg, left);
+  const rightChain = chainToBase(reg, right);
+
+  // Opaque labels (not in any declared eenheidsysteem): equal to self only.
+  if (!leftChain || !rightChain) {
+    return left.toLowerCase() === right.toLowerCase()
+      ? { kind: 'equal', unit: left }
+      : { kind: 'incompatible', left, right };
+  }
+
+  const sameCanonical = reg.byToken.get(left.toLowerCase())!.canonical ===
+    reg.byToken.get(right.toLowerCase())!.canonical;
+  if (sameCanonical) return { kind: 'equal', unit: left };
+
+  // Convertible iff both reach the same base (same connected component). Different
+  // bases within one system (maand/jaar vs dagen, §3.7) are incompatible.
+  if (leftChain.base !== rightChain.base) {
+    return { kind: 'incompatible', left, right };
+  }
+  return {
+    kind: 'convertible',
+    unit: left,
+    multiplyBy: rightChain.factors,
+    divideBy: leftChain.factors,
+  };
+}
+
+/** Diagnostic for two numeric operands whose units neither match nor convert. */
+export function unitMismatchMessage(context: string, left: string, right: string): string {
+  return (
+    `Unit mismatch: cannot combine '${left}' and '${right}' (${context}) — ` +
+    `units must be equal or convertible within one eenheidsysteem (§3.7)`
+  );
+}
