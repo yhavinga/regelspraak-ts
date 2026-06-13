@@ -261,3 +261,33 @@ De totaal van een reis moet berekend worden als ${totaalExpr}.
     expect(result.success).toBe(true);
   });
 });
+
+describe('omrekenfactor parsing (§3.7)', () => {
+  function factors(src: string): Record<string, number | undefined> {
+    const model = new AntlrParser().parseModel(src);
+    const out: Record<string, number | undefined> = {};
+    for (const sys of model.unitSystems ?? []) {
+      for (const u of sys.units) out[u.abbreviation] = u.conversion?.factor;
+    }
+    return out;
+  }
+
+  it('parses a fraction-token factor exactly (cm = 1/100 m → 0.01, not 1)', () => {
+    const f = factors(`Eenheidsysteem afstand
+de meter m
+de kilometer km = 1000 m
+de centimeter cm = 1/100 m
+`);
+    expect(f.km).toBe(1000);
+    expect(f.cm).toBe(0.01);
+    expect(f.m).toBeUndefined();
+  });
+
+  it('parses the leading-slash reciprocal factor (ms = /1000 s → 0.001)', () => {
+    const f = factors(`Eenheidsysteem Tijd
+de seconde s
+de milliseconde ms = /1000 s
+`);
+    expect(f.ms).toBe(0.001);
+  });
+});

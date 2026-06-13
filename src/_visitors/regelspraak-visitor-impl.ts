@@ -115,6 +115,26 @@ import {
 } from '../ast/decision-tables';
 
 /**
+ * Evaluate a NUMBER token's text to its numeric value. The NUMBER lexer rule
+ * accepts plain (`1000`), decimal-comma (`1,5`), proper-fraction (`1/100`) and
+ * mixed-fraction (`1_2/3`) forms; plain `parseFloat` reads only the leading
+ * integer of a fraction, so fraction tokens need explicit evaluation.
+ */
+function parseNumericLiteral(text: string): number {
+  const t = text.replace(',', '.').trim();
+  const mixed = t.match(/^(-?)(\d+)_(\d+)\/(\d+)$/);
+  if (mixed) {
+    const sign = mixed[1] === '-' ? -1 : 1;
+    return sign * (parseFloat(mixed[2]) + parseFloat(mixed[3]) / parseFloat(mixed[4]));
+  }
+  const frac = t.match(/^(-?\d+)\/(\d+)$/);
+  if (frac) {
+    return parseFloat(frac[1]) / parseFloat(frac[2]);
+  }
+  return parseFloat(t);
+}
+
+/**
  * Implementation of ANTLR4 visitor that builds our AST
  */
 export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements RegelSpraakVisitor<any> {
@@ -7148,16 +7168,16 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       }
     }
 
-    // Check for conversion specification - labeled as _value and _targetUnit
+    // Conversion specification (§3.7). Two notations reach here: a leading slash
+    // (`ms = /1000 s`) means 1/value, and a fraction is also lexed by the NUMBER
+    // rule as one token (`cm = 1/100 m`). `parseFloat` read only the "1" of a
+    // fraction token, so `1/100` came out factor 1 instead of 0.01 — evaluate the
+    // token (incl. the mixed form `1_2/3`), then apply the leading-slash inverse.
     let conversion: UnitConversion | undefined;
     if (ctx._value && ctx._targetUnit) {
-      const isFraction = ctx.SLASH && ctx.SLASH();
-      // _value is a token, so use getText() or text property
       const valueText = ctx._value.getText ? ctx._value.getText() : ctx._value.text;
-      const numberValue = parseFloat(valueText.replace(',', '.'));
-
-      const factor = isFraction ? 1 / numberValue : numberValue;
-      // _targetUnit might already be extracted
+      const magnitude = parseNumericLiteral(valueText);
+      const factor = ctx.SLASH && ctx.SLASH() ? 1 / magnitude : magnitude;
       const toUnit = ctx._targetUnit.getText ? ctx._targetUnit.getText() : this.extractText(ctx._targetUnit);
 
       conversion = {

@@ -323,7 +323,7 @@ eenheidEntry
       (MV_START pluralName=unitIdentifierWithTime RPAREN)?  // Optional plural form
       abbrev=unitIdentifierWithTime // abbreviation
       symbol=unitIdentifierWithTime? // optional symbol like € or °C
-      (EQUALS (SLASH)? value=NUMBER targetUnit=unitIdentifierWithTime)? // conversion spec with optional fraction
+      (EQUALS (SLASH)? value=NUMBER targetUnit=unitIdentifierWithTime)? // conversion spec; "= /N u" is 1/N, and NUMBER also lexes "1/100" as one fraction token
     ;
 
 // Unit identifier for general use (attribute definitions, number literals).
