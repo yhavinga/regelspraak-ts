@@ -361,7 +361,16 @@ eenheidMacht // EBNF 13.3.5.5
     : unitIdentifier ( CARET NUMBER )? // Use unitIdentifier rule here too
     ;
 
-// §13.3.7 Dimensie Definition (Added based on Spec)
+// §13.3.7 Dimensie Definition (Added based on Spec).
+// The comma after the dimension name is optional ON PURPOSE — do not make it
+// mandatory. The spec writes it ("Dimensie de jaardimensie, bestaande uit …"),
+// but the naamwoord / multiword tokenizer absorbs the leading comma into a
+// comma-prefixed token (cf. naamPhrase's `COMMA naamwoordWithNumbers` alts)
+// rather than emitting a standalone COMMA, so requiring COMMA here rejects the
+// valid spec form (ANTLR: "missing ',' at ', bestaande uit …'"). Tightening this
+// is a lexer-level change (stop that absorption), not a one-token edit. The
+// optional is harmless: the comma is inert punctuation, so present-or-absent
+// yields the same dimension AST.
 dimensieDefinition
     : DIMENSIE naamwoord (COMMA)? BESTAANDE_UIT dimensieNaamMeervoud=naamwoord voorzetselSpecificatie // Assuming meervoud is also a naamwoord
       ( labelWaardeSpecificatie )+
