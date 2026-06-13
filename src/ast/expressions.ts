@@ -101,7 +101,8 @@ export interface FunctionCall extends Expression {
 
 export interface UnaryExpression extends Expression {
   type: 'UnaryExpression';
-  operator: '-' | '!' | 'niet' | 'voldoet aan de elfproef' | 'voldoen aan de elfproef' |
+  operator: '-' | '!' | 'niet' | 'is leeg' | 'is gevuld' | 'zijn leeg' | 'zijn gevuld' |
+  'voldoet aan de elfproef' | 'voldoen aan de elfproef' |
   'voldoet niet aan de elfproef' | 'voldoen niet aan de elfproef' | 'moeten uniek zijn';
   operand: Expression;
 }

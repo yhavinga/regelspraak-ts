@@ -676,3 +676,32 @@ indien hij een recht op korting heeft.
     });
   });
 });
+
+describe('emptiness checks resolve to Boolean', () => {
+  // An "is leeg"/"is gevuld" check is a UnaryExpression; strict resolution must
+  // mark it resolved (resolvedType Boolean) or a resolver-gated consumer rejects
+  // the whole model.
+  const source = `
+Objecttype de Passagier (mv: passagiers)
+  de correctie Numeriek;
+  de status Numeriek;
+
+Regel r
+geldig altijd
+De status van een Passagier moet berekend worden als 1 indien zijn correctie is leeg.
+`;
+
+  test('resolveModel(strict) accepts an "is leeg" condition', () => {
+    const model = new AntlrParser().parseModel(source);
+    const result = resolveModel(model, { strict: true });
+    expect(result.success).toBe(true);
+  });
+
+  test('the emptiness UnaryExpression carries a resolved Boolean type', () => {
+    const model = new AntlrParser().parseModel(source);
+    resolveModel(model, { strict: true });
+    const check = findNode(model, n => n.type === 'UnaryExpression' && n.operator === 'is leeg');
+    expect(check).toBeDefined();
+    expect(check.resolved?.resolvedType).toMatchObject({ type: 'Boolean' });
+  });
+});

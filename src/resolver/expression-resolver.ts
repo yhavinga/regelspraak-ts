@@ -1805,11 +1805,15 @@ function resolveUnaryExpression(
     };
   } else if (expr.operator === '!' ||
       expr.operator === 'niet' ||
+      expr.operator === 'is leeg' ||
+      expr.operator === 'is gevuld' ||
       expr.operator === 'voldoet aan de elfproef' ||
       expr.operator === 'voldoen aan de elfproef' ||
       expr.operator === 'voldoet niet aan de elfproef' ||
       expr.operator === 'voldoen niet aan de elfproef' ||
       expr.operator === 'moeten uniek zijn') {
+    // An emptiness check (§5.8.2/§8) or boolean unary resolves to Boolean
+    // regardless of the operand's type.
     expr.resolved = {
       resolvedType: { type: 'Boolean' },
       timeline: operandTimeline,
