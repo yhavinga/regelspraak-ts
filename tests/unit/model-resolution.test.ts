@@ -143,7 +143,7 @@ Objecttype de Dagcheck (mv: dagchecks) (bezield)
 
 Regel check feestdag
 geldig altijd
-De uitkomst van een Dagcheck moet berekend worden als zijn datum is een dagsoort feestdag.
+De uitkomst van een Dagcheck moet berekend worden als zijn datum is een feestdag.
 `);
 
     expect(result.success).toBe(true);
@@ -389,7 +389,7 @@ Objecttype de Dagcheck (mv: dagchecks) (bezield)
 
 Regel R
 geldig altijd
-De uitkomst van een Dagcheck moet berekend worden als zijn datum is een dagsoort onbekende.
+De uitkomst van een Dagcheck moet berekend worden als zijn datum is een onbekende.
 `);
 
     expect(result.success).toBe(false);

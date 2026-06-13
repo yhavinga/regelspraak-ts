@@ -101,217 +101,213 @@ export default class RegelSpraakParser extends Parser {
 	public static readonly IS_NIET_NUMERIEK_MET_EXACT = 81;
 	public static readonly ZIJN_NUMERIEK_MET_EXACT = 82;
 	public static readonly ZIJN_NIET_NUMERIEK_MET_EXACT = 83;
-	public static readonly IS_EEN_DAGSOORT = 84;
-	public static readonly ZIJN_EEN_DAGSOORT = 85;
-	public static readonly IS_GEEN_DAGSOORT = 86;
-	public static readonly ZIJN_GEEN_DAGSOORT = 87;
-	public static readonly MOETEN_UNIEK_ZIJN = 88;
-	public static readonly IS_GEVUURD = 89;
-	public static readonly IS_INCONSISTENT = 90;
-	public static readonly CONSISTENTIEREGEL = 91;
-	public static readonly REGEL = 92;
-	public static readonly REGELGROEP = 93;
-	public static readonly BESLISTABEL = 94;
-	public static readonly OBJECTTYPE = 95;
-	public static readonly DOMEIN = 96;
-	public static readonly LIJST = 97;
-	public static readonly DIMENSIE = 98;
-	public static readonly EENHEIDSYSTEEM = 99;
-	public static readonly PARAMETER = 100;
-	public static readonly FEITTYPE = 101;
-	public static readonly DAGSOORT = 102;
-	public static readonly DAARBIJ_GELDT = 103;
-	public static readonly GELDIG = 104;
-	public static readonly HEBBEN = 105;
-	public static readonly HEEFT = 106;
-	public static readonly INDIEN = 107;
-	public static readonly IS_RECURSIEF = 108;
-	public static readonly IS = 109;
-	public static readonly MOET = 110;
-	public static readonly MOETEN = 111;
-	public static readonly WORDT_VERDEELD_OVER = 112;
-	public static readonly WORDT = 113;
-	public static readonly VOLDAAN = 114;
-	public static readonly ZIJN = 115;
-	public static readonly HAAR = 116;
-	public static readonly HUN = 117;
-	public static readonly AAN = 118;
-	public static readonly AFGEROND_OP = 119;
-	public static readonly ALLE = 120;
-	public static readonly EERDER_DAN = 121;
-	public static readonly GEDEELD_DOOR = 122;
-	public static readonly GEDEELD_DOOR_ABS = 123;
-	public static readonly GELIJK_AAN = 124;
-	public static readonly GEVULD = 125;
-	public static readonly GEVUURD = 126;
-	public static readonly GROTER_DAN = 127;
-	public static readonly INCONSISTENT = 128;
-	public static readonly KLEINER_DAN = 129;
-	public static readonly LATER_DAN = 130;
-	public static readonly LEEG = 131;
-	public static readonly MAAL = 132;
-	public static readonly MIN = 133;
-	public static readonly NAAR_BENEDEN = 134;
-	public static readonly NAAR_BOVEN = 135;
-	public static readonly NIET = 136;
-	public static readonly ONGELIJK_ZIJN_AAN = 137;
-	public static readonly ONGELIJK_AAN = 138;
-	public static readonly PLUS = 139;
-	public static readonly REKENKUNDIG = 140;
-	public static readonly RICHTING_NUL = 141;
-	public static readonly TOT = 142;
-	public static readonly TOT_DE_MACHT = 143;
-	public static readonly TOT_EN_MET = 144;
-	public static readonly UNIEK = 145;
-	public static readonly VANAF = 146;
-	public static readonly VERENIGD_MET = 147;
-	public static readonly VERMINDERD_MET = 148;
-	public static readonly VOLDOEN = 149;
-	public static readonly VOLDOET = 150;
-	public static readonly WEG_VAN_NUL = 151;
-	public static readonly DE_WORTEL_VAN = 152;
-	public static readonly TENMINSTE = 153;
-	public static readonly TEN_MINSTE = 154;
-	public static readonly TEN_HOOGSTE = 155;
-	public static readonly PRECIES = 156;
-	public static readonly VOORWAARDE = 157;
-	public static readonly VOORWAARDEN = 158;
-	public static readonly BEZITTELIJK = 159;
-	public static readonly BIJVOEGLIJK = 160;
-	public static readonly BEZIELD = 161;
-	public static readonly BOOLEAN = 162;
-	public static readonly CIJFERS = 163;
-	public static readonly DATUM_IN_DAGEN = 164;
-	public static readonly DECIMALEN = 165;
-	public static readonly ENUMERATIE = 166;
-	public static readonly GEDIMENSIONEERD_MET = 167;
-	public static readonly GEHEEL_GETAL = 168;
-	public static readonly GETAL = 169;
-	public static readonly KENMERK = 170;
-	public static readonly KENMERKEN = 171;
-	public static readonly MET = 172;
-	public static readonly MET_EENHEID = 173;
-	public static readonly MV_START = 174;
-	public static readonly NEGATIEF = 175;
-	public static readonly NIET_NEGATIEF = 176;
-	public static readonly NUMERIEK = 177;
-	public static readonly PERCENTAGE = 178;
-	public static readonly POSITIEF = 179;
-	public static readonly ROL = 180;
-	public static readonly ROLLEN = 181;
-	public static readonly TEKST = 182;
-	public static readonly VOOR_ELK_JAAR = 183;
-	public static readonly VOOR_ELKE_DAG = 184;
-	public static readonly VOOR_ELKE_MAAND = 185;
-	public static readonly AANTAL = 186;
-	public static readonly EERSTE_VAN = 187;
-	public static readonly IN_HELE = 188;
-	public static readonly LAATSTE_VAN = 189;
-	public static readonly REEKS_VAN_TEKSTEN_EN_WAARDEN = 190;
-	public static readonly SOM_VAN = 191;
-	public static readonly TIJDSDUUR_VAN = 192;
-	public static readonly AFNEMENDE = 193;
-	public static readonly IN_GELIJKE_DELEN = 194;
-	public static readonly OVER_VERDELING = 195;
-	public static readonly TOENEMENDE = 196;
-	public static readonly DRIE_TELWOORD = 197;
-	public static readonly EEN_TELWOORD = 198;
-	public static readonly GEEN_VAN_DE = 199;
-	public static readonly GEEN = 200;
-	public static readonly TWEE_TELWOORD = 201;
-	public static readonly VIER_TELWOORD = 202;
-	public static readonly ALTIJD = 203;
-	public static readonly BIJ = 204;
-	public static readonly DAG = 205;
-	public static readonly DAGEN = 206;
-	public static readonly DAT = 207;
-	public static readonly DE = 208;
-	public static readonly DD_PUNT = 209;
-	public static readonly DIE = 210;
-	public static readonly EEN = 211;
-	public static readonly EN = 212;
-	public static readonly HET = 213;
-	public static readonly MEERDERE = 214;
-	public static readonly HIJ = 215;
-	public static readonly IN = 216;
-	public static readonly JAAR = 217;
-	public static readonly JAREN = 218;
-	public static readonly KWARTAAL = 219;
-	public static readonly MAAND = 220;
-	public static readonly MAANDEN = 221;
-	public static readonly MILLISECONDE = 222;
-	public static readonly MINUUT = 223;
-	public static readonly MINUTEN = 224;
-	public static readonly OF = 225;
-	public static readonly ONWAAR = 226;
-	public static readonly OP = 227;
-	public static readonly OUDER = 228;
-	public static readonly OVER = 229;
-	public static readonly PERIODE = 230;
-	public static readonly REKENDATUM = 231;
-	public static readonly REKENJAAR = 232;
-	public static readonly REGELVERSIE = 233;
-	public static readonly SECONDE = 234;
-	public static readonly SECONDEN = 235;
-	public static readonly TM = 236;
-	public static readonly UIT = 237;
-	public static readonly UUR = 238;
-	public static readonly UREN = 239;
-	public static readonly VAN = 240;
-	public static readonly VOLGENDE_VOORWAARDE = 241;
-	public static readonly VOLGENDE_VOORWAARDEN = 242;
-	public static readonly VOLGENDE = 243;
-	public static readonly VOOR = 244;
-	public static readonly WAAR = 245;
-	public static readonly WEEK = 246;
-	public static readonly WEKEN = 247;
-	public static readonly ER = 248;
-	public static readonly METER = 249;
-	public static readonly KILOGRAM = 250;
-	public static readonly VOET = 251;
-	public static readonly POND = 252;
-	public static readonly MIJL = 253;
-	public static readonly GROTER_OF_GELIJK_IS_AAN = 254;
-	public static readonly KLEINER_OF_GELIJK_IS_AAN = 255;
-	public static readonly M = 256;
-	public static readonly KG = 257;
-	public static readonly S = 258;
-	public static readonly FT = 259;
-	public static readonly LB = 260;
-	public static readonly MI = 261;
-	public static readonly EURO_SYMBOL = 262;
-	public static readonly DOLLAR_SYMBOL = 263;
-	public static readonly DEGREE_SYMBOL = 264;
-	public static readonly IDENTIFIER = 265;
-	public static readonly NUMBER = 266;
-	public static readonly EQUALS = 267;
-	public static readonly DATE_TIME_LITERAL = 268;
-	public static readonly PERCENTAGE_LITERAL = 269;
-	public static readonly STRING_LITERAL = 270;
-	public static readonly ENUM_LITERAL = 271;
-	public static readonly LPAREN = 272;
-	public static readonly RPAREN = 273;
-	public static readonly LBRACE = 274;
-	public static readonly RBRACE = 275;
-	public static readonly COMMA = 276;
-	public static readonly DOT = 277;
-	public static readonly COLON = 278;
-	public static readonly SEMICOLON = 279;
-	public static readonly SLASH = 280;
-	public static readonly PERCENT_SIGN = 281;
-	public static readonly BULLET = 282;
-	public static readonly ASTERISK = 283;
-	public static readonly L_ANGLE_QUOTE = 284;
-	public static readonly R_ANGLE_QUOTE = 285;
-	public static readonly CARET = 286;
-	public static readonly DOUBLE_DOT = 287;
-	public static readonly LINE_WS = 288;
-	public static readonly TAB = 289;
-	public static readonly WS = 290;
-	public static readonly LINE_COMMENT = 291;
-	public static readonly MINUS = 292;
-	public static readonly PIPE = 293;
-	public static readonly NVT = 294;
+	public static readonly MOETEN_UNIEK_ZIJN = 84;
+	public static readonly IS_GEVUURD = 85;
+	public static readonly IS_INCONSISTENT = 86;
+	public static readonly CONSISTENTIEREGEL = 87;
+	public static readonly REGEL = 88;
+	public static readonly REGELGROEP = 89;
+	public static readonly BESLISTABEL = 90;
+	public static readonly OBJECTTYPE = 91;
+	public static readonly DOMEIN = 92;
+	public static readonly LIJST = 93;
+	public static readonly DIMENSIE = 94;
+	public static readonly EENHEIDSYSTEEM = 95;
+	public static readonly PARAMETER = 96;
+	public static readonly FEITTYPE = 97;
+	public static readonly DAGSOORT = 98;
+	public static readonly DAARBIJ_GELDT = 99;
+	public static readonly GELDIG = 100;
+	public static readonly HEBBEN = 101;
+	public static readonly HEEFT = 102;
+	public static readonly INDIEN = 103;
+	public static readonly IS_RECURSIEF = 104;
+	public static readonly IS = 105;
+	public static readonly MOET = 106;
+	public static readonly MOETEN = 107;
+	public static readonly WORDT_VERDEELD_OVER = 108;
+	public static readonly WORDT = 109;
+	public static readonly VOLDAAN = 110;
+	public static readonly ZIJN = 111;
+	public static readonly HAAR = 112;
+	public static readonly HUN = 113;
+	public static readonly AAN = 114;
+	public static readonly AFGEROND_OP = 115;
+	public static readonly ALLE = 116;
+	public static readonly EERDER_DAN = 117;
+	public static readonly GEDEELD_DOOR = 118;
+	public static readonly GEDEELD_DOOR_ABS = 119;
+	public static readonly GELIJK_AAN = 120;
+	public static readonly GEVULD = 121;
+	public static readonly GEVUURD = 122;
+	public static readonly GROTER_DAN = 123;
+	public static readonly INCONSISTENT = 124;
+	public static readonly KLEINER_DAN = 125;
+	public static readonly LATER_DAN = 126;
+	public static readonly LEEG = 127;
+	public static readonly MAAL = 128;
+	public static readonly MIN = 129;
+	public static readonly NAAR_BENEDEN = 130;
+	public static readonly NAAR_BOVEN = 131;
+	public static readonly NIET = 132;
+	public static readonly ONGELIJK_ZIJN_AAN = 133;
+	public static readonly ONGELIJK_AAN = 134;
+	public static readonly PLUS = 135;
+	public static readonly REKENKUNDIG = 136;
+	public static readonly RICHTING_NUL = 137;
+	public static readonly TOT = 138;
+	public static readonly TOT_DE_MACHT = 139;
+	public static readonly TOT_EN_MET = 140;
+	public static readonly UNIEK = 141;
+	public static readonly VANAF = 142;
+	public static readonly VERENIGD_MET = 143;
+	public static readonly VERMINDERD_MET = 144;
+	public static readonly VOLDOEN = 145;
+	public static readonly VOLDOET = 146;
+	public static readonly WEG_VAN_NUL = 147;
+	public static readonly DE_WORTEL_VAN = 148;
+	public static readonly TENMINSTE = 149;
+	public static readonly TEN_MINSTE = 150;
+	public static readonly TEN_HOOGSTE = 151;
+	public static readonly PRECIES = 152;
+	public static readonly VOORWAARDE = 153;
+	public static readonly VOORWAARDEN = 154;
+	public static readonly BEZITTELIJK = 155;
+	public static readonly BIJVOEGLIJK = 156;
+	public static readonly BEZIELD = 157;
+	public static readonly BOOLEAN = 158;
+	public static readonly CIJFERS = 159;
+	public static readonly DATUM_IN_DAGEN = 160;
+	public static readonly DECIMALEN = 161;
+	public static readonly ENUMERATIE = 162;
+	public static readonly GEDIMENSIONEERD_MET = 163;
+	public static readonly GEHEEL_GETAL = 164;
+	public static readonly GETAL = 165;
+	public static readonly KENMERK = 166;
+	public static readonly KENMERKEN = 167;
+	public static readonly MET = 168;
+	public static readonly MET_EENHEID = 169;
+	public static readonly MV_START = 170;
+	public static readonly NEGATIEF = 171;
+	public static readonly NIET_NEGATIEF = 172;
+	public static readonly NUMERIEK = 173;
+	public static readonly PERCENTAGE = 174;
+	public static readonly POSITIEF = 175;
+	public static readonly ROL = 176;
+	public static readonly ROLLEN = 177;
+	public static readonly TEKST = 178;
+	public static readonly VOOR_ELK_JAAR = 179;
+	public static readonly VOOR_ELKE_DAG = 180;
+	public static readonly VOOR_ELKE_MAAND = 181;
+	public static readonly AANTAL = 182;
+	public static readonly EERSTE_VAN = 183;
+	public static readonly IN_HELE = 184;
+	public static readonly LAATSTE_VAN = 185;
+	public static readonly REEKS_VAN_TEKSTEN_EN_WAARDEN = 186;
+	public static readonly SOM_VAN = 187;
+	public static readonly TIJDSDUUR_VAN = 188;
+	public static readonly AFNEMENDE = 189;
+	public static readonly IN_GELIJKE_DELEN = 190;
+	public static readonly OVER_VERDELING = 191;
+	public static readonly TOENEMENDE = 192;
+	public static readonly DRIE_TELWOORD = 193;
+	public static readonly EEN_TELWOORD = 194;
+	public static readonly GEEN_VAN_DE = 195;
+	public static readonly GEEN = 196;
+	public static readonly TWEE_TELWOORD = 197;
+	public static readonly VIER_TELWOORD = 198;
+	public static readonly ALTIJD = 199;
+	public static readonly BIJ = 200;
+	public static readonly DAG = 201;
+	public static readonly DAGEN = 202;
+	public static readonly DAT = 203;
+	public static readonly DE = 204;
+	public static readonly DD_PUNT = 205;
+	public static readonly DIE = 206;
+	public static readonly EEN = 207;
+	public static readonly EN = 208;
+	public static readonly HET = 209;
+	public static readonly MEERDERE = 210;
+	public static readonly HIJ = 211;
+	public static readonly IN = 212;
+	public static readonly JAAR = 213;
+	public static readonly JAREN = 214;
+	public static readonly KWARTAAL = 215;
+	public static readonly MAAND = 216;
+	public static readonly MAANDEN = 217;
+	public static readonly MILLISECONDE = 218;
+	public static readonly MINUUT = 219;
+	public static readonly MINUTEN = 220;
+	public static readonly OF = 221;
+	public static readonly ONWAAR = 222;
+	public static readonly OP = 223;
+	public static readonly OUDER = 224;
+	public static readonly OVER = 225;
+	public static readonly PERIODE = 226;
+	public static readonly REKENDATUM = 227;
+	public static readonly REKENJAAR = 228;
+	public static readonly REGELVERSIE = 229;
+	public static readonly SECONDE = 230;
+	public static readonly SECONDEN = 231;
+	public static readonly TM = 232;
+	public static readonly UIT = 233;
+	public static readonly UUR = 234;
+	public static readonly UREN = 235;
+	public static readonly VAN = 236;
+	public static readonly VOLGENDE_VOORWAARDE = 237;
+	public static readonly VOLGENDE_VOORWAARDEN = 238;
+	public static readonly VOLGENDE = 239;
+	public static readonly VOOR = 240;
+	public static readonly WAAR = 241;
+	public static readonly WEEK = 242;
+	public static readonly WEKEN = 243;
+	public static readonly ER = 244;
+	public static readonly METER = 245;
+	public static readonly KILOGRAM = 246;
+	public static readonly VOET = 247;
+	public static readonly POND = 248;
+	public static readonly MIJL = 249;
+	public static readonly GROTER_OF_GELIJK_IS_AAN = 250;
+	public static readonly KLEINER_OF_GELIJK_IS_AAN = 251;
+	public static readonly M = 252;
+	public static readonly KG = 253;
+	public static readonly S = 254;
+	public static readonly FT = 255;
+	public static readonly LB = 256;
+	public static readonly MI = 257;
+	public static readonly EURO_SYMBOL = 258;
+	public static readonly DOLLAR_SYMBOL = 259;
+	public static readonly DEGREE_SYMBOL = 260;
+	public static readonly IDENTIFIER = 261;
+	public static readonly NUMBER = 262;
+	public static readonly EQUALS = 263;
+	public static readonly DATE_TIME_LITERAL = 264;
+	public static readonly PERCENTAGE_LITERAL = 265;
+	public static readonly STRING_LITERAL = 266;
+	public static readonly ENUM_LITERAL = 267;
+	public static readonly LPAREN = 268;
+	public static readonly RPAREN = 269;
+	public static readonly LBRACE = 270;
+	public static readonly RBRACE = 271;
+	public static readonly COMMA = 272;
+	public static readonly DOT = 273;
+	public static readonly COLON = 274;
+	public static readonly SEMICOLON = 275;
+	public static readonly SLASH = 276;
+	public static readonly PERCENT_SIGN = 277;
+	public static readonly BULLET = 278;
+	public static readonly ASTERISK = 279;
+	public static readonly L_ANGLE_QUOTE = 280;
+	public static readonly R_ANGLE_QUOTE = 281;
+	public static readonly CARET = 282;
+	public static readonly DOUBLE_DOT = 283;
+	public static readonly LINE_WS = 284;
+	public static readonly TAB = 285;
+	public static readonly WS = 286;
+	public static readonly LINE_COMMENT = 287;
+	public static readonly MINUS = 288;
+	public static readonly PIPE = 289;
+	public static readonly NVT = 290;
 	public static readonly EOF = Token.EOF;
 	public static readonly RULE_regelSpraakDocument = 0;
 	public static readonly RULE_definitie = 1;
@@ -572,10 +568,6 @@ export default class RegelSpraakParser extends Parser {
                                                             "'is niet numeriek met exact'",
                                                             "'zijn numeriek met exact'",
                                                             "'zijn niet numeriek met exact'",
-                                                            "'is een dagsoort'",
-                                                            "'zijn een dagsoort'",
-                                                            "'is geen dagsoort'",
-                                                            "'zijn geen dagsoort'",
                                                             "'moeten uniek zijn'",
                                                             "'is gevuurd'",
                                                             "'is inconsistent'",
@@ -804,10 +796,6 @@ export default class RegelSpraakParser extends Parser {
                                                              "IS_NIET_NUMERIEK_MET_EXACT",
                                                              "ZIJN_NUMERIEK_MET_EXACT",
                                                              "ZIJN_NIET_NUMERIEK_MET_EXACT",
-                                                             "IS_EEN_DAGSOORT",
-                                                             "ZIJN_EEN_DAGSOORT",
-                                                             "IS_GEEN_DAGSOORT",
-                                                             "ZIJN_GEEN_DAGSOORT",
                                                              "MOETEN_UNIEK_ZIJN",
                                                              "IS_GEVUURD",
                                                              "IS_INCONSISTENT",
@@ -1037,48 +1025,48 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 364;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===28 || ((((_la - 91)) & ~0x1F) === 0 && ((1 << (_la - 91)) & 4031) !== 0)) {
+			while (_la===28 || ((((_la - 87)) & ~0x1F) === 0 && ((1 << (_la - 87)) & 4031) !== 0)) {
 				{
 				this.state = 362;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
 				case 28:
-				case 95:
+				case 91:
+				case 92:
+				case 94:
 				case 96:
+				case 97:
 				case 98:
-				case 100:
-				case 101:
-				case 102:
 					{
 					this.state = 356;
 					this.definitie();
 					}
 					break;
-				case 92:
+				case 88:
 					{
 					this.state = 357;
 					this.regel();
 					}
 					break;
-				case 93:
+				case 89:
 					{
 					this.state = 358;
 					this.regelGroep();
 					}
 					break;
-				case 94:
+				case 90:
 					{
 					this.state = 359;
 					this.beslistabel();
 					}
 					break;
-				case 91:
+				case 87:
 					{
 					this.state = 360;
 					this.consistentieregel();
 					}
 					break;
-				case 99:
+				case 95:
 					{
 					this.state = 361;
 					this.eenheidsysteemDefinition();
@@ -1118,28 +1106,28 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 375;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 95:
+			case 91:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 369;
 				this.objectTypeDefinition();
 				}
 				break;
-			case 96:
+			case 92:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 370;
 				this.domeinDefinition();
 				}
 				break;
-			case 100:
+			case 96:
 				this.enterOuterAlt(localctx, 3);
 				{
 				this.state = 371;
 				this.parameterDefinition();
 				}
 				break;
-			case 98:
+			case 94:
 				this.enterOuterAlt(localctx, 4);
 				{
 				this.state = 372;
@@ -1147,14 +1135,14 @@ export default class RegelSpraakParser extends Parser {
 				}
 				break;
 			case 28:
-			case 101:
+			case 97:
 				this.enterOuterAlt(localctx, 5);
 				{
 				this.state = 373;
 				this.feitTypeDefinition();
 				}
 				break;
-			case 102:
+			case 98:
 				this.enterOuterAlt(localctx, 6);
 				{
 				this.state = 374;
@@ -1194,7 +1182,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 380;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===104) {
+			if (_la===100) {
 				{
 				this.state = 379;
 				this.regelVersie();
@@ -1244,7 +1232,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 389;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while (_la===293);
+			} while (_la===289);
 			}
 		}
 		catch (re) {
@@ -1275,7 +1263,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 393;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===293) {
+			if (_la===289) {
 				{
 				this.state = 392;
 				this.match(RegelSpraakParser.PIPE);
@@ -1342,7 +1330,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 407;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===293) {
+			if (_la===289) {
 				{
 				this.state = 406;
 				this.match(RegelSpraakParser.PIPE);
@@ -1400,7 +1388,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 424;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===292) {
+			while (_la===288) {
 				{
 				{
 				this.state = 421;
@@ -1508,70 +1496,70 @@ export default class RegelSpraakParser extends Parser {
 			case 18:
 			case 30:
 			case 41:
-			case 92:
-			case 106:
-			case 109:
-			case 115:
+			case 88:
+			case 102:
+			case 105:
+			case 111:
+			case 112:
+			case 113:
 			case 116:
-			case 117:
-			case 120:
-			case 128:
-			case 133:
-			case 136:
-			case 152:
-			case 157:
-			case 186:
+			case 124:
+			case 129:
+			case 132:
+			case 148:
+			case 153:
+			case 182:
+			case 183:
+			case 185:
 			case 187:
-			case 189:
-			case 191:
-			case 192:
+			case 188:
+			case 193:
+			case 194:
 			case 197:
 			case 198:
 			case 201:
 			case 202:
-			case 205:
-			case 206:
-			case 208:
+			case 204:
+			case 207:
+			case 209:
 			case 211:
 			case 213:
+			case 214:
 			case 215:
+			case 216:
 			case 217:
 			case 218:
 			case 219:
 			case 220:
-			case 221:
 			case 222:
-			case 223:
 			case 224:
 			case 226:
+			case 227:
 			case 228:
+			case 229:
 			case 230:
 			case 231:
-			case 232:
-			case 233:
 			case 234:
 			case 235:
-			case 238:
-			case 239:
+			case 241:
+			case 242:
+			case 243:
 			case 245:
-			case 246:
-			case 247:
-			case 249:
+			case 261:
+			case 262:
+			case 264:
 			case 265:
 			case 266:
+			case 267:
 			case 268:
-			case 269:
-			case 270:
-			case 271:
-			case 272:
-			case 292:
+			case 288:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 441;
 				this.expressie();
 				}
 				break;
-			case 294:
+			case 290:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 442;
@@ -1615,7 +1603,7 @@ export default class RegelSpraakParser extends Parser {
 					{
 					this.state = 445;
 					_la = this._input.LA(1);
-					if(_la<=0 || _la===293) {
+					if(_la<=0 || _la===289) {
 					this._errHandler.recoverInline(this);
 					}
 					else {
@@ -1677,7 +1665,7 @@ export default class RegelSpraakParser extends Parser {
 				this.onderwerpReferentie();
 				this.state = 455;
 				_la = this._input.LA(1);
-				if(!(_la===106 || _la===109)) {
+				if(!(_la===102 || _la===105)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -1744,7 +1732,7 @@ export default class RegelSpraakParser extends Parser {
 					{
 					this.state = 468;
 					_la = this._input.LA(1);
-					if(!(((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0))) {
+					if(!(((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0))) {
 					this._errHandler.recoverInline(this);
 					}
 					else {
@@ -1791,7 +1779,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 480;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===240) {
+			if (_la===236) {
 				{
 				this.state = 478;
 				this.match(RegelSpraakParser.VAN);
@@ -1871,11 +1859,11 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 492;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===115 || ((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0)) {
+			if (_la===111 || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0)) {
 				{
 				this.state = 491;
 				_la = this._input.LA(1);
-				if(!(_la===115 || ((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0))) {
+				if(!(_la===111 || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0))) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -1898,7 +1886,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 497;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while (((((_la - 92)) & ~0x1F) === 0 && ((1 << (_la - 92)) & 268451841) !== 0) || _la===128 || _la===157 || ((((_la - 186)) & ~0x1F) === 0 && ((1 << (_la - 186)) & 2149160961) !== 0) || ((((_la - 218)) & ~0x1F) === 0 && ((1 << (_la - 218)) & 2956137599) !== 0) || _la===265);
+			} while (((((_la - 88)) & ~0x1F) === 0 && ((1 << (_la - 88)) & 268451841) !== 0) || _la===124 || _la===153 || ((((_la - 182)) & ~0x1F) === 0 && ((1 << (_la - 182)) & 2149160961) !== 0) || ((((_la - 214)) & ~0x1F) === 0 && ((1 << (_la - 214)) & 2956137599) !== 0) || _la===261);
 			}
 		}
 		catch (re) {
@@ -1936,7 +1924,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 502;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while (((((_la - 92)) & ~0x1F) === 0 && ((1 << (_la - 92)) & 268451841) !== 0) || _la===128 || _la===157 || ((((_la - 186)) & ~0x1F) === 0 && ((1 << (_la - 186)) & 2149160961) !== 0) || ((((_la - 218)) & ~0x1F) === 0 && ((1 << (_la - 218)) & 2956137599) !== 0) || _la===265);
+			} while (((((_la - 88)) & ~0x1F) === 0 && ((1 << (_la - 88)) & 268451841) !== 0) || _la===124 || _la===153 || ((((_la - 182)) & ~0x1F) === 0 && ((1 << (_la - 182)) & 2149160961) !== 0) || ((((_la - 214)) & ~0x1F) === 0 && ((1 << (_la - 214)) & 2956137599) !== 0) || _la===261);
 			}
 		}
 		catch (re) {
@@ -1963,7 +1951,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 504;
 			_la = this._input.LA(1);
-			if(!(((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & 1073741829) !== 0) || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 44044545) !== 0) || ((((_la - 237)) & ~0x1F) === 0 && ((1 << (_la - 237)) & 137) !== 0))) {
+			if(!(((((_la - 138)) & ~0x1F) === 0 && ((1 << (_la - 138)) & 1073741829) !== 0) || ((((_la - 200)) & ~0x1F) === 0 && ((1 << (_la - 200)) & 44044545) !== 0) || ((((_la - 233)) & ~0x1F) === 0 && ((1 << (_la - 233)) & 137) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -2021,7 +2009,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 508;
 			_la = this._input.LA(1);
-			if(!(((((_la - 92)) & ~0x1F) === 0 && ((1 << (_la - 92)) & 268582913) !== 0) || _la===128 || _la===157 || ((((_la - 186)) & ~0x1F) === 0 && ((1 << (_la - 186)) & 2149160961) !== 0) || ((((_la - 218)) & ~0x1F) === 0 && ((1 << (_la - 218)) & 2956137599) !== 0) || _la===265)) {
+			if(!(((((_la - 88)) & ~0x1F) === 0 && ((1 << (_la - 88)) & 268582913) !== 0) || _la===124 || _la===153 || ((((_la - 182)) & ~0x1F) === 0 && ((1 << (_la - 182)) & 2149160961) !== 0) || ((((_la - 214)) & ~0x1F) === 0 && ((1 << (_la - 214)) & 2956137599) !== 0) || _la===261)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -2054,7 +2042,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 510;
 			_la = this._input.LA(1);
-			if(!(((((_la - 92)) & ~0x1F) === 0 && ((1 << (_la - 92)) & 268451841) !== 0) || _la===128 || _la===157 || ((((_la - 186)) & ~0x1F) === 0 && ((1 << (_la - 186)) & 2149160961) !== 0) || ((((_la - 218)) & ~0x1F) === 0 && ((1 << (_la - 218)) & 2956137599) !== 0) || _la===265)) {
+			if(!(((((_la - 88)) & ~0x1F) === 0 && ((1 << (_la - 88)) & 268451841) !== 0) || _la===124 || _la===153 || ((((_la - 182)) & ~0x1F) === 0 && ((1 << (_la - 182)) & 2149160961) !== 0) || ((((_la - 214)) & ~0x1F) === 0 && ((1 << (_la - 214)) & 2956137599) !== 0) || _la===261)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -2093,11 +2081,11 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 513;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===115 || ((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0)) {
+				if (_la===111 || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0)) {
 					{
 					this.state = 512;
 					_la = this._input.LA(1);
-					if(!(_la===115 || ((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0))) {
+					if(!(_la===111 || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0))) {
 					this._errHandler.recoverInline(this);
 					}
 					else {
@@ -2199,7 +2187,7 @@ export default class RegelSpraakParser extends Parser {
 					this.state = 535;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-				} while (((((_la - 92)) & ~0x1F) === 0 && ((1 << (_la - 92)) & 268582913) !== 0) || _la===128 || _la===157 || ((((_la - 186)) & ~0x1F) === 0 && ((1 << (_la - 186)) & 2149160961) !== 0) || ((((_la - 218)) & ~0x1F) === 0 && ((1 << (_la - 218)) & 2956137599) !== 0) || _la===265);
+				} while (((((_la - 88)) & ~0x1F) === 0 && ((1 << (_la - 88)) & 268582913) !== 0) || _la===124 || _la===153 || ((((_la - 182)) & ~0x1F) === 0 && ((1 << (_la - 182)) & 2149160961) !== 0) || ((((_la - 214)) & ~0x1F) === 0 && ((1 << (_la - 214)) & 2956137599) !== 0) || _la===261);
 				this.state = 537;
 				this.match(RegelSpraakParser.MET);
 				this.state = 539;
@@ -2240,7 +2228,7 @@ export default class RegelSpraakParser extends Parser {
 					this.state = 546;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-				} while (((((_la - 92)) & ~0x1F) === 0 && ((1 << (_la - 92)) & 268582913) !== 0) || _la===128 || _la===157 || ((((_la - 186)) & ~0x1F) === 0 && ((1 << (_la - 186)) & 2149160961) !== 0) || ((((_la - 218)) & ~0x1F) === 0 && ((1 << (_la - 218)) & 2956137599) !== 0) || _la===265);
+				} while (((((_la - 88)) & ~0x1F) === 0 && ((1 << (_la - 88)) & 268582913) !== 0) || _la===124 || _la===153 || ((((_la - 182)) & ~0x1F) === 0 && ((1 << (_la - 182)) & 2149160961) !== 0) || ((((_la - 214)) & ~0x1F) === 0 && ((1 << (_la - 214)) & 2956137599) !== 0) || _la===261);
 				this.state = 548;
 				this.match(RegelSpraakParser.MET);
 				this.state = 550;
@@ -2357,11 +2345,11 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 572;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===115 || ((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0)) {
+				if (_la===111 || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0)) {
 					{
 					this.state = 571;
 					_la = this._input.LA(1);
-					if(!(_la===115 || ((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0))) {
+					if(!(_la===111 || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0))) {
 					this._errHandler.recoverInline(this);
 					}
 					else {
@@ -2463,7 +2451,7 @@ export default class RegelSpraakParser extends Parser {
 					this.state = 594;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-				} while (((((_la - 92)) & ~0x1F) === 0 && ((1 << (_la - 92)) & 268582913) !== 0) || _la===128 || _la===157 || ((((_la - 186)) & ~0x1F) === 0 && ((1 << (_la - 186)) & 2149160961) !== 0) || ((((_la - 218)) & ~0x1F) === 0 && ((1 << (_la - 218)) & 2956137599) !== 0) || _la===265 || _la===266);
+				} while (((((_la - 88)) & ~0x1F) === 0 && ((1 << (_la - 88)) & 268582913) !== 0) || _la===124 || _la===153 || ((((_la - 182)) & ~0x1F) === 0 && ((1 << (_la - 182)) & 2149160961) !== 0) || ((((_la - 214)) & ~0x1F) === 0 && ((1 << (_la - 214)) & 2956137599) !== 0) || _la===261 || _la===262);
 				this.state = 596;
 				this.match(RegelSpraakParser.MET);
 				this.state = 598;
@@ -2504,7 +2492,7 @@ export default class RegelSpraakParser extends Parser {
 					this.state = 605;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-				} while (((((_la - 92)) & ~0x1F) === 0 && ((1 << (_la - 92)) & 268582913) !== 0) || _la===128 || _la===157 || ((((_la - 186)) & ~0x1F) === 0 && ((1 << (_la - 186)) & 2149160961) !== 0) || ((((_la - 218)) & ~0x1F) === 0 && ((1 << (_la - 218)) & 2956137599) !== 0) || _la===265 || _la===266);
+				} while (((((_la - 88)) & ~0x1F) === 0 && ((1 << (_la - 88)) & 268582913) !== 0) || _la===124 || _la===153 || ((((_la - 182)) & ~0x1F) === 0 && ((1 << (_la - 182)) & 2149160961) !== 0) || ((((_la - 214)) & ~0x1F) === 0 && ((1 << (_la - 214)) & 2956137599) !== 0) || _la===261 || _la===262);
 				this.state = 607;
 				this.match(RegelSpraakParser.MET);
 				this.state = 609;
@@ -2613,44 +2601,44 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 632;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 92:
-			case 106:
-			case 109:
-			case 120:
-			case 128:
-			case 157:
-			case 186:
+			case 88:
+			case 102:
+			case 105:
+			case 116:
+			case 124:
+			case 153:
+			case 182:
+			case 193:
+			case 194:
 			case 197:
 			case 198:
 			case 201:
 			case 202:
-			case 205:
-			case 206:
+			case 213:
+			case 214:
+			case 215:
+			case 216:
 			case 217:
 			case 218:
 			case 219:
 			case 220:
-			case 221:
-			case 222:
-			case 223:
 			case 224:
-			case 228:
+			case 226:
 			case 230:
+			case 231:
 			case 234:
 			case 235:
-			case 238:
-			case 239:
-			case 246:
-			case 247:
-			case 249:
-			case 265:
+			case 242:
+			case 243:
+			case 245:
+			case 261:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 630;
 				this.identifierOrKeyword();
 				}
 				break;
-			case 266:
+			case 262:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 631;
@@ -2691,11 +2679,11 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 635;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===115 || ((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0)) {
+				if (_la===111 || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0)) {
 					{
 					this.state = 634;
 					_la = this._input.LA(1);
-					if(!(_la===115 || ((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0))) {
+					if(!(_la===111 || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0))) {
 					this._errHandler.recoverInline(this);
 					}
 					else {
@@ -2797,7 +2785,7 @@ export default class RegelSpraakParser extends Parser {
 					this.state = 657;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-				} while (((((_la - 92)) & ~0x1F) === 0 && ((1 << (_la - 92)) & 268451841) !== 0) || _la===128 || _la===157 || ((((_la - 186)) & ~0x1F) === 0 && ((1 << (_la - 186)) & 2149160961) !== 0) || ((((_la - 218)) & ~0x1F) === 0 && ((1 << (_la - 218)) & 2956137599) !== 0) || _la===265);
+				} while (((((_la - 88)) & ~0x1F) === 0 && ((1 << (_la - 88)) & 268451841) !== 0) || _la===124 || _la===153 || ((((_la - 182)) & ~0x1F) === 0 && ((1 << (_la - 182)) & 2149160961) !== 0) || ((((_la - 214)) & ~0x1F) === 0 && ((1 << (_la - 214)) & 2956137599) !== 0) || _la===261);
 				this.state = 659;
 				this.match(RegelSpraakParser.MET);
 				this.state = 661;
@@ -2838,7 +2826,7 @@ export default class RegelSpraakParser extends Parser {
 					this.state = 668;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-				} while (((((_la - 92)) & ~0x1F) === 0 && ((1 << (_la - 92)) & 268451841) !== 0) || _la===128 || _la===157 || ((((_la - 186)) & ~0x1F) === 0 && ((1 << (_la - 186)) & 2149160961) !== 0) || ((((_la - 218)) & ~0x1F) === 0 && ((1 << (_la - 218)) & 2956137599) !== 0) || _la===265);
+				} while (((((_la - 88)) & ~0x1F) === 0 && ((1 << (_la - 88)) & 268451841) !== 0) || _la===124 || _la===153 || ((((_la - 182)) & ~0x1F) === 0 && ((1 << (_la - 182)) & 2149160961) !== 0) || ((((_la - 214)) & ~0x1F) === 0 && ((1 << (_la - 214)) & 2956137599) !== 0) || _la===261);
 				this.state = 670;
 				this.match(RegelSpraakParser.MET);
 				this.state = 672;
@@ -3048,7 +3036,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 711;
 			_la = this._input.LA(1);
-			if(!(((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & 1073741829) !== 0) || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 44044545) !== 0) || ((((_la - 237)) & ~0x1F) === 0 && ((1 << (_la - 237)) & 137) !== 0))) {
+			if(!(((((_la - 138)) & ~0x1F) === 0 && ((1 << (_la - 138)) & 1073741829) !== 0) || ((((_la - 200)) & ~0x1F) === 0 && ((1 << (_la - 200)) & 44044545) !== 0) || ((((_la - 233)) & ~0x1F) === 0 && ((1 << (_la - 233)) & 137) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -3131,7 +3119,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 717;
 			_la = this._input.LA(1);
-			if(!(((((_la - 205)) & ~0x1F) === 0 && ((1 << (_la - 205)) & 1611509763) !== 0) || ((((_la - 238)) & ~0x1F) === 0 && ((1 << (_la - 238)) & 771) !== 0))) {
+			if(!(((((_la - 201)) & ~0x1F) === 0 && ((1 << (_la - 201)) & 1611509763) !== 0) || ((((_la - 234)) & ~0x1F) === 0 && ((1 << (_la - 234)) & 771) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -3170,7 +3158,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 728;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===174) {
+			if (_la===170) {
 				{
 				this.state = 721;
 				this.match(RegelSpraakParser.MV_START);
@@ -3188,7 +3176,7 @@ export default class RegelSpraakParser extends Parser {
 					this.state = 725;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-				} while (_la===265);
+				} while (_la===261);
 				this.state = 727;
 				this.match(RegelSpraakParser.RPAREN);
 				}
@@ -3197,7 +3185,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 731;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===161) {
+			if (_la===157) {
 				{
 				this.state = 730;
 				this.match(RegelSpraakParser.BEZIELD);
@@ -3293,7 +3281,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 746;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===109) {
+				if (_la===105) {
 					{
 					this.state = 745;
 					this.match(RegelSpraakParser.IS);
@@ -3316,11 +3304,11 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 754;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===159 || _la===160) {
+			if (_la===155 || _la===156) {
 				{
 				this.state = 753;
 				_la = this._input.LA(1);
-				if(!(_la===159 || _la===160)) {
+				if(!(_la===155 || _la===156)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -3333,7 +3321,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 757;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (((((_la - 183)) & ~0x1F) === 0 && ((1 << (_la - 183)) & 7) !== 0)) {
+			if (((((_la - 179)) & ~0x1F) === 0 && ((1 << (_la - 179)) & 7) !== 0)) {
 				{
 				this.state = 756;
 				this.tijdlijn();
@@ -3391,7 +3379,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 767;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===173) {
+			if (_la===169) {
 				{
 				this.state = 765;
 				this.match(RegelSpraakParser.MET_EENHEID);
@@ -3403,7 +3391,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 778;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===167) {
+			if (_la===163) {
 				{
 				this.state = 769;
 				this.match(RegelSpraakParser.GEDIMENSIONEERD_MET);
@@ -3412,7 +3400,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 775;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while (_la===212) {
+				while (_la===208) {
 					{
 					{
 					this.state = 771;
@@ -3431,7 +3419,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 781;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (((((_la - 183)) & ~0x1F) === 0 && ((1 << (_la - 183)) & 7) !== 0)) {
+			if (((((_la - 179)) & ~0x1F) === 0 && ((1 << (_la - 179)) & 7) !== 0)) {
 				{
 				this.state = 780;
 				this.tijdlijn();
@@ -3462,21 +3450,21 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 789;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 177:
+			case 173:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 783;
 				this.numeriekDatatype();
 				}
 				break;
-			case 182:
+			case 178:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 784;
 				this.tekstDatatype();
 				}
 				break;
-			case 162:
+			case 158:
 				this.enterOuterAlt(localctx, 3);
 				{
 				this.state = 785;
@@ -3484,21 +3472,21 @@ export default class RegelSpraakParser extends Parser {
 				}
 				break;
 			case 3:
-			case 164:
+			case 160:
 				this.enterOuterAlt(localctx, 4);
 				{
 				this.state = 786;
 				this.datumTijdDatatype();
 				}
 				break;
-			case 97:
+			case 93:
 				this.enterOuterAlt(localctx, 5);
 				{
 				this.state = 787;
 				this.lijstDatatype();
 				}
 				break;
-			case 178:
+			case 174:
 				this.enterOuterAlt(localctx, 6);
 				{
 				this.state = 788;
@@ -3585,7 +3573,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 803;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===272) {
+			if (_la===268) {
 				{
 				this.state = 799;
 				this.match(RegelSpraakParser.LPAREN);
@@ -3650,7 +3638,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 812;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===272) {
+			if (_la===268) {
 				{
 				this.state = 808;
 				this.match(RegelSpraakParser.LPAREN);
@@ -3712,7 +3700,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 816;
 			_la = this._input.LA(1);
-			if(!(_la===3 || _la===164)) {
+			if(!(_la===3 || _la===160)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -3746,11 +3734,11 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 819;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (((((_la - 175)) & ~0x1F) === 0 && ((1 << (_la - 175)) & 19) !== 0)) {
+			if (((((_la - 171)) & ~0x1F) === 0 && ((1 << (_la - 171)) & 19) !== 0)) {
 				{
 				this.state = 818;
 				_la = this._input.LA(1);
-				if(!(((((_la - 175)) & ~0x1F) === 0 && ((1 << (_la - 175)) & 19) !== 0))) {
+				if(!(((((_la - 171)) & ~0x1F) === 0 && ((1 << (_la - 171)) & 19) !== 0))) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -3825,7 +3813,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 835;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===173) {
+			if (_la===169) {
 				{
 				this.state = 833;
 				this.match(RegelSpraakParser.MET_EENHEID);
@@ -3837,7 +3825,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 838;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===279) {
+			if (_la===275) {
 				{
 				this.state = 837;
 				this.match(RegelSpraakParser.SEMICOLON);
@@ -3868,28 +3856,28 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 845;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 166:
+			case 162:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 840;
 				this.enumeratieSpecificatie();
 				}
 				break;
-			case 177:
+			case 173:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 841;
 				this.numeriekDatatype();
 				}
 				break;
-			case 182:
+			case 178:
 				this.enterOuterAlt(localctx, 3);
 				{
 				this.state = 842;
 				this.tekstDatatype();
 				}
 				break;
-			case 162:
+			case 158:
 				this.enterOuterAlt(localctx, 4);
 				{
 				this.state = 843;
@@ -3897,7 +3885,7 @@ export default class RegelSpraakParser extends Parser {
 				}
 				break;
 			case 3:
-			case 164:
+			case 160:
 				this.enterOuterAlt(localctx, 5);
 				{
 				this.state = 844;
@@ -3945,7 +3933,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 851;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while (_la===271);
+			} while (_la===267);
 			}
 		}
 		catch (re) {
@@ -4027,7 +4015,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 862;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===208 || _la===213) {
+			while (_la===204 || _la===209) {
 				{
 				{
 				this.state = 859;
@@ -4064,7 +4052,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 865;
 			_la = this._input.LA(1);
-			if(!(_la===208 || _la===213)) {
+			if(!(_la===204 || _la===209)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -4076,7 +4064,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 871;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===174) {
+			if (_la===170) {
 				{
 				this.state = 867;
 				this.match(RegelSpraakParser.MV_START);
@@ -4092,7 +4080,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 875;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===133 || ((((_la - 205)) & ~0x1F) === 0 && ((1 << (_la - 205)) & 1611657219) !== 0) || ((((_la - 238)) & ~0x1F) === 0 && ((1 << (_la - 238)) & 268237571) !== 0)) {
+			if (_la===129 || ((((_la - 201)) & ~0x1F) === 0 && ((1 << (_la - 201)) & 1611657219) !== 0) || ((((_la - 234)) & ~0x1F) === 0 && ((1 << (_la - 234)) & 268237571) !== 0)) {
 				{
 				this.state = 874;
 				localctx._symbol_ = this.unitIdentifierWithTime();
@@ -4102,14 +4090,14 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 883;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===267) {
+			if (_la===263) {
 				{
 				this.state = 877;
 				this.match(RegelSpraakParser.EQUALS);
 				this.state = 879;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===280) {
+				if (_la===276) {
 					{
 					this.state = 878;
 					this.match(RegelSpraakParser.SLASH);
@@ -4149,7 +4137,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 885;
 			_la = this._input.LA(1);
-			if(!(_la===133 || ((((_la - 222)) & ~0x1F) === 0 && ((1 << (_la - 222)) & 4160958471) !== 0) || ((((_la - 256)) & ~0x1F) === 0 && ((1 << (_la - 256)) & 1023) !== 0))) {
+			if(!(_la===129 || ((((_la - 218)) & ~0x1F) === 0 && ((1 << (_la - 218)) & 4160958471) !== 0) || ((((_la - 252)) & ~0x1F) === 0 && ((1 << (_la - 252)) & 1023) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -4180,92 +4168,92 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 897;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 133:
-			case 222:
-			case 223:
-			case 224:
+			case 129:
+			case 218:
+			case 219:
+			case 220:
+			case 230:
+			case 231:
 			case 234:
 			case 235:
-			case 238:
-			case 239:
+			case 245:
+			case 246:
+			case 247:
+			case 248:
 			case 249:
-			case 250:
-			case 251:
 			case 252:
 			case 253:
+			case 254:
+			case 255:
 			case 256:
 			case 257:
 			case 258:
 			case 259:
 			case 260:
 			case 261:
-			case 262:
-			case 263:
-			case 264:
-			case 265:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 887;
 				this.unitIdentifier();
 				}
 				break;
-			case 205:
+			case 201:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 888;
 				this.match(RegelSpraakParser.DAG);
 				}
 				break;
-			case 206:
+			case 202:
 				this.enterOuterAlt(localctx, 3);
 				{
 				this.state = 889;
 				this.match(RegelSpraakParser.DAGEN);
 				}
 				break;
-			case 220:
+			case 216:
 				this.enterOuterAlt(localctx, 4);
 				{
 				this.state = 890;
 				this.match(RegelSpraakParser.MAAND);
 				}
 				break;
-			case 221:
+			case 217:
 				this.enterOuterAlt(localctx, 5);
 				{
 				this.state = 891;
 				this.match(RegelSpraakParser.MAANDEN);
 				}
 				break;
-			case 217:
+			case 213:
 				this.enterOuterAlt(localctx, 6);
 				{
 				this.state = 892;
 				this.match(RegelSpraakParser.JAAR);
 				}
 				break;
-			case 218:
+			case 214:
 				this.enterOuterAlt(localctx, 7);
 				{
 				this.state = 893;
 				this.match(RegelSpraakParser.JAREN);
 				}
 				break;
-			case 246:
+			case 242:
 				this.enterOuterAlt(localctx, 8);
 				{
 				this.state = 894;
 				this.match(RegelSpraakParser.WEEK);
 				}
 				break;
-			case 247:
+			case 243:
 				this.enterOuterAlt(localctx, 9);
 				{
 				this.state = 895;
 				this.match(RegelSpraakParser.WEKEN);
 				}
 				break;
-			case 219:
+			case 215:
 				this.enterOuterAlt(localctx, 10);
 				{
 				this.state = 896;
@@ -4464,7 +4452,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 929;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===276) {
+			if (_la===272) {
 				{
 				this.state = 928;
 				this.match(RegelSpraakParser.COMMA);
@@ -4490,7 +4478,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 937;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while (_la===266);
+			} while (_la===262);
 			}
 		}
 		catch (re) {
@@ -4529,7 +4517,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 943;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===278) {
+				if (_la===274) {
 					{
 					this.state = 942;
 					this.match(RegelSpraakParser.COLON);
@@ -4603,7 +4591,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 952;
 			_la = this._input.LA(1);
-			if(!(((((_la - 183)) & ~0x1F) === 0 && ((1 << (_la - 183)) & 7) !== 0))) {
+			if(!(((((_la - 179)) & ~0x1F) === 0 && ((1 << (_la - 179)) & 7) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -4669,18 +4657,18 @@ export default class RegelSpraakParser extends Parser {
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 3:
-			case 97:
-			case 162:
-			case 164:
-			case 177:
+			case 93:
+			case 158:
+			case 160:
+			case 173:
+			case 174:
 			case 178:
-			case 182:
 				{
 				this.state = 959;
 				this.datatype();
 				}
 				break;
-			case 265:
+			case 261:
 				{
 				this.state = 960;
 				this.domeinRef();
@@ -4692,7 +4680,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 965;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===173) {
+			if (_la===169) {
 				{
 				this.state = 963;
 				this.match(RegelSpraakParser.MET_EENHEID);
@@ -4704,7 +4692,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 969;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===109) {
+			if (_la===105) {
 				{
 				this.state = 967;
 				this.match(RegelSpraakParser.IS);
@@ -4716,7 +4704,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 972;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (((((_la - 183)) & ~0x1F) === 0 && ((1 << (_la - 183)) & 7) !== 0)) {
+			if (((((_la - 179)) & ~0x1F) === 0 && ((1 << (_la - 179)) & 7) !== 0)) {
 				{
 				this.state = 971;
 				this.tijdlijn();
@@ -4750,11 +4738,11 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 975;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===208 || _la===213) {
+			if (_la===204 || _la===209) {
 				{
 				this.state = 974;
 				_la = this._input.LA(1);
-				if(!(_la===208 || _la===213)) {
+				if(!(_la===204 || _la===209)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -4769,7 +4757,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 983;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & 1073741829) !== 0) || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 44044545) !== 0) || ((((_la - 237)) & ~0x1F) === 0 && ((1 << (_la - 237)) & 137) !== 0)) {
+			while (((((_la - 138)) & ~0x1F) === 0 && ((1 << (_la - 138)) & 1073741829) !== 0) || ((((_la - 200)) & ~0x1F) === 0 && ((1 << (_la - 200)) & 44044545) !== 0) || ((((_la - 233)) & ~0x1F) === 0 && ((1 << (_la - 233)) & 137) !== 0)) {
 				{
 				{
 				this.state = 978;
@@ -4809,7 +4797,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 986;
 			_la = this._input.LA(1);
-			if(!(_la===186 || _la===265)) {
+			if(!(_la===182 || _la===261)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -4825,7 +4813,7 @@ export default class RegelSpraakParser extends Parser {
 					{
 					this.state = 987;
 					_la = this._input.LA(1);
-					if(!(_la===186 || _la===265 || _la===266)) {
+					if(!(_la===182 || _la===261 || _la===262)) {
 					this._errHandler.recoverInline(this);
 					}
 					else {
@@ -4871,11 +4859,11 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 994;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===208 || _la===213) {
+				if (_la===204 || _la===209) {
 					{
 					this.state = 993;
 					_la = this._input.LA(1);
-					if(!(_la===208 || _la===213)) {
+					if(!(_la===204 || _la===209)) {
 					this._errHandler.recoverInline(this);
 					}
 					else {
@@ -4939,7 +4927,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1023;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 101:
+			case 97:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 1008;
@@ -5015,7 +5003,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1025;
 			localctx._article = this._input.LT(1);
 			_la = this._input.LA(1);
-			if(!(_la===208 || _la===213)) {
+			if(!(_la===204 || _la===209)) {
 			    localctx._article = this._errHandler.recoverInline(this);
 			}
 			else {
@@ -5027,7 +5015,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1031;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===174) {
+			if (_la===170) {
 				{
 				this.state = 1027;
 				this.match(RegelSpraakParser.MV_START);
@@ -5093,54 +5081,54 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 1041;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
-				case 92:
-				case 106:
-				case 109:
-				case 120:
-				case 128:
-				case 157:
-				case 186:
+				case 88:
+				case 102:
+				case 105:
+				case 116:
+				case 124:
+				case 153:
+				case 182:
+				case 193:
+				case 194:
 				case 197:
 				case 198:
 				case 201:
 				case 202:
-				case 205:
-				case 206:
+				case 213:
+				case 214:
+				case 215:
+				case 216:
 				case 217:
 				case 218:
 				case 219:
 				case 220:
-				case 221:
-				case 222:
-				case 223:
 				case 224:
-				case 228:
+				case 226:
 				case 230:
+				case 231:
 				case 234:
 				case 235:
-				case 238:
-				case 239:
-				case 246:
-				case 247:
-				case 249:
-				case 265:
+				case 242:
+				case 243:
+				case 245:
+				case 261:
 					{
 					this.state = 1039;
 					this.identifierOrKeyword();
 					}
 					break;
-				case 142:
-				case 144:
-				case 172:
-				case 204:
+				case 138:
+				case 140:
+				case 168:
+				case 200:
+				case 208:
 				case 212:
-				case 216:
+				case 221:
+				case 223:
 				case 225:
-				case 227:
-				case 229:
-				case 237:
+				case 233:
+				case 236:
 				case 240:
-				case 244:
 					{
 					this.state = 1040;
 					this.voorzetsel();
@@ -5153,7 +5141,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 1043;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while (((((_la - 92)) & ~0x1F) === 0 && ((1 << (_la - 92)) & 268582913) !== 0) || ((((_la - 128)) & ~0x1F) === 0 && ((1 << (_la - 128)) & 536952833) !== 0) || ((((_la - 172)) & ~0x1F) === 0 && ((1 << (_la - 172)) & 1711292417) !== 0) || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 3351245063) !== 0) || ((((_la - 237)) & ~0x1F) === 0 && ((1 << (_la - 237)) & 268441231) !== 0));
+			} while (((((_la - 88)) & ~0x1F) === 0 && ((1 << (_la - 88)) & 268582913) !== 0) || ((((_la - 124)) & ~0x1F) === 0 && ((1 << (_la - 124)) & 536952833) !== 0) || ((((_la - 168)) & ~0x1F) === 0 && ((1 << (_la - 168)) & 1711292417) !== 0) || ((((_la - 200)) & ~0x1F) === 0 && ((1 << (_la - 200)) & 3351245063) !== 0) || ((((_la - 233)) & ~0x1F) === 0 && ((1 << (_la - 233)) & 268441231) !== 0));
 			}
 		}
 		catch (re) {
@@ -5191,7 +5179,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 1048;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 4026531838) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & 4294967295) !== 0) || ((((_la - 64)) & ~0x1F) === 0 && ((1 << (_la - 64)) & 134217727) !== 0) || ((((_la - 97)) & ~0x1F) === 0 && ((1 << (_la - 97)) & 4294967233) !== 0) || ((((_la - 129)) & ~0x1F) === 0 && ((1 << (_la - 129)) & 4294967295) !== 0) || ((((_la - 161)) & ~0x1F) === 0 && ((1 << (_la - 161)) & 4294967295) !== 0) || ((((_la - 193)) & ~0x1F) === 0 && ((1 << (_la - 193)) & 4294967295) !== 0) || ((((_la - 225)) & ~0x1F) === 0 && ((1 << (_la - 225)) & 4294967295) !== 0) || ((((_la - 257)) & ~0x1F) === 0 && ((1 << (_la - 257)) & 4290772991) !== 0) || ((((_la - 289)) & ~0x1F) === 0 && ((1 << (_la - 289)) & 63) !== 0));
+			} while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 4026531838) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & 4294967295) !== 0) || ((((_la - 64)) & ~0x1F) === 0 && ((1 << (_la - 64)) & 545259519) !== 0) || ((((_la - 99)) & ~0x1F) === 0 && ((1 << (_la - 99)) & 4294967295) !== 0) || ((((_la - 131)) & ~0x1F) === 0 && ((1 << (_la - 131)) & 4294967295) !== 0) || ((((_la - 163)) & ~0x1F) === 0 && ((1 << (_la - 163)) & 4294967295) !== 0) || ((((_la - 195)) & ~0x1F) === 0 && ((1 << (_la - 195)) & 4294967295) !== 0) || ((((_la - 227)) & ~0x1F) === 0 && ((1 << (_la - 227)) & 4294967295) !== 0) || ((((_la - 259)) & ~0x1F) === 0 && ((1 << (_la - 259)) & 4294901759) !== 0));
 			}
 		}
 		catch (re) {
@@ -5218,7 +5206,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 1050;
 			_la = this._input.LA(1);
-			if(_la<=0 || _la===28 || ((((_la - 91)) & ~0x1F) === 0 && ((1 << (_la - 91)) & 4031) !== 0) || _la===279) {
+			if(_la<=0 || _la===28 || ((((_la - 87)) & ~0x1F) === 0 && ((1 << (_la - 87)) & 4031) !== 0) || _la===275) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -5256,7 +5244,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1055;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===266) {
+			if (_la===262) {
 				{
 				this.state = 1054;
 				this.match(RegelSpraakParser.NUMBER);
@@ -5276,7 +5264,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 1060;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while (_la===104);
+			} while (_la===100);
 			}
 		}
 		catch (re) {
@@ -5308,14 +5296,14 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1069;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 107:
+			case 103:
 				{
 				this.state = 1064;
 				this.voorwaardeDeel();
 				this.state = 1066;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===277) {
+				if (_la===273) {
 					{
 					this.state = 1065;
 					this.match(RegelSpraakParser.DOT);
@@ -5324,7 +5312,7 @@ export default class RegelSpraakParser extends Parser {
 
 				}
 				break;
-			case 277:
+			case 273:
 				{
 				this.state = 1068;
 				this.match(RegelSpraakParser.DOT);
@@ -5332,19 +5320,19 @@ export default class RegelSpraakParser extends Parser {
 				break;
 			case -1:
 			case 28:
+			case 87:
+			case 88:
+			case 89:
+			case 90:
 			case 91:
 			case 92:
-			case 93:
 			case 94:
 			case 95:
 			case 96:
+			case 97:
 			case 98:
 			case 99:
 			case 100:
-			case 101:
-			case 102:
-			case 103:
-			case 104:
 				break;
 			default:
 				break;
@@ -5352,7 +5340,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1072;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===103) {
+			if (_la===99) {
 				{
 				this.state = 1071;
 				this.variabeleDeel();
@@ -5391,7 +5379,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1077;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===108) {
+			if (_la===104) {
 				{
 				this.state = 1076;
 				localctx._isRecursive = this.match(RegelSpraakParser.IS_RECURSIEF);
@@ -5408,13 +5396,13 @@ export default class RegelSpraakParser extends Parser {
 					this.state = 1081;
 					this._errHandler.sync(this);
 					switch (this._input.LA(1)) {
-					case 92:
+					case 88:
 						{
 						this.state = 1079;
 						this.regel();
 						}
 						break;
-					case 91:
+					case 87:
 						{
 						this.state = 1080;
 						this.consistentieregel();
@@ -5461,7 +5449,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1089;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===109 || ((((_la - 194)) & ~0x1F) === 0 && ((1 << (_la - 194)) & 262209) !== 0) || _la===276) {
+			while (_la===105 || ((((_la - 190)) & ~0x1F) === 0 && ((1 << (_la - 190)) & 262209) !== 0) || _la===272) {
 				{
 				{
 				this.state = 1086;
@@ -5604,14 +5592,14 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1120;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 203:
+			case 199:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 1111;
 				this.match(RegelSpraakParser.ALTIJD);
 				}
 				break;
-			case 146:
+			case 142:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 1112;
@@ -5621,11 +5609,11 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 1116;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===144 || _la===236) {
+				if (_la===140 || _la===232) {
 					{
 					this.state = 1114;
 					_la = this._input.LA(1);
-					if(!(_la===144 || _la===236)) {
+					if(!(_la===140 || _la===232)) {
 					this._errHandler.recoverInline(this);
 					}
 					else {
@@ -5639,13 +5627,13 @@ export default class RegelSpraakParser extends Parser {
 
 				}
 				break;
-			case 144:
-			case 236:
+			case 140:
+			case 232:
 				this.enterOuterAlt(localctx, 3);
 				{
 				this.state = 1118;
 				_la = this._input.LA(1);
-				if(!(_la===144 || _la===236)) {
+				if(!(_la===140 || _la===232)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -5682,14 +5670,14 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1124;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 268:
+			case 264:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 1122;
 				this.datumLiteral();
 				}
 				break;
-			case 266:
+			case 262:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 1123;
@@ -5778,7 +5766,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 1141;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===4 || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & 21) !== 0) || _la===240) {
+				if (_la===4 || ((((_la - 138)) & ~0x1F) === 0 && ((1 << (_la - 138)) & 21) !== 0) || _la===236) {
 					{
 					this.state = 1140;
 					this.conditieBijExpressie();
@@ -5827,7 +5815,7 @@ export default class RegelSpraakParser extends Parser {
 				this.match(RegelSpraakParser.HEEFT);
 				this.state = 1152;
 				_la = this._input.LA(1);
-				if(!(_la===208 || _la===213)) {
+				if(!(_la===204 || _la===209)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -5842,7 +5830,7 @@ export default class RegelSpraakParser extends Parser {
 				this.attribuutMetLidwoord();
 				this.state = 1156;
 				_la = this._input.LA(1);
-				if(!(_la===43 || _la===44 || _la===124)) {
+				if(!(_la===43 || _la===44 || _la===120)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -5861,7 +5849,7 @@ export default class RegelSpraakParser extends Parser {
 				this.onderwerpReferentie();
 				this.state = 1160;
 				_la = this._input.LA(1);
-				if(!(_la===106 || _la===109)) {
+				if(!(_la===102 || _la===105)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -5873,7 +5861,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 1163;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===4 || ((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & 21) !== 0) || _la===240) {
+				if (_la===4 || ((((_la - 138)) & ~0x1F) === 0 && ((1 << (_la - 138)) & 21) !== 0) || _la===236) {
 					{
 					this.state = 1162;
 					this.conditieBijExpressie();
@@ -5916,7 +5904,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 1168;
 			_la = this._input.LA(1);
-			if(!(((((_la - 44)) & ~0x1F) === 0 && ((1 << (_la - 44)) & 23) !== 0) || ((((_la - 124)) & ~0x1F) === 0 && ((1 << (_la - 124)) & 24617) !== 0))) {
+			if(!(((((_la - 44)) & ~0x1F) === 0 && ((1 << (_la - 44)) & 23) !== 0) || ((((_la - 120)) & ~0x1F) === 0 && ((1 << (_la - 120)) & 24617) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -5962,7 +5950,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1176;
 			localctx._article2 = this._input.LT(1);
 			_la = this._input.LA(1);
-			if(!(((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0))) {
+			if(!(((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0))) {
 			    localctx._article2 = this._errHandler.recoverInline(this);
 			}
 			else {
@@ -5976,7 +5964,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1179;
 			localctx._article3 = this._input.LT(1);
 			_la = this._input.LA(1);
-			if(!(((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0))) {
+			if(!(((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0))) {
 			    localctx._article3 = this._errHandler.recoverInline(this);
 			}
 			else {
@@ -6022,7 +6010,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 1185;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while (((((_la - 92)) & ~0x1F) === 0 && ((1 << (_la - 92)) & 268582913) !== 0) || ((((_la - 128)) & ~0x1F) === 0 && ((1 << (_la - 128)) & 536887297) !== 0) || ((((_la - 172)) & ~0x1F) === 0 && ((1 << (_la - 172)) & 1711292417) !== 0) || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 3349147911) !== 0) || ((((_la - 237)) & ~0x1F) === 0 && ((1 << (_la - 237)) & 268441223) !== 0));
+			} while (((((_la - 88)) & ~0x1F) === 0 && ((1 << (_la - 88)) & 268582913) !== 0) || ((((_la - 124)) & ~0x1F) === 0 && ((1 << (_la - 124)) & 536887297) !== 0) || ((((_la - 168)) & ~0x1F) === 0 && ((1 << (_la - 168)) & 1711292417) !== 0) || ((((_la - 200)) & ~0x1F) === 0 && ((1 << (_la - 200)) & 3349147911) !== 0) || ((((_la - 233)) & ~0x1F) === 0 && ((1 << (_la - 233)) & 268441223) !== 0));
 			}
 		}
 		catch (re) {
@@ -6091,76 +6079,76 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1197;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 92:
-			case 106:
-			case 109:
-			case 120:
-			case 128:
-			case 157:
-			case 186:
+			case 88:
+			case 102:
+			case 105:
+			case 116:
+			case 124:
+			case 153:
+			case 182:
+			case 193:
+			case 194:
 			case 197:
 			case 198:
 			case 201:
 			case 202:
-			case 205:
-			case 206:
+			case 213:
+			case 214:
+			case 215:
+			case 216:
 			case 217:
 			case 218:
 			case 219:
 			case 220:
-			case 221:
-			case 222:
-			case 223:
 			case 224:
-			case 228:
+			case 226:
 			case 230:
+			case 231:
 			case 234:
 			case 235:
-			case 238:
-			case 239:
-			case 246:
-			case 247:
-			case 249:
-			case 265:
+			case 242:
+			case 243:
+			case 245:
+			case 261:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 1192;
 				this.identifierOrKeyword();
 				}
 				break;
-			case 142:
-			case 144:
-			case 172:
-			case 204:
+			case 138:
+			case 140:
+			case 168:
+			case 200:
+			case 208:
 			case 212:
-			case 216:
+			case 221:
+			case 223:
 			case 225:
-			case 227:
-			case 229:
-			case 237:
+			case 233:
+			case 236:
 			case 240:
-			case 244:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 1193;
 				this.voorzetsel();
 				}
 				break;
-			case 208:
+			case 204:
 				this.enterOuterAlt(localctx, 3);
 				{
 				this.state = 1194;
 				this.match(RegelSpraakParser.DE);
 				}
 				break;
-			case 213:
+			case 209:
 				this.enterOuterAlt(localctx, 4);
 				{
 				this.state = 1195;
 				this.match(RegelSpraakParser.HET);
 				}
 				break;
-			case 211:
+			case 207:
 				this.enterOuterAlt(localctx, 5);
 				{
 				this.state = 1196;
@@ -6193,52 +6181,52 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1201;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 92:
-			case 106:
-			case 109:
-			case 120:
-			case 128:
-			case 157:
-			case 186:
+			case 88:
+			case 102:
+			case 105:
+			case 116:
+			case 124:
+			case 153:
+			case 182:
+			case 193:
+			case 194:
 			case 197:
 			case 198:
 			case 201:
 			case 202:
-			case 205:
-			case 206:
+			case 213:
+			case 214:
+			case 215:
+			case 216:
 			case 217:
 			case 218:
 			case 219:
 			case 220:
-			case 221:
-			case 222:
-			case 223:
 			case 224:
-			case 228:
+			case 226:
 			case 230:
+			case 231:
 			case 234:
 			case 235:
-			case 238:
-			case 239:
-			case 246:
-			case 247:
-			case 249:
-			case 265:
+			case 242:
+			case 243:
+			case 245:
+			case 261:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 1199;
 				this.identifierOrKeyword();
 				}
 				break;
-			case 142:
-			case 172:
-			case 204:
+			case 138:
+			case 168:
+			case 200:
+			case 208:
 			case 212:
-			case 216:
-			case 227:
-			case 229:
-			case 237:
-			case 244:
+			case 223:
+			case 225:
+			case 233:
+			case 240:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 1200;
@@ -6273,7 +6261,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 1203;
 			_la = this._input.LA(1);
-			if(!(_la===142 || _la===172 || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41947393) !== 0) || _la===237 || _la===244)) {
+			if(!(_la===138 || _la===168 || ((((_la - 200)) & ~0x1F) === 0 && ((1 << (_la - 200)) & 41947393) !== 0) || _la===233 || _la===240)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -6311,7 +6299,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1207;
 			localctx._roleArticle = this._input.LT(1);
 			_la = this._input.LA(1);
-			if(!(((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0))) {
+			if(!(((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0))) {
 			    localctx._roleArticle = this._errHandler.recoverInline(this);
 			}
 			else {
@@ -6323,7 +6311,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1210;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===172) {
+			if (_la===168) {
 				{
 				this.state = 1209;
 				this.objectAttributeInit();
@@ -6371,7 +6359,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1221;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===276) {
+			while (_la===272) {
 				{
 				{
 				this.state = 1217;
@@ -6387,7 +6375,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1226;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===212) {
+			if (_la===208) {
 				{
 				this.state = 1224;
 				this.match(RegelSpraakParser.EN);
@@ -6494,14 +6482,14 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 1243;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
-				case 107:
+				case 103:
 					{
 					this.state = 1238;
 					this.voorwaardeDeel();
 					this.state = 1240;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-					if (_la===277) {
+					if (_la===273) {
 						{
 						this.state = 1239;
 						this.match(RegelSpraakParser.DOT);
@@ -6510,7 +6498,7 @@ export default class RegelSpraakParser extends Parser {
 
 					}
 					break;
-				case 277:
+				case 273:
 					{
 					this.state = 1242;
 					this.match(RegelSpraakParser.DOT);
@@ -6518,17 +6506,17 @@ export default class RegelSpraakParser extends Parser {
 					break;
 				case -1:
 				case 28:
+				case 87:
+				case 88:
+				case 89:
+				case 90:
 				case 91:
 				case 92:
-				case 93:
 				case 94:
 				case 95:
 				case 96:
+				case 97:
 				case 98:
-				case 99:
-				case 100:
-				case 101:
-				case 102:
 					break;
 				default:
 					break;
@@ -6567,7 +6555,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1250;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===277) {
+			if (_la===273) {
 				{
 				this.state = 1249;
 				this.match(RegelSpraakParser.DOT);
@@ -6638,7 +6626,7 @@ export default class RegelSpraakParser extends Parser {
 				{
 				this.state = 1258;
 				_la = this._input.LA(1);
-				if(!(_la===208 || _la===213 || _la===248)) {
+				if(!(_la===204 || _la===209 || _la===244)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -6727,7 +6715,7 @@ export default class RegelSpraakParser extends Parser {
 				this.voorwaardeKwantificatie();
 				this.state = 1271;
 				_la = this._input.LA(1);
-				if(!(_la===241 || _la===242)) {
+				if(!(_la===237 || _la===238)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -6751,7 +6739,7 @@ export default class RegelSpraakParser extends Parser {
 					this.state = 1277;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-				} while (_la===282 || _la===292);
+				} while (_la===278 || _la===288);
 				}
 				break;
 			case 2:
@@ -6791,7 +6779,7 @@ export default class RegelSpraakParser extends Parser {
 				this.voorwaardeKwantificatie();
 				this.state = 1287;
 				_la = this._input.LA(1);
-				if(!(_la===241 || _la===242)) {
+				if(!(_la===237 || _la===238)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -6815,7 +6803,7 @@ export default class RegelSpraakParser extends Parser {
 					this.state = 1293;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-				} while (_la===282 || _la===292);
+				} while (_la===278 || _la===288);
 				}
 				break;
 			case 3:
@@ -6857,7 +6845,7 @@ export default class RegelSpraakParser extends Parser {
 				this.voorwaardeKwantificatie();
 				this.state = 1304;
 				_la = this._input.LA(1);
-				if(!(_la===241 || _la===242)) {
+				if(!(_la===237 || _la===238)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -6879,7 +6867,7 @@ export default class RegelSpraakParser extends Parser {
 					this.state = 1309;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-				} while (_la===282 || _la===292);
+				} while (_la===278 || _la===288);
 				}
 				break;
 			}
@@ -6907,34 +6895,34 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1328;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 208:
+			case 204:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 1313;
 				this.match(RegelSpraakParser.DE);
 				}
 				break;
-			case 120:
+			case 116:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 1314;
 				this.match(RegelSpraakParser.ALLE);
 				}
 				break;
-			case 199:
+			case 195:
 				this.enterOuterAlt(localctx, 3);
 				{
 				this.state = 1315;
 				this.match(RegelSpraakParser.GEEN_VAN_DE);
 				}
 				break;
-			case 153:
-			case 154:
+			case 149:
+			case 150:
 				this.enterOuterAlt(localctx, 4);
 				{
 				this.state = 1316;
 				_la = this._input.LA(1);
-				if(!(_la===153 || _la===154)) {
+				if(!(_la===149 || _la===150)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -6943,7 +6931,7 @@ export default class RegelSpraakParser extends Parser {
 				}
 				this.state = 1317;
 				_la = this._input.LA(1);
-				if(!(((((_la - 197)) & ~0x1F) === 0 && ((1 << (_la - 197)) & 16435) !== 0) || _la===266)) {
+				if(!(((((_la - 193)) & ~0x1F) === 0 && ((1 << (_la - 193)) & 16435) !== 0) || _la===262)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -6956,14 +6944,14 @@ export default class RegelSpraakParser extends Parser {
 				this.match(RegelSpraakParser.DE);
 				}
 				break;
-			case 155:
+			case 151:
 				this.enterOuterAlt(localctx, 5);
 				{
 				this.state = 1320;
 				this.match(RegelSpraakParser.TEN_HOOGSTE);
 				this.state = 1321;
 				_la = this._input.LA(1);
-				if(!(((((_la - 197)) & ~0x1F) === 0 && ((1 << (_la - 197)) & 16435) !== 0) || _la===266)) {
+				if(!(((((_la - 193)) & ~0x1F) === 0 && ((1 << (_la - 193)) & 16435) !== 0) || _la===262)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -6976,14 +6964,14 @@ export default class RegelSpraakParser extends Parser {
 				this.match(RegelSpraakParser.DE);
 				}
 				break;
-			case 156:
+			case 152:
 				this.enterOuterAlt(localctx, 6);
 				{
 				this.state = 1324;
 				this.match(RegelSpraakParser.PRECIES);
 				this.state = 1325;
 				_la = this._input.LA(1);
-				if(!(((((_la - 197)) & ~0x1F) === 0 && ((1 << (_la - 197)) & 16435) !== 0) || _la===266)) {
+				if(!(((((_la - 193)) & ~0x1F) === 0 && ((1 << (_la - 193)) & 16435) !== 0) || _la===262)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -7065,7 +7053,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 1335;
 			_la = this._input.LA(1);
-			if(!(_la===282 || _la===292)) {
+			if(!(_la===278 || _la===288)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -7096,14 +7084,14 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1340;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 287:
+			case 283:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 1337;
 				this.match(RegelSpraakParser.DOUBLE_DOT);
 				}
 				break;
-			case 282:
+			case 278:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 1338;
@@ -7146,7 +7134,7 @@ export default class RegelSpraakParser extends Parser {
 				{
 				this.state = 1342;
 				_la = this._input.LA(1);
-				if(!(((((_la - 282)) & ~0x1F) === 0 && ((1 << (_la - 282)) & 1059) !== 0))) {
+				if(!(((((_la - 278)) & ~0x1F) === 0 && ((1 << (_la - 278)) & 1059) !== 0))) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -7158,7 +7146,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 1345;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while (((((_la - 282)) & ~0x1F) === 0 && ((1 << (_la - 282)) & 1059) !== 0));
+			} while (((((_la - 278)) & ~0x1F) === 0 && ((1 << (_la - 278)) & 1059) !== 0));
 			}
 		}
 		catch (re) {
@@ -7239,7 +7227,7 @@ export default class RegelSpraakParser extends Parser {
 			this.voorwaardeKwantificatie();
 			this.state = 1357;
 			_la = this._input.LA(1);
-			if(!(_la===241 || _la===242)) {
+			if(!(_la===237 || _la===238)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -7342,7 +7330,7 @@ export default class RegelSpraakParser extends Parser {
 				{
 				this.state = 1370;
 				_la = this._input.LA(1);
-				if(!(_la===207 || _la===210)) {
+				if(!(_la===203 || _la===206)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -7383,11 +7371,11 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1377;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===207 || _la===210) {
+			if (_la===203 || _la===206) {
 				{
 				this.state = 1375;
 				_la = this._input.LA(1);
-				if(!(_la===207 || _la===210)) {
+				if(!(_la===203 || _la===206)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -7472,7 +7460,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1394;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & 1073741829) !== 0) || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 44044545) !== 0) || ((((_la - 237)) & ~0x1F) === 0 && ((1 << (_la - 237)) & 137) !== 0)) {
+			while (((((_la - 138)) & ~0x1F) === 0 && ((1 << (_la - 138)) & 1073741829) !== 0) || ((((_la - 200)) & ~0x1F) === 0 && ((1 << (_la - 200)) & 44044545) !== 0) || ((((_la - 233)) & ~0x1F) === 0 && ((1 << (_la - 233)) & 137) !== 0)) {
 				{
 				{
 				this.state = 1389;
@@ -7511,15 +7499,15 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1404;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 115:
-			case 208:
-			case 211:
-			case 213:
+			case 111:
+			case 204:
+			case 207:
+			case 209:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 1397;
 				_la = this._input.LA(1);
-				if(!(_la===115 || ((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0))) {
+				if(!(_la===111 || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0))) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -7548,7 +7536,7 @@ export default class RegelSpraakParser extends Parser {
 				} while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER);
 				}
 				break;
-			case 215:
+			case 211:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 1403;
@@ -7582,15 +7570,15 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1413;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 115:
-			case 208:
-			case 211:
-			case 213:
+			case 111:
+			case 204:
+			case 207:
+			case 209:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 1406;
 				_la = this._input.LA(1);
-				if(!(_la===115 || ((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0))) {
+				if(!(_la===111 || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0))) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -7610,10 +7598,10 @@ export default class RegelSpraakParser extends Parser {
 					this.state = 1410;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-				} while (((((_la - 92)) & ~0x1F) === 0 && ((1 << (_la - 92)) & 268582913) !== 0) || _la===128 || _la===157 || ((((_la - 186)) & ~0x1F) === 0 && ((1 << (_la - 186)) & 2149160961) !== 0) || ((((_la - 218)) & ~0x1F) === 0 && ((1 << (_la - 218)) & 2956137599) !== 0) || _la===265 || _la===266);
+				} while (((((_la - 88)) & ~0x1F) === 0 && ((1 << (_la - 88)) & 268582913) !== 0) || _la===124 || _la===153 || ((((_la - 182)) & ~0x1F) === 0 && ((1 << (_la - 182)) & 2149160961) !== 0) || ((((_la - 214)) & ~0x1F) === 0 && ((1 << (_la - 214)) & 2956137599) !== 0) || _la===261 || _la===262);
 				}
 				break;
-			case 215:
+			case 211:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 1412;
@@ -7703,7 +7691,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1422;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & 1073741829) !== 0) || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 44044545) !== 0) || ((((_la - 237)) & ~0x1F) === 0 && ((1 << (_la - 237)) & 137) !== 0)) {
+			if (((((_la - 138)) & ~0x1F) === 0 && ((1 << (_la - 138)) & 1073741829) !== 0) || ((((_la - 200)) & ~0x1F) === 0 && ((1 << (_la - 200)) & 44044545) !== 0) || ((((_la - 233)) & ~0x1F) === 0 && ((1 << (_la - 233)) & 137) !== 0)) {
 				{
 				this.state = 1421;
 				this.voorzetsel();
@@ -7739,7 +7727,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1427;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (((((_la - 142)) & ~0x1F) === 0 && ((1 << (_la - 142)) & 1073741829) !== 0) || ((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 44044545) !== 0) || ((((_la - 237)) & ~0x1F) === 0 && ((1 << (_la - 237)) & 137) !== 0)) {
+			if (((((_la - 138)) & ~0x1F) === 0 && ((1 << (_la - 138)) & 1073741829) !== 0) || ((((_la - 200)) & ~0x1F) === 0 && ((1 << (_la - 200)) & 44044545) !== 0) || ((((_la - 233)) & ~0x1F) === 0 && ((1 << (_la - 233)) & 137) !== 0)) {
 				{
 				this.state = 1426;
 				this.voorzetsel();
@@ -7749,11 +7737,11 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1430;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0)) {
+			if (((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0)) {
 				{
 				this.state = 1429;
 				_la = this._input.LA(1);
-				if(!(((((_la - 208)) & ~0x1F) === 0 && ((1 << (_la - 208)) & 41) !== 0))) {
+				if(!(((((_la - 204)) & ~0x1F) === 0 && ((1 << (_la - 204)) & 41) !== 0))) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -7776,7 +7764,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 1435;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while (((((_la - 92)) & ~0x1F) === 0 && ((1 << (_la - 92)) & 268582913) !== 0) || _la===128 || _la===157 || ((((_la - 186)) & ~0x1F) === 0 && ((1 << (_la - 186)) & 2149160961) !== 0) || ((((_la - 218)) & ~0x1F) === 0 && ((1 << (_la - 218)) & 2956137599) !== 0) || _la===265 || _la===266);
+			} while (((((_la - 88)) & ~0x1F) === 0 && ((1 << (_la - 88)) & 268582913) !== 0) || _la===124 || _la===153 || ((((_la - 182)) & ~0x1F) === 0 && ((1 << (_la - 182)) & 2149160961) !== 0) || ((((_la - 214)) & ~0x1F) === 0 && ((1 << (_la - 214)) & 2956137599) !== 0) || _la===261 || _la===262);
 			}
 		}
 		catch (re) {
@@ -7803,7 +7791,7 @@ export default class RegelSpraakParser extends Parser {
 			{
 			this.state = 1437;
 			_la = this._input.LA(1);
-			if(!(((((_la - 115)) & ~0x1F) === 0 && ((1 << (_la - 115)) & 7) !== 0))) {
+			if(!(((((_la - 111)) & ~0x1F) === 0 && ((1 << (_la - 111)) & 7) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -7858,7 +7846,7 @@ export default class RegelSpraakParser extends Parser {
 					{
 					this.state = 1443;
 					_la = this._input.LA(1);
-					if(!(_la===207 || _la===210)) {
+					if(!(_la===203 || _la===206)) {
 					this._errHandler.recoverInline(this);
 					}
 					else {
@@ -7907,62 +7895,62 @@ export default class RegelSpraakParser extends Parser {
 			case 61:
 			case 62:
 			case 63:
-			case 92:
-			case 106:
-			case 109:
-			case 115:
-			case 120:
-			case 128:
-			case 136:
-			case 142:
-			case 144:
-			case 157:
-			case 172:
-			case 186:
+			case 88:
+			case 102:
+			case 105:
+			case 111:
+			case 116:
+			case 124:
+			case 132:
+			case 138:
+			case 140:
+			case 153:
+			case 168:
+			case 182:
+			case 193:
+			case 194:
 			case 197:
 			case 198:
+			case 200:
 			case 201:
 			case 202:
 			case 204:
-			case 205:
-			case 206:
+			case 207:
 			case 208:
-			case 211:
+			case 209:
 			case 212:
 			case 213:
+			case 214:
+			case 215:
 			case 216:
 			case 217:
 			case 218:
 			case 219:
 			case 220:
 			case 221:
-			case 222:
 			case 223:
 			case 224:
 			case 225:
-			case 227:
-			case 228:
-			case 229:
+			case 226:
 			case 230:
+			case 231:
+			case 233:
 			case 234:
 			case 235:
-			case 237:
-			case 238:
-			case 239:
+			case 236:
 			case 240:
-			case 244:
-			case 246:
-			case 247:
-			case 249:
-			case 265:
-			case 266:
+			case 242:
+			case 243:
+			case 245:
+			case 261:
+			case 262:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 1449;
 				this.elementairPredicaat();
 				}
 				break;
-			case 118:
+			case 114:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 1450;
@@ -8107,7 +8095,7 @@ export default class RegelSpraakParser extends Parser {
 			}
 			this.state = 1469;
 			_la = this._input.LA(1);
-			if(!(_la===105 || _la===115)) {
+			if(!(_la===101 || _la===111)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -8292,7 +8280,7 @@ export default class RegelSpraakParser extends Parser {
 			this.voorwaardeKwantificatie();
 			this.state = 1492;
 			_la = this._input.LA(1);
-			if(!(_la===241 || _la===242)) {
+			if(!(_la===237 || _la===238)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -8301,7 +8289,7 @@ export default class RegelSpraakParser extends Parser {
 			}
 			this.state = 1493;
 			_la = this._input.LA(1);
-			if(!(_la===149 || _la===150)) {
+			if(!(_la===145 || _la===146)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -8443,7 +8431,7 @@ export default class RegelSpraakParser extends Parser {
 				}
 				this.state = 1514;
 				_la = this._input.LA(1);
-				if(!(_la===109 || _la===115)) {
+				if(!(_la===105 || _la===111)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -8523,19 +8511,19 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1534;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 150:
+			case 146:
 				{
 				this.state = 1530;
 				this.match(RegelSpraakParser.VOLDOET);
 				}
 				break;
-			case 149:
+			case 145:
 				{
 				this.state = 1531;
 				this.match(RegelSpraakParser.VOLDOEN);
 				}
 				break;
-			case 113:
+			case 109:
 				{
 				this.state = 1532;
 				this.match(RegelSpraakParser.WORDT);
@@ -8552,7 +8540,7 @@ export default class RegelSpraakParser extends Parser {
 			this.voorwaardeKwantificatie();
 			this.state = 1538;
 			_la = this._input.LA(1);
-			if(!(_la===241 || _la===242)) {
+			if(!(_la===237 || _la===238)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -8870,7 +8858,7 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1585;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===208 || _la===213 || _la===265) {
+			while (_la===204 || _la===209 || _la===261) {
 				{
 				{
 				this.state = 1582;
@@ -8910,12 +8898,12 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1591;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===208 || _la===213) {
+			if (_la===204 || _la===209) {
 				{
 				this.state = 1590;
 				localctx._article = this._input.LT(1);
 				_la = this._input.LA(1);
-				if(!(_la===208 || _la===213)) {
+				if(!(_la===204 || _la===209)) {
 				    localctx._article = this._errHandler.recoverInline(this);
 				}
 				else {
@@ -8960,23 +8948,23 @@ export default class RegelSpraakParser extends Parser {
 			this.state = 1606;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (((((_la - 122)) & ~0x1F) === 0 && ((1 << (_la - 122)) & 67243011) !== 0)) {
+			while (((((_la - 118)) & ~0x1F) === 0 && ((1 << (_la - 118)) & 67243011) !== 0)) {
 				{
 				{
 				this.state = 1600;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
-				case 133:
-				case 139:
-				case 148:
+				case 129:
+				case 135:
+				case 144:
 					{
 					this.state = 1598;
 					this.additiveOperator();
 					}
 					break;
-				case 122:
-				case 123:
-				case 132:
+				case 118:
+				case 119:
+				case 128:
 					{
 					this.state = 1599;
 					this.multiplicativeOperator();
@@ -9164,7 +9152,7 @@ export default class RegelSpraakParser extends Parser {
 				this.state = 1640;
 				(localctx as LogicalExprContext)._op = this._input.LT(1);
 				_la = this._input.LA(1);
-				if(!(_la===212 || _la===225)) {
+				if(!(_la===208 || _la===221)) {
 				    (localctx as LogicalExprContext)._op = this._errHandler.recoverInline(this);
 				}
 				else {
@@ -9198,115 +9186,145 @@ export default class RegelSpraakParser extends Parser {
 		this.enterRule(localctx, 280, RegelSpraakParser.RULE_comparisonExpression);
 		let _la: number;
 		try {
-			this.state = 1675;
+			this.state = 1680;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 196, this._ctx) ) {
 			case 1:
-				localctx = new SubordinateClauseExprContext(this, localctx);
+				localctx = new IsDagsoortExprContext(this, localctx);
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 1644;
-				this.subordinateClauseExpression();
+				(localctx as IsDagsoortExprContext)._left = this.additiveExpression();
+				this.state = 1645;
+				(localctx as IsDagsoortExprContext)._v = this._input.LT(1);
+				_la = this._input.LA(1);
+				if(!(_la===105 || _la===111)) {
+				    (localctx as IsDagsoortExprContext)._v = this._errHandler.recoverInline(this);
+				}
+				else {
+					this._errHandler.reportMatch(this);
+				    this.consume();
+				}
+				this.state = 1646;
+				(localctx as IsDagsoortExprContext)._neg = this._input.LT(1);
+				_la = this._input.LA(1);
+				if(!(_la===196 || _la===207)) {
+				    (localctx as IsDagsoortExprContext)._neg = this._errHandler.recoverInline(this);
+				}
+				else {
+					this._errHandler.reportMatch(this);
+				    this.consume();
+				}
+				this.state = 1647;
+				(localctx as IsDagsoortExprContext)._dagsoort = this.identifier();
 				}
 				break;
 			case 2:
-				localctx = new PeriodeCheckExprContext(this, localctx);
+				localctx = new SubordinateClauseExprContext(this, localctx);
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 1645;
-				this.periodevergelijkingElementair();
+				this.state = 1649;
+				this.subordinateClauseExpression();
 				}
 				break;
 			case 3:
-				localctx = new IsKenmerkExprContext(this, localctx);
+				localctx = new PeriodeCheckExprContext(this, localctx);
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 1646;
-				(localctx as IsKenmerkExprContext)._left = this.additiveExpression();
-				this.state = 1647;
-				this.match(RegelSpraakParser.IS);
-				this.state = 1648;
-				this.naamwoordWithNumbers();
+				this.state = 1650;
+				this.periodevergelijkingElementair();
 				}
 				break;
 			case 4:
-				localctx = new HeeftKenmerkExprContext(this, localctx);
+				localctx = new IsKenmerkExprContext(this, localctx);
 				this.enterOuterAlt(localctx, 4);
 				{
-				this.state = 1650;
-				(localctx as HeeftKenmerkExprContext)._left = this.additiveExpression();
 				this.state = 1651;
-				this.match(RegelSpraakParser.HEEFT);
+				(localctx as IsKenmerkExprContext)._left = this.additiveExpression();
 				this.state = 1652;
+				this.match(RegelSpraakParser.IS);
+				this.state = 1653;
 				this.naamwoordWithNumbers();
 				}
 				break;
 			case 5:
-				localctx = new GelijkIsAanOfExprContext(this, localctx);
+				localctx = new HeeftKenmerkExprContext(this, localctx);
 				this.enterOuterAlt(localctx, 5);
 				{
-				this.state = 1654;
-				(localctx as GelijkIsAanOfExprContext)._left = this.additiveExpression();
 				this.state = 1655;
-				(localctx as GelijkIsAanOfExprContext)._op = this.gelijkIsAanOperator();
+				(localctx as HeeftKenmerkExprContext)._left = this.additiveExpression();
 				this.state = 1656;
-				(localctx as GelijkIsAanOfExprContext)._firstValue = this.literalValue();
+				this.match(RegelSpraakParser.HEEFT);
+				this.state = 1657;
+				this.naamwoordWithNumbers();
+				}
+				break;
+			case 6:
+				localctx = new GelijkIsAanOfExprContext(this, localctx);
+				this.enterOuterAlt(localctx, 6);
+				{
+				this.state = 1659;
+				(localctx as GelijkIsAanOfExprContext)._left = this.additiveExpression();
+				this.state = 1660;
+				(localctx as GelijkIsAanOfExprContext)._op = this.gelijkIsAanOperator();
 				this.state = 1661;
+				(localctx as GelijkIsAanOfExprContext)._firstValue = this.literalValue();
+				this.state = 1666;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while (_la===276) {
+				while (_la===272) {
 					{
 					{
-					this.state = 1657;
+					this.state = 1662;
 					this.match(RegelSpraakParser.COMMA);
-					this.state = 1658;
+					this.state = 1663;
 					(localctx as GelijkIsAanOfExprContext)._literalValue = this.literalValue();
 					(localctx as GelijkIsAanOfExprContext)._middleValues.push((localctx as GelijkIsAanOfExprContext)._literalValue);
 					}
 					}
-					this.state = 1663;
+					this.state = 1668;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 				}
-				this.state = 1664;
+				this.state = 1669;
 				this.match(RegelSpraakParser.OF);
-				this.state = 1665;
+				this.state = 1670;
 				(localctx as GelijkIsAanOfExprContext)._lastValue = this.literalValue();
 				}
 				break;
-			case 6:
+			case 7:
 				localctx = new BinaryComparisonExprContext(this, localctx);
-				this.enterOuterAlt(localctx, 6);
+				this.enterOuterAlt(localctx, 7);
 				{
-				this.state = 1667;
+				this.state = 1672;
 				(localctx as BinaryComparisonExprContext)._left = this.additiveExpression();
-				this.state = 1671;
+				this.state = 1676;
 				this._errHandler.sync(this);
 				switch ( this._interp.adaptivePredict(this._input, 195, this._ctx) ) {
 				case 1:
 					{
-					this.state = 1668;
+					this.state = 1673;
 					this.comparisonOperator();
-					this.state = 1669;
+					this.state = 1674;
 					(localctx as BinaryComparisonExprContext)._right = this.additiveExpression();
 					}
 					break;
 				}
 				}
 				break;
-			case 7:
+			case 8:
 				localctx = new UnaryConditionExprContext(this, localctx);
-				this.enterOuterAlt(localctx, 7);
+				this.enterOuterAlt(localctx, 8);
 				{
-				this.state = 1673;
+				this.state = 1678;
 				this.unaryCondition();
 				}
 				break;
-			case 8:
+			case 9:
 				localctx = new RegelStatusConditionExprContext(this, localctx);
-				this.enterOuterAlt(localctx, 8);
+				this.enterOuterAlt(localctx, 9);
 				{
-				this.state = 1674;
+				this.state = 1679;
 				this.regelStatusCondition();
 				}
 				break;
@@ -9331,58 +9349,58 @@ export default class RegelSpraakParser extends Parser {
 		let localctx: LiteralValueContext = new LiteralValueContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 282, RegelSpraakParser.RULE_literalValue);
 		try {
-			this.state = 1686;
+			this.state = 1691;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 271:
+			case 267:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 1677;
+				this.state = 1682;
 				this.match(RegelSpraakParser.ENUM_LITERAL);
 				}
 				break;
-			case 270:
+			case 266:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 1678;
+				this.state = 1683;
 				this.match(RegelSpraakParser.STRING_LITERAL);
 				}
 				break;
-			case 266:
+			case 262:
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 1679;
+				this.state = 1684;
 				this.match(RegelSpraakParser.NUMBER);
-				this.state = 1681;
+				this.state = 1686;
 				this._errHandler.sync(this);
 				switch ( this._interp.adaptivePredict(this._input, 197, this._ctx) ) {
 				case 1:
 					{
-					this.state = 1680;
+					this.state = 1685;
 					this.eenheidExpressie();
 					}
 					break;
 				}
 				}
 				break;
-			case 269:
+			case 265:
 				this.enterOuterAlt(localctx, 4);
 				{
-				this.state = 1683;
+				this.state = 1688;
 				this.match(RegelSpraakParser.PERCENTAGE_LITERAL);
 				}
 				break;
-			case 268:
+			case 264:
 				this.enterOuterAlt(localctx, 5);
 				{
-				this.state = 1684;
+				this.state = 1689;
 				this.datumLiteral();
 				}
 				break;
-			case 265:
+			case 261:
 				this.enterOuterAlt(localctx, 6);
 				{
-				this.state = 1685;
+				this.state = 1690;
 				this.identifier();
 				}
 				break;
@@ -9412,9 +9430,9 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 1688;
+			this.state = 1693;
 			_la = this._input.LA(1);
-			if(!(((((_la - 43)) & ~0x1F) === 0 && ((1 << (_la - 43)) & 131) !== 0) || _la===124)) {
+			if(!(((((_la - 43)) & ~0x1F) === 0 && ((1 << (_la - 43)) & 131) !== 0) || _la===120)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -9445,9 +9463,9 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 1690;
+			this.state = 1695;
 			_la = this._input.LA(1);
-			if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 62914560) !== 0) || ((((_la - 38)) & ~0x1F) === 0 && ((1 << (_la - 38)) & 67108835) !== 0) || ((((_la - 109)) & ~0x1F) === 0 && ((1 << (_la - 109)) & 674533377) !== 0) || _la===216 || _la===254 || _la===255)) {
+			if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 62914560) !== 0) || ((((_la - 38)) & ~0x1F) === 0 && ((1 << (_la - 38)) & 67108835) !== 0) || ((((_la - 105)) & ~0x1F) === 0 && ((1 << (_la - 105)) & 674533377) !== 0) || _la===212 || _la===250 || _la===251)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -9478,23 +9496,23 @@ export default class RegelSpraakParser extends Parser {
 			let _alt: number;
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 1692;
+			this.state = 1697;
 			localctx._left = this.multiplicativeExpression();
-			this.state = 1698;
+			this.state = 1703;
 			this._errHandler.sync(this);
 			_alt = this._interp.adaptivePredict(this._input, 199, this._ctx);
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
 				if (_alt === 1) {
 					{
 					{
-					this.state = 1693;
+					this.state = 1698;
 					this.additiveOperator();
-					this.state = 1694;
+					this.state = 1699;
 					localctx._right = this.multiplicativeExpression();
 					}
 					}
 				}
-				this.state = 1700;
+				this.state = 1705;
 				this._errHandler.sync(this);
 				_alt = this._interp.adaptivePredict(this._input, 199, this._ctx);
 			}
@@ -9522,9 +9540,9 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 1701;
+			this.state = 1706;
 			_la = this._input.LA(1);
-			if(!(((((_la - 133)) & ~0x1F) === 0 && ((1 << (_la - 133)) & 32833) !== 0))) {
+			if(!(((((_la - 129)) & ~0x1F) === 0 && ((1 << (_la - 129)) & 32833) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -9555,23 +9573,23 @@ export default class RegelSpraakParser extends Parser {
 			let _alt: number;
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 1703;
+			this.state = 1708;
 			localctx._left = this.powerExpression();
-			this.state = 1709;
+			this.state = 1714;
 			this._errHandler.sync(this);
 			_alt = this._interp.adaptivePredict(this._input, 200, this._ctx);
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
 				if (_alt === 1) {
 					{
 					{
-					this.state = 1704;
+					this.state = 1709;
 					this.multiplicativeOperator();
-					this.state = 1705;
+					this.state = 1710;
 					localctx._right = this.powerExpression();
 					}
 					}
 				}
-				this.state = 1711;
+				this.state = 1716;
 				this._errHandler.sync(this);
 				_alt = this._interp.adaptivePredict(this._input, 200, this._ctx);
 			}
@@ -9599,9 +9617,9 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 1712;
+			this.state = 1717;
 			_la = this._input.LA(1);
-			if(!(((((_la - 122)) & ~0x1F) === 0 && ((1 << (_la - 122)) & 1027) !== 0))) {
+			if(!(((((_la - 118)) & ~0x1F) === 0 && ((1 << (_la - 118)) & 1027) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -9632,23 +9650,23 @@ export default class RegelSpraakParser extends Parser {
 			let _alt: number;
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 1714;
+			this.state = 1719;
 			localctx._left = this.primaryExpression(0);
-			this.state = 1720;
+			this.state = 1725;
 			this._errHandler.sync(this);
 			_alt = this._interp.adaptivePredict(this._input, 201, this._ctx);
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
 				if (_alt === 1) {
 					{
 					{
-					this.state = 1715;
+					this.state = 1720;
 					this.powerOperator();
-					this.state = 1716;
+					this.state = 1721;
 					localctx._right = this.primaryExpression(0);
 					}
 					}
 				}
-				this.state = 1722;
+				this.state = 1727;
 				this._errHandler.sync(this);
 				_alt = this._interp.adaptivePredict(this._input, 201, this._ctx);
 			}
@@ -9676,9 +9694,9 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 1723;
+			this.state = 1728;
 			_la = this._input.LA(1);
-			if(!(_la===143 || _la===286)) {
+			if(!(_la===139 || _la===282)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -9721,7 +9739,7 @@ export default class RegelSpraakParser extends Parser {
 			let _alt: number;
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 1988;
+			this.state = 1993;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 227, this._ctx) ) {
 			case 1:
@@ -9730,9 +9748,9 @@ export default class RegelSpraakParser extends Parser {
 				this._ctx = localctx;
 				_prevctx = localctx;
 
-				this.state = 1726;
+				this.state = 1731;
 				this.match(RegelSpraakParser.MIN);
-				this.state = 1727;
+				this.state = 1732;
 				this.primaryExpression(55);
 				}
 				break;
@@ -9741,9 +9759,9 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new UnaryMinusExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1728;
+				this.state = 1733;
 				this.match(RegelSpraakParser.MINUS);
-				this.state = 1729;
+				this.state = 1734;
 				this.primaryExpression(54);
 				}
 				break;
@@ -9752,9 +9770,9 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new UnaryNietExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1730;
+				this.state = 1735;
 				this.match(RegelSpraakParser.NIET);
-				this.state = 1731;
+				this.state = 1736;
 				this.primaryExpression(53);
 				}
 				break;
@@ -9763,22 +9781,22 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new AbsTijdsduurFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1732;
+				this.state = 1737;
 				this.match(RegelSpraakParser.DE_ABSOLUTE_TIJDSDUUR_VAN);
-				this.state = 1733;
-				this.primaryExpression(0);
-				this.state = 1734;
-				this.match(RegelSpraakParser.TOT);
-				this.state = 1735;
-				this.primaryExpression(0);
 				this.state = 1738;
+				this.primaryExpression(0);
+				this.state = 1739;
+				this.match(RegelSpraakParser.TOT);
+				this.state = 1740;
+				this.primaryExpression(0);
+				this.state = 1743;
 				this._errHandler.sync(this);
 				switch ( this._interp.adaptivePredict(this._input, 202, this._ctx) ) {
 				case 1:
 					{
-					this.state = 1736;
+					this.state = 1741;
 					this.match(RegelSpraakParser.IN_HELE);
-					this.state = 1737;
+					this.state = 1742;
 					this.unitIdentifierWithTime();
 					}
 					break;
@@ -9790,22 +9808,22 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new TijdsduurFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1740;
+				this.state = 1745;
 				this.match(RegelSpraakParser.TIJDSDUUR_VAN);
-				this.state = 1741;
-				this.primaryExpression(0);
-				this.state = 1742;
-				this.match(RegelSpraakParser.TOT);
-				this.state = 1743;
-				this.primaryExpression(0);
 				this.state = 1746;
+				this.primaryExpression(0);
+				this.state = 1747;
+				this.match(RegelSpraakParser.TOT);
+				this.state = 1748;
+				this.primaryExpression(0);
+				this.state = 1751;
 				this._errHandler.sync(this);
 				switch ( this._interp.adaptivePredict(this._input, 203, this._ctx) ) {
 				case 1:
 					{
-					this.state = 1744;
+					this.state = 1749;
 					this.match(RegelSpraakParser.IN_HELE);
-					this.state = 1745;
+					this.state = 1750;
 					this.unitIdentifierWithTime();
 					}
 					break;
@@ -9817,29 +9835,29 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new SomFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1748;
+				this.state = 1753;
 				this.match(RegelSpraakParser.SOM_VAN);
-				this.state = 1749;
-				this.primaryExpression(0);
 				this.state = 1754;
+				this.primaryExpression(0);
+				this.state = 1759;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while (_la===276) {
+				while (_la===272) {
 					{
 					{
-					this.state = 1750;
+					this.state = 1755;
 					this.match(RegelSpraakParser.COMMA);
-					this.state = 1751;
+					this.state = 1756;
 					this.primaryExpression(0);
 					}
 					}
-					this.state = 1756;
+					this.state = 1761;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 				}
-				this.state = 1757;
+				this.state = 1762;
 				this.match(RegelSpraakParser.EN);
-				this.state = 1758;
+				this.state = 1763;
 				this.primaryExpression(50);
 				}
 				break;
@@ -9848,11 +9866,11 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new SomAlleExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1760;
+				this.state = 1765;
 				this.match(RegelSpraakParser.SOM_VAN);
-				this.state = 1761;
+				this.state = 1766;
 				this.match(RegelSpraakParser.ALLE);
-				this.state = 1762;
+				this.state = 1767;
 				this.naamwoord();
 				}
 				break;
@@ -9861,11 +9879,11 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new SomAlleAttribuutExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1763;
+				this.state = 1768;
 				this.match(RegelSpraakParser.SOM_VAN);
-				this.state = 1764;
+				this.state = 1769;
 				this.match(RegelSpraakParser.ALLE);
-				this.state = 1765;
+				this.state = 1770;
 				this.attribuutReferentie();
 				}
 				break;
@@ -9874,27 +9892,27 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new AantalFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1769;
+				this.state = 1774;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
-				case 213:
+				case 209:
 					{
-					this.state = 1766;
+					this.state = 1771;
 					this.match(RegelSpraakParser.HET);
-					this.state = 1767;
+					this.state = 1772;
 					this.match(RegelSpraakParser.AANTAL);
 					}
 					break;
-				case 186:
+				case 182:
 					{
-					this.state = 1768;
+					this.state = 1773;
 					this.match(RegelSpraakParser.AANTAL);
 					}
 					break;
 				default:
 					throw new NoViableAltException(this);
 				}
-				this.state = 1771;
+				this.state = 1776;
 				this.aggregationSubject();
 				}
 				break;
@@ -9903,11 +9921,11 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new AantalAttribuutExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1772;
+				this.state = 1777;
 				this.match(RegelSpraakParser.HET);
-				this.state = 1773;
+				this.state = 1778;
 				this.match(RegelSpraakParser.AANTAL);
-				this.state = 1774;
+				this.state = 1779;
 				this.attribuutReferentie();
 				}
 				break;
@@ -9916,9 +9934,9 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new AantalAttribuutExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1775;
+				this.state = 1780;
 				this.match(RegelSpraakParser.AANTAL);
-				this.state = 1776;
+				this.state = 1781;
 				this.attribuutReferentie();
 				}
 				break;
@@ -9927,25 +9945,25 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new PercentageFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1783;
+				this.state = 1788;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
-				case 266:
+				case 262:
 					{
-					this.state = 1777;
+					this.state = 1782;
 					this.match(RegelSpraakParser.NUMBER);
-					this.state = 1780;
+					this.state = 1785;
 					this._errHandler.sync(this);
 					switch (this._input.LA(1)) {
-					case 281:
+					case 277:
 						{
-						this.state = 1778;
+						this.state = 1783;
 						this.match(RegelSpraakParser.PERCENT_SIGN);
 						}
 						break;
-					case 265:
+					case 261:
 						{
-						this.state = 1779;
+						this.state = 1784;
 						(localctx as PercentageFuncExprContext)._p = this.match(RegelSpraakParser.IDENTIFIER);
 						}
 						break;
@@ -9954,18 +9972,18 @@ export default class RegelSpraakParser extends Parser {
 					}
 					}
 					break;
-				case 269:
+				case 265:
 					{
-					this.state = 1782;
+					this.state = 1787;
 					this.match(RegelSpraakParser.PERCENTAGE_LITERAL);
 					}
 					break;
 				default:
 					throw new NoViableAltException(this);
 				}
-				this.state = 1785;
+				this.state = 1790;
 				this.match(RegelSpraakParser.VAN);
-				this.state = 1786;
+				this.state = 1791;
 				this.primaryExpression(44);
 				}
 				break;
@@ -9974,11 +9992,11 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new PercentageOfExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1787;
+				this.state = 1792;
 				this.match(RegelSpraakParser.PERCENTAGE_LITERAL);
-				this.state = 1788;
+				this.state = 1793;
 				this.match(RegelSpraakParser.VAN);
-				this.state = 1789;
+				this.state = 1794;
 				this.primaryExpression(43);
 				}
 				break;
@@ -9987,36 +10005,36 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new ConcatenatieExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1790;
+				this.state = 1795;
 				this.match(RegelSpraakParser.CONCATENATIE_VAN);
-				this.state = 1791;
-				this.primaryExpression(0);
 				this.state = 1796;
+				this.primaryExpression(0);
+				this.state = 1801;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while (_la===276) {
+				while (_la===272) {
 					{
 					{
-					this.state = 1792;
+					this.state = 1797;
 					this.match(RegelSpraakParser.COMMA);
-					this.state = 1793;
+					this.state = 1798;
 					this.primaryExpression(0);
 					}
 					}
-					this.state = 1798;
+					this.state = 1803;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 				}
-				this.state = 1799;
+				this.state = 1804;
 				_la = this._input.LA(1);
-				if(!(_la===212 || _la===225)) {
+				if(!(_la===208 || _la===221)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 1800;
+				this.state = 1805;
 				this.primaryExpression(39);
 				}
 				break;
@@ -10025,9 +10043,9 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new WortelFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1802;
+				this.state = 1807;
 				this.match(RegelSpraakParser.DE_WORTEL_VAN);
-				this.state = 1803;
+				this.state = 1808;
 				this.primaryExpression(37);
 				}
 				break;
@@ -10036,13 +10054,13 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new AbsValFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1804;
+				this.state = 1809;
 				this.match(RegelSpraakParser.DE_ABSOLUTE_WAARDE_VAN);
-				this.state = 1805;
+				this.state = 1810;
 				this.match(RegelSpraakParser.LPAREN);
-				this.state = 1806;
+				this.state = 1811;
 				this.expressie();
-				this.state = 1807;
+				this.state = 1812;
 				this.match(RegelSpraakParser.RPAREN);
 				}
 				break;
@@ -10051,29 +10069,29 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new MinValFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1809;
+				this.state = 1814;
 				this.match(RegelSpraakParser.DE_MINIMALE_WAARDE_VAN);
-				this.state = 1810;
-				this.primaryExpression(0);
 				this.state = 1815;
+				this.primaryExpression(0);
+				this.state = 1820;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while (_la===276) {
+				while (_la===272) {
 					{
 					{
-					this.state = 1811;
+					this.state = 1816;
 					this.match(RegelSpraakParser.COMMA);
-					this.state = 1812;
+					this.state = 1817;
 					this.primaryExpression(0);
 					}
 					}
-					this.state = 1817;
+					this.state = 1822;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 				}
-				this.state = 1818;
+				this.state = 1823;
 				this.match(RegelSpraakParser.EN);
-				this.state = 1819;
+				this.state = 1824;
 				this.primaryExpression(35);
 				}
 				break;
@@ -10082,11 +10100,11 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new MinAlleAttribuutExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1821;
+				this.state = 1826;
 				this.match(RegelSpraakParser.DE_MINIMALE_WAARDE_VAN);
-				this.state = 1822;
+				this.state = 1827;
 				this.match(RegelSpraakParser.ALLE);
-				this.state = 1823;
+				this.state = 1828;
 				this.attribuutReferentie();
 				}
 				break;
@@ -10095,29 +10113,29 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new MaxValFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1824;
+				this.state = 1829;
 				this.match(RegelSpraakParser.DE_MAXIMALE_WAARDE_VAN);
-				this.state = 1825;
-				this.primaryExpression(0);
 				this.state = 1830;
+				this.primaryExpression(0);
+				this.state = 1835;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while (_la===276) {
+				while (_la===272) {
 					{
 					{
-					this.state = 1826;
+					this.state = 1831;
 					this.match(RegelSpraakParser.COMMA);
-					this.state = 1827;
+					this.state = 1832;
 					this.primaryExpression(0);
 					}
 					}
-					this.state = 1832;
+					this.state = 1837;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 				}
-				this.state = 1833;
+				this.state = 1838;
 				this.match(RegelSpraakParser.EN);
-				this.state = 1834;
+				this.state = 1839;
 				this.primaryExpression(33);
 				}
 				break;
@@ -10126,11 +10144,11 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new MaxAlleAttribuutExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1836;
+				this.state = 1841;
 				this.match(RegelSpraakParser.DE_MAXIMALE_WAARDE_VAN);
-				this.state = 1837;
+				this.state = 1842;
 				this.match(RegelSpraakParser.ALLE);
-				this.state = 1838;
+				this.state = 1843;
 				this.attribuutReferentie();
 				}
 				break;
@@ -10139,13 +10157,13 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new JaarUitFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1839;
+				this.state = 1844;
 				this.match(RegelSpraakParser.HET);
-				this.state = 1840;
+				this.state = 1845;
 				this.match(RegelSpraakParser.JAAR);
-				this.state = 1841;
+				this.state = 1846;
 				this.match(RegelSpraakParser.UIT);
-				this.state = 1842;
+				this.state = 1847;
 				this.primaryExpression(31);
 				}
 				break;
@@ -10154,13 +10172,13 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new MaandUitFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1843;
+				this.state = 1848;
 				this.match(RegelSpraakParser.DE);
-				this.state = 1844;
+				this.state = 1849;
 				this.match(RegelSpraakParser.MAAND);
-				this.state = 1845;
+				this.state = 1850;
 				this.match(RegelSpraakParser.UIT);
-				this.state = 1846;
+				this.state = 1851;
 				this.primaryExpression(30);
 				}
 				break;
@@ -10169,13 +10187,13 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new DagUitFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1847;
+				this.state = 1852;
 				this.match(RegelSpraakParser.DE);
-				this.state = 1848;
+				this.state = 1853;
 				this.match(RegelSpraakParser.DAG);
-				this.state = 1849;
+				this.state = 1854;
 				this.match(RegelSpraakParser.UIT);
-				this.state = 1850;
+				this.state = 1855;
 				this.primaryExpression(29);
 				}
 				break;
@@ -10184,21 +10202,21 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new DatumMetFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1851;
-				this.match(RegelSpraakParser.DE_DATUM_MET);
-				this.state = 1852;
-				this.match(RegelSpraakParser.LPAREN);
-				this.state = 1853;
-				this.primaryExpression(0);
-				this.state = 1854;
-				this.match(RegelSpraakParser.COMMA);
-				this.state = 1855;
-				this.primaryExpression(0);
 				this.state = 1856;
-				this.match(RegelSpraakParser.COMMA);
+				this.match(RegelSpraakParser.DE_DATUM_MET);
 				this.state = 1857;
-				this.primaryExpression(0);
+				this.match(RegelSpraakParser.LPAREN);
 				this.state = 1858;
+				this.primaryExpression(0);
+				this.state = 1859;
+				this.match(RegelSpraakParser.COMMA);
+				this.state = 1860;
+				this.primaryExpression(0);
+				this.state = 1861;
+				this.match(RegelSpraakParser.COMMA);
+				this.state = 1862;
+				this.primaryExpression(0);
+				this.state = 1863;
 				this.match(RegelSpraakParser.RPAREN);
 				}
 				break;
@@ -10207,13 +10225,13 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new PasenFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1860;
+				this.state = 1865;
 				this.match(RegelSpraakParser.DE_EERSTE_PAASDAG_VAN);
-				this.state = 1861;
+				this.state = 1866;
 				this.match(RegelSpraakParser.LPAREN);
-				this.state = 1862;
+				this.state = 1867;
 				this.primaryExpression(0);
-				this.state = 1863;
+				this.state = 1868;
 				this.match(RegelSpraakParser.RPAREN);
 				}
 				break;
@@ -10222,20 +10240,20 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new DateCalcExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1865;
+				this.state = 1870;
 				this.datumExpressie();
-				this.state = 1866;
+				this.state = 1871;
 				_la = this._input.LA(1);
-				if(!(_la===133 || _la===139)) {
+				if(!(_la===129 || _la===135)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 1867;
+				this.state = 1872;
 				this.primaryExpression(0);
-				this.state = 1868;
+				this.state = 1873;
 				this.timeUnit();
 				}
 				break;
@@ -10244,29 +10262,29 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new EersteDatumFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1870;
+				this.state = 1875;
 				this.match(RegelSpraakParser.EERSTE_VAN);
-				this.state = 1871;
-				this.primaryExpression(0);
 				this.state = 1876;
+				this.primaryExpression(0);
+				this.state = 1881;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while (_la===276) {
+				while (_la===272) {
 					{
 					{
-					this.state = 1872;
+					this.state = 1877;
 					this.match(RegelSpraakParser.COMMA);
-					this.state = 1873;
+					this.state = 1878;
 					this.primaryExpression(0);
 					}
 					}
-					this.state = 1878;
+					this.state = 1883;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 				}
-				this.state = 1879;
+				this.state = 1884;
 				this.match(RegelSpraakParser.EN);
-				this.state = 1880;
+				this.state = 1885;
 				this.primaryExpression(25);
 				}
 				break;
@@ -10275,29 +10293,29 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new LaatsteDatumFuncExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1882;
+				this.state = 1887;
 				this.match(RegelSpraakParser.LAATSTE_VAN);
-				this.state = 1883;
-				this.primaryExpression(0);
 				this.state = 1888;
+				this.primaryExpression(0);
+				this.state = 1893;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while (_la===276) {
+				while (_la===272) {
 					{
 					{
-					this.state = 1884;
+					this.state = 1889;
 					this.match(RegelSpraakParser.COMMA);
-					this.state = 1885;
+					this.state = 1890;
 					this.primaryExpression(0);
 					}
 					}
-					this.state = 1890;
+					this.state = 1895;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 				}
-				this.state = 1891;
+				this.state = 1896;
 				this.match(RegelSpraakParser.EN);
-				this.state = 1892;
+				this.state = 1897;
 				this.primaryExpression(24);
 				}
 				break;
@@ -10306,16 +10324,16 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new TotaalVanExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1894;
+				this.state = 1899;
 				this.match(RegelSpraakParser.HET_TOTAAL_VAN);
-				this.state = 1895;
+				this.state = 1900;
 				this.expressie();
-				this.state = 1897;
+				this.state = 1902;
 				this._errHandler.sync(this);
 				switch ( this._interp.adaptivePredict(this._input, 213, this._ctx) ) {
 				case 1:
 					{
-					this.state = 1896;
+					this.state = 1901;
 					this.conditieBijExpressie();
 					}
 					break;
@@ -10327,57 +10345,57 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new HetAantalDagenInExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1899;
+				this.state = 1904;
 				this.match(RegelSpraakParser.HET);
-				this.state = 1900;
+				this.state = 1905;
 				this.match(RegelSpraakParser.AANTAL);
-				this.state = 1901;
+				this.state = 1906;
 				this.match(RegelSpraakParser.DAGEN);
-				this.state = 1902;
+				this.state = 1907;
 				this.match(RegelSpraakParser.IN);
-				this.state = 1911;
+				this.state = 1916;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
-				case 208:
-				case 220:
+				case 204:
+				case 216:
 					{
-					this.state = 1904;
+					this.state = 1909;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-					if (_la===208) {
+					if (_la===204) {
 						{
-						this.state = 1903;
+						this.state = 1908;
 						this.match(RegelSpraakParser.DE);
 						}
 					}
 
-					this.state = 1906;
+					this.state = 1911;
 					this.match(RegelSpraakParser.MAAND);
 					}
 					break;
+				case 209:
 				case 213:
-				case 217:
 					{
-					this.state = 1908;
+					this.state = 1913;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-					if (_la===213) {
+					if (_la===209) {
 						{
-						this.state = 1907;
+						this.state = 1912;
 						this.match(RegelSpraakParser.HET);
 						}
 					}
 
-					this.state = 1910;
+					this.state = 1915;
 					this.match(RegelSpraakParser.JAAR);
 					}
 					break;
 				default:
 					throw new NoViableAltException(this);
 				}
-				this.state = 1913;
+				this.state = 1918;
 				this.match(RegelSpraakParser.DAT);
-				this.state = 1914;
+				this.state = 1919;
 				this.expressie();
 				}
 				break;
@@ -10386,30 +10404,30 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new CapitalizedTotaalVanExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1916;
+				this.state = 1921;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				do {
 					{
 					{
-					this.state = 1915;
+					this.state = 1920;
 					this.identifier();
 					}
 					}
-					this.state = 1918;
+					this.state = 1923;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-				} while (_la===265);
-				this.state = 1920;
+				} while (_la===261);
+				this.state = 1925;
 				this.match(RegelSpraakParser.HET_TOTAAL_VAN);
-				this.state = 1921;
+				this.state = 1926;
 				this.expressie();
-				this.state = 1923;
+				this.state = 1928;
 				this._errHandler.sync(this);
 				switch ( this._interp.adaptivePredict(this._input, 218, this._ctx) ) {
 				case 1:
 					{
-					this.state = 1922;
+					this.state = 1927;
 					this.conditieBijExpressie();
 					}
 					break;
@@ -10421,27 +10439,27 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new TijdsevenredigDeelExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1925;
+				this.state = 1930;
 				this.match(RegelSpraakParser.HET_TIJDSEVENREDIG_DEEL_PER);
-				this.state = 1926;
+				this.state = 1931;
 				_la = this._input.LA(1);
-				if(!(_la===217 || _la===220)) {
+				if(!(_la===213 || _la===216)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 1927;
+				this.state = 1932;
 				this.match(RegelSpraakParser.VAN);
-				this.state = 1928;
+				this.state = 1933;
 				this.expressie();
-				this.state = 1930;
+				this.state = 1935;
 				this._errHandler.sync(this);
 				switch ( this._interp.adaptivePredict(this._input, 219, this._ctx) ) {
 				case 1:
 					{
-					this.state = 1929;
+					this.state = 1934;
 					this.conditieBijExpressie();
 					}
 					break;
@@ -10453,41 +10471,41 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new CapitalizedTijdsevenredigDeelExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1933;
+				this.state = 1938;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				do {
 					{
 					{
-					this.state = 1932;
+					this.state = 1937;
 					this.identifier();
 					}
 					}
-					this.state = 1935;
+					this.state = 1940;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-				} while (_la===265);
-				this.state = 1937;
+				} while (_la===261);
+				this.state = 1942;
 				this.match(RegelSpraakParser.HET_TIJDSEVENREDIG_DEEL_PER);
-				this.state = 1938;
+				this.state = 1943;
 				_la = this._input.LA(1);
-				if(!(_la===217 || _la===220)) {
+				if(!(_la===213 || _la===216)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 1939;
+				this.state = 1944;
 				this.match(RegelSpraakParser.VAN);
-				this.state = 1940;
+				this.state = 1945;
 				this.expressie();
-				this.state = 1942;
+				this.state = 1947;
 				this._errHandler.sync(this);
 				switch ( this._interp.adaptivePredict(this._input, 221, this._ctx) ) {
 				case 1:
 					{
-					this.state = 1941;
+					this.state = 1946;
 					this.conditieBijExpressie();
 					}
 					break;
@@ -10499,32 +10517,32 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new DimensieAggExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1946;
+				this.state = 1951;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
 				case 13:
 				case 14:
-				case 186:
-				case 191:
-				case 213:
+				case 182:
+				case 187:
+				case 209:
 					{
-					this.state = 1944;
+					this.state = 1949;
 					this.getalAggregatieFunctie();
 					}
 					break;
-				case 187:
-				case 189:
+				case 183:
+				case 185:
 					{
-					this.state = 1945;
+					this.state = 1950;
 					this.datumAggregatieFunctie();
 					}
 					break;
 				default:
 					throw new NoViableAltException(this);
 				}
-				this.state = 1948;
+				this.state = 1953;
 				this.attribuutMetLidwoord();
-				this.state = 1949;
+				this.state = 1954;
 				this.dimensieSelectie();
 				}
 				break;
@@ -10533,59 +10551,59 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new DimensieRangeAggExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1953;
+				this.state = 1958;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
 				case 13:
 				case 14:
-				case 186:
-				case 191:
-				case 213:
+				case 182:
+				case 187:
+				case 209:
 					{
-					this.state = 1951;
+					this.state = 1956;
 					this.getalAggregatieFunctie();
 					}
 					break;
-				case 187:
-				case 189:
+				case 183:
+				case 185:
 					{
-					this.state = 1952;
+					this.state = 1957;
 					this.datumAggregatieFunctie();
 					}
 					break;
 				default:
 					throw new NoViableAltException(this);
 				}
-				this.state = 1957;
+				this.state = 1962;
 				this._errHandler.sync(this);
 				switch ( this._interp.adaptivePredict(this._input, 224, this._ctx) ) {
 				case 1:
 					{
-					this.state = 1955;
+					this.state = 1960;
 					this.bezieldeReferentie();
 					}
 					break;
 				case 2:
 					{
-					this.state = 1956;
+					this.state = 1961;
 					this.attribuutReferentie();
 					}
 					break;
 				}
-				this.state = 1959;
-				this.match(RegelSpraakParser.VANAF);
-				this.state = 1960;
-				this.naamwoord();
-				this.state = 1961;
-				this.match(RegelSpraakParser.TM);
-				this.state = 1962;
-				this.naamwoord();
 				this.state = 1964;
+				this.match(RegelSpraakParser.VANAF);
+				this.state = 1965;
+				this.naamwoord();
+				this.state = 1966;
+				this.match(RegelSpraakParser.TM);
+				this.state = 1967;
+				this.naamwoord();
+				this.state = 1969;
 				this._errHandler.sync(this);
 				switch ( this._interp.adaptivePredict(this._input, 225, this._ctx) ) {
 				case 1:
 					{
-					this.state = 1963;
+					this.state = 1968;
 					this.match(RegelSpraakParser.DOT);
 					}
 					break;
@@ -10597,14 +10615,14 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new NumberLiteralExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1966;
+				this.state = 1971;
 				this.match(RegelSpraakParser.NUMBER);
-				this.state = 1968;
+				this.state = 1973;
 				this._errHandler.sync(this);
 				switch ( this._interp.adaptivePredict(this._input, 226, this._ctx) ) {
 				case 1:
 					{
-					this.state = 1967;
+					this.state = 1972;
 					this.eenheidExpressie();
 					}
 					break;
@@ -10616,7 +10634,7 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new RekendatumKeywordExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1970;
+				this.state = 1975;
 				this.match(RegelSpraakParser.REKENDATUM);
 				}
 				break;
@@ -10625,7 +10643,7 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new IdentifierExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1971;
+				this.state = 1976;
 				this.identifier();
 				}
 				break;
@@ -10634,7 +10652,7 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new BezieldeRefExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1972;
+				this.state = 1977;
 				this.bezieldeReferentie();
 				}
 				break;
@@ -10643,7 +10661,7 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new AttrRefExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1973;
+				this.state = 1978;
 				this.attribuutReferentie();
 				}
 				break;
@@ -10652,7 +10670,7 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new OnderwerpRefExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1974;
+				this.state = 1979;
 				this.onderwerpReferentie();
 				}
 				break;
@@ -10661,7 +10679,7 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new NaamwoordExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1975;
+				this.state = 1980;
 				this.naamwoord();
 				}
 				break;
@@ -10670,7 +10688,7 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new ParamRefExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1976;
+				this.state = 1981;
 				this.parameterMetLidwoord();
 				}
 				break;
@@ -10679,7 +10697,7 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new PercentageLiteralExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1977;
+				this.state = 1982;
 				this.match(RegelSpraakParser.PERCENTAGE_LITERAL);
 				}
 				break;
@@ -10688,7 +10706,7 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new StringLiteralExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1978;
+				this.state = 1983;
 				this.match(RegelSpraakParser.STRING_LITERAL);
 				}
 				break;
@@ -10697,7 +10715,7 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new EnumLiteralExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1979;
+				this.state = 1984;
 				this.match(RegelSpraakParser.ENUM_LITERAL);
 				}
 				break;
@@ -10706,7 +10724,7 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new DatumLiteralExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1980;
+				this.state = 1985;
 				this.datumLiteral();
 				}
 				break;
@@ -10715,7 +10733,7 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new BooleanTrueLiteralExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1981;
+				this.state = 1986;
 				this.match(RegelSpraakParser.WAAR);
 				}
 				break;
@@ -10724,7 +10742,7 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new BooleanFalseLiteralExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1982;
+				this.state = 1987;
 				this.match(RegelSpraakParser.ONWAAR);
 				}
 				break;
@@ -10733,7 +10751,7 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new PronounExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1983;
+				this.state = 1988;
 				this.match(RegelSpraakParser.HIJ);
 				}
 				break;
@@ -10742,17 +10760,17 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new ParenExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 1984;
+				this.state = 1989;
 				this.match(RegelSpraakParser.LPAREN);
-				this.state = 1985;
+				this.state = 1990;
 				this.expressie();
-				this.state = 1986;
+				this.state = 1991;
 				this.match(RegelSpraakParser.RPAREN);
 				}
 				break;
 			}
 			this._ctx.stop = this._input.LT(-1);
-			this.state = 2012;
+			this.state = 2017;
 			this._errHandler.sync(this);
 			_alt = this._interp.adaptivePredict(this._input, 230, this._ctx);
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
@@ -10762,43 +10780,43 @@ export default class RegelSpraakParser extends Parser {
 					}
 					_prevctx = localctx;
 					{
-					this.state = 2010;
+					this.state = 2015;
 					this._errHandler.sync(this);
 					switch ( this._interp.adaptivePredict(this._input, 229, this._ctx) ) {
 					case 1:
 						{
 						localctx = new SimpleConcatenatieExprContext(this, new PrimaryExpressionContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, RegelSpraakParser.RULE_primaryExpression);
-						this.state = 1990;
+						this.state = 1995;
 						if (!(this.precpred(this._ctx, 38))) {
 							throw this.createFailedPredicateException("this.precpred(this._ctx, 38)");
 						}
-						this.state = 1993;
+						this.state = 1998;
 						this._errHandler.sync(this);
 						_la = this._input.LA(1);
 						do {
 							{
 							{
-							this.state = 1991;
+							this.state = 1996;
 							this.match(RegelSpraakParser.COMMA);
-							this.state = 1992;
+							this.state = 1997;
 							this.primaryExpression(0);
 							}
 							}
-							this.state = 1995;
+							this.state = 2000;
 							this._errHandler.sync(this);
 							_la = this._input.LA(1);
-						} while (_la===276);
-						this.state = 1997;
+						} while (_la===272);
+						this.state = 2002;
 						_la = this._input.LA(1);
-						if(!(_la===212 || _la===225)) {
+						if(!(_la===208 || _la===221)) {
 						this._errHandler.recoverInline(this);
 						}
 						else {
 							this._errHandler.reportMatch(this);
 						    this.consume();
 						}
-						this.state = 1998;
+						this.state = 2003;
 						this.primaryExpression(39);
 						}
 						break;
@@ -10806,11 +10824,11 @@ export default class RegelSpraakParser extends Parser {
 						{
 						localctx = new AfrondingExprContext(this, new PrimaryExpressionContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, RegelSpraakParser.RULE_primaryExpression);
-						this.state = 2000;
+						this.state = 2005;
 						if (!(this.precpred(this._ctx, 42))) {
 							throw this.createFailedPredicateException("this.precpred(this._ctx, 42)");
 						}
-						this.state = 2001;
+						this.state = 2006;
 						this.afronding();
 						}
 						break;
@@ -10818,15 +10836,15 @@ export default class RegelSpraakParser extends Parser {
 						{
 						localctx = new BegrenzingAfrondingExprContext(this, new PrimaryExpressionContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, RegelSpraakParser.RULE_primaryExpression);
-						this.state = 2002;
+						this.state = 2007;
 						if (!(this.precpred(this._ctx, 41))) {
 							throw this.createFailedPredicateException("this.precpred(this._ctx, 41)");
 						}
-						this.state = 2003;
+						this.state = 2008;
 						this.match(RegelSpraakParser.COMMA);
-						this.state = 2004;
+						this.state = 2009;
 						this.begrenzing();
-						this.state = 2005;
+						this.state = 2010;
 						this.afronding();
 						}
 						break;
@@ -10834,20 +10852,20 @@ export default class RegelSpraakParser extends Parser {
 						{
 						localctx = new BegrenzingExprContext(this, new PrimaryExpressionContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, RegelSpraakParser.RULE_primaryExpression);
-						this.state = 2007;
+						this.state = 2012;
 						if (!(this.precpred(this._ctx, 40))) {
 							throw this.createFailedPredicateException("this.precpred(this._ctx, 40)");
 						}
-						this.state = 2008;
+						this.state = 2013;
 						this.match(RegelSpraakParser.COMMA);
-						this.state = 2009;
+						this.state = 2014;
 						this.begrenzing();
 						}
 						break;
 					}
 					}
 				}
-				this.state = 2014;
+				this.state = 2019;
 				this._errHandler.sync(this);
 				_alt = this._interp.adaptivePredict(this._input, 230, this._ctx);
 			}
@@ -10875,20 +10893,20 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2015;
+			this.state = 2020;
 			_la = this._input.LA(1);
-			if(!(((((_la - 134)) & ~0x1F) === 0 && ((1 << (_la - 134)) & 131267) !== 0))) {
+			if(!(((((_la - 130)) & ~0x1F) === 0 && ((1 << (_la - 130)) & 131267) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
 				this._errHandler.reportMatch(this);
 			    this.consume();
 			}
-			this.state = 2016;
+			this.state = 2021;
 			this.match(RegelSpraakParser.AFGEROND_OP);
-			this.state = 2017;
+			this.state = 2022;
 			this.match(RegelSpraakParser.NUMBER);
-			this.state = 2018;
+			this.state = 2023;
 			this.match(RegelSpraakParser.DECIMALEN);
 			}
 		}
@@ -10911,31 +10929,31 @@ export default class RegelSpraakParser extends Parser {
 		let localctx: BegrenzingContext = new BegrenzingContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 304, RegelSpraakParser.RULE_begrenzing);
 		try {
-			this.state = 2026;
+			this.state = 2031;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 231, this._ctx) ) {
 			case 1:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 2020;
+				this.state = 2025;
 				this.begrenzingMinimum();
 				}
 				break;
 			case 2:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 2021;
+				this.state = 2026;
 				this.begrenzingMaximum();
 				}
 				break;
 			case 3:
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 2022;
+				this.state = 2027;
 				this.begrenzingMinimum();
-				this.state = 2023;
+				this.state = 2028;
 				this.match(RegelSpraakParser.EN);
-				this.state = 2024;
+				this.state = 2029;
 				this.begrenzingMaximum();
 				}
 				break;
@@ -10962,9 +10980,9 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2028;
+			this.state = 2033;
 			this.match(RegelSpraakParser.MET_EEN_MINIMUM_VAN);
-			this.state = 2029;
+			this.state = 2034;
 			this.expressie();
 			}
 		}
@@ -10989,9 +11007,9 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2031;
+			this.state = 2036;
 			this.match(RegelSpraakParser.MET_EEN_MAXIMUM_VAN);
-			this.state = 2032;
+			this.state = 2037;
 			this.expressie();
 			}
 		}
@@ -11014,25 +11032,25 @@ export default class RegelSpraakParser extends Parser {
 		let localctx: ConditieBijExpressieContext = new ConditieBijExpressieContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 310, RegelSpraakParser.RULE_conditieBijExpressie);
 		try {
-			this.state = 2037;
+			this.state = 2042;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 4:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 2034;
+				this.state = 2039;
 				this.match(RegelSpraakParser.GEDURENDE_DE_TIJD_DAT);
-				this.state = 2035;
+				this.state = 2040;
 				localctx._condition = this.expressie();
 				}
 				break;
+			case 138:
+			case 140:
 			case 142:
-			case 144:
-			case 146:
-			case 240:
+			case 236:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 2036;
+				this.state = 2041;
 				this.periodevergelijkingEnkelvoudig();
 				}
 				break;
@@ -11061,9 +11079,9 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2039;
+			this.state = 2044;
 			this.match(RegelSpraakParser.HET_IS_DE_PERIODE);
-			this.state = 2040;
+			this.state = 2045;
 			this.periodevergelijkingEnkelvoudig();
 			}
 		}
@@ -11086,59 +11104,59 @@ export default class RegelSpraakParser extends Parser {
 		let localctx: PeriodevergelijkingEnkelvoudigContext = new PeriodevergelijkingEnkelvoudigContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 314, RegelSpraakParser.RULE_periodevergelijkingEnkelvoudig);
 		try {
-			this.state = 2058;
+			this.state = 2063;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 233, this._ctx) ) {
 			case 1:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 2042;
+				this.state = 2047;
 				this.match(RegelSpraakParser.VANAF);
-				this.state = 2043;
+				this.state = 2048;
 				this.datumExpressie();
 				}
 				break;
 			case 2:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 2044;
+				this.state = 2049;
 				this.match(RegelSpraakParser.VAN);
-				this.state = 2045;
+				this.state = 2050;
 				this.datumExpressie();
-				this.state = 2046;
+				this.state = 2051;
 				this.match(RegelSpraakParser.TOT);
-				this.state = 2047;
+				this.state = 2052;
 				this.datumExpressie();
 				}
 				break;
 			case 3:
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 2049;
+				this.state = 2054;
 				this.match(RegelSpraakParser.VAN);
-				this.state = 2050;
+				this.state = 2055;
 				this.datumExpressie();
-				this.state = 2051;
+				this.state = 2056;
 				this.match(RegelSpraakParser.TOT_EN_MET);
-				this.state = 2052;
+				this.state = 2057;
 				this.datumExpressie();
 				}
 				break;
 			case 4:
 				this.enterOuterAlt(localctx, 4);
 				{
-				this.state = 2054;
+				this.state = 2059;
 				this.match(RegelSpraakParser.TOT);
-				this.state = 2055;
+				this.state = 2060;
 				this.datumExpressie();
 				}
 				break;
 			case 5:
 				this.enterOuterAlt(localctx, 5);
 				{
-				this.state = 2056;
+				this.state = 2061;
 				this.match(RegelSpraakParser.TOT_EN_MET);
-				this.state = 2057;
+				this.state = 2062;
 				this.datumExpressie();
 				}
 				break;
@@ -11163,16 +11181,16 @@ export default class RegelSpraakParser extends Parser {
 		let localctx: PeriodeDefinitieContext = new PeriodeDefinitieContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 316, RegelSpraakParser.RULE_periodeDefinitie);
 		try {
-			this.state = 2076;
+			this.state = 2081;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 234, this._ctx) ) {
 			case 1:
 				localctx = new VanafPeriodeContext(this, localctx);
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 2060;
+				this.state = 2065;
 				this.match(RegelSpraakParser.VANAF);
-				this.state = 2061;
+				this.state = 2066;
 				this.dateExpression();
 				}
 				break;
@@ -11180,9 +11198,9 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new TotPeriodeContext(this, localctx);
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 2062;
+				this.state = 2067;
 				this.match(RegelSpraakParser.TOT);
-				this.state = 2063;
+				this.state = 2068;
 				this.dateExpression();
 				}
 				break;
@@ -11190,9 +11208,9 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new TotEnMetPeriodeContext(this, localctx);
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 2064;
+				this.state = 2069;
 				this.match(RegelSpraakParser.TOT_EN_MET);
-				this.state = 2065;
+				this.state = 2070;
 				this.dateExpression();
 				}
 				break;
@@ -11200,13 +11218,13 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new VanTotPeriodeContext(this, localctx);
 				this.enterOuterAlt(localctx, 4);
 				{
-				this.state = 2066;
+				this.state = 2071;
 				this.match(RegelSpraakParser.VAN);
-				this.state = 2067;
+				this.state = 2072;
 				this.dateExpression();
-				this.state = 2068;
+				this.state = 2073;
 				this.match(RegelSpraakParser.TOT);
-				this.state = 2069;
+				this.state = 2074;
 				this.dateExpression();
 				}
 				break;
@@ -11214,13 +11232,13 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new VanTotEnMetPeriodeContext(this, localctx);
 				this.enterOuterAlt(localctx, 5);
 				{
-				this.state = 2071;
+				this.state = 2076;
 				this.match(RegelSpraakParser.VAN);
-				this.state = 2072;
+				this.state = 2077;
 				this.dateExpression();
-				this.state = 2073;
+				this.state = 2078;
 				this.match(RegelSpraakParser.TOT_EN_MET);
-				this.state = 2074;
+				this.state = 2079;
 				this.dateExpression();
 				}
 				break;
@@ -11245,69 +11263,69 @@ export default class RegelSpraakParser extends Parser {
 		let localctx: DateExpressionContext = new DateExpressionContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 318, RegelSpraakParser.RULE_dateExpression);
 		try {
-			this.state = 2082;
+			this.state = 2087;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 268:
+			case 264:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 2078;
+				this.state = 2083;
 				this.datumLiteral();
 				}
 				break;
-			case 231:
+			case 227:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 2079;
+				this.state = 2084;
 				this.match(RegelSpraakParser.REKENDATUM);
 				}
 				break;
-			case 232:
+			case 228:
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 2080;
+				this.state = 2085;
 				this.match(RegelSpraakParser.REKENJAAR);
 				}
 				break;
 			case 41:
-			case 92:
-			case 106:
-			case 115:
-			case 120:
-			case 128:
-			case 136:
-			case 157:
-			case 186:
+			case 88:
+			case 102:
+			case 111:
+			case 116:
+			case 124:
+			case 132:
+			case 153:
+			case 182:
+			case 193:
+			case 194:
 			case 197:
 			case 198:
 			case 201:
 			case 202:
-			case 205:
-			case 206:
-			case 208:
-			case 211:
+			case 204:
+			case 207:
+			case 209:
 			case 213:
+			case 214:
+			case 215:
+			case 216:
 			case 217:
 			case 218:
 			case 219:
 			case 220:
-			case 221:
-			case 222:
-			case 223:
 			case 224:
-			case 228:
+			case 226:
 			case 230:
+			case 231:
 			case 234:
 			case 235:
-			case 238:
-			case 239:
-			case 246:
-			case 247:
-			case 249:
-			case 265:
+			case 242:
+			case 243:
+			case 245:
+			case 261:
 				this.enterOuterAlt(localctx, 4);
 				{
-				this.state = 2081;
+				this.state = 2086;
 				this.attribuutReferentie();
 				}
 				break;
@@ -11334,43 +11352,43 @@ export default class RegelSpraakParser extends Parser {
 		let localctx: GetalAggregatieFunctieContext = new GetalAggregatieFunctieContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 320, RegelSpraakParser.RULE_getalAggregatieFunctie);
 		try {
-			this.state = 2090;
+			this.state = 2095;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 213:
+			case 209:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 2084;
+				this.state = 2089;
 				this.match(RegelSpraakParser.HET);
-				this.state = 2085;
+				this.state = 2090;
 				this.match(RegelSpraakParser.AANTAL);
 				}
 				break;
-			case 186:
+			case 182:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 2086;
+				this.state = 2091;
 				this.match(RegelSpraakParser.AANTAL);
 				}
 				break;
 			case 13:
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 2087;
+				this.state = 2092;
 				this.match(RegelSpraakParser.DE_MAXIMALE_WAARDE_VAN);
 				}
 				break;
 			case 14:
 				this.enterOuterAlt(localctx, 4);
 				{
-				this.state = 2088;
+				this.state = 2093;
 				this.match(RegelSpraakParser.DE_MINIMALE_WAARDE_VAN);
 				}
 				break;
-			case 191:
+			case 187:
 				this.enterOuterAlt(localctx, 5);
 				{
-				this.state = 2089;
+				this.state = 2094;
 				this.match(RegelSpraakParser.SOM_VAN);
 				}
 				break;
@@ -11400,9 +11418,9 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2092;
+			this.state = 2097;
 			_la = this._input.LA(1);
-			if(!(_la===187 || _la===189)) {
+			if(!(_la===183 || _la===185)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -11430,46 +11448,46 @@ export default class RegelSpraakParser extends Parser {
 		let localctx: DimensieSelectieContext = new DimensieSelectieContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 324, RegelSpraakParser.RULE_dimensieSelectie);
 		try {
-			this.state = 2104;
+			this.state = 2109;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 229:
+			case 225:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 2094;
+				this.state = 2099;
 				this.match(RegelSpraakParser.OVER);
-				this.state = 2098;
+				this.state = 2103;
 				this._errHandler.sync(this);
 				switch ( this._interp.adaptivePredict(this._input, 237, this._ctx) ) {
 				case 1:
 					{
-					this.state = 2095;
+					this.state = 2100;
 					this.aggregerenOverAlleDimensies();
 					}
 					break;
 				case 2:
 					{
-					this.state = 2096;
+					this.state = 2101;
 					this.aggregerenOverVerzameling();
 					}
 					break;
 				case 3:
 					{
-					this.state = 2097;
+					this.state = 2102;
 					this.aggregerenOverBereik();
 					}
 					break;
 				}
-				this.state = 2100;
+				this.state = 2105;
 				this.match(RegelSpraakParser.DOT);
 				}
 				break;
-			case 240:
+			case 236:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 2102;
+				this.state = 2107;
 				this.match(RegelSpraakParser.VAN);
-				this.state = 2103;
+				this.state = 2108;
 				this.aggregerenOverAlleDimensies();
 				}
 				break;
@@ -11499,25 +11517,25 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2106;
+			this.state = 2111;
 			this.match(RegelSpraakParser.ALLE);
-			this.state = 2107;
+			this.state = 2112;
 			this.naamwoord();
-			this.state = 2110;
+			this.state = 2115;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 239, this._ctx) ) {
 			case 1:
 				{
-				this.state = 2108;
+				this.state = 2113;
 				_la = this._input.LA(1);
-				if(!(_la===207 || _la===210)) {
+				if(!(_la===203 || _la===206)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 2109;
+				this.state = 2114;
 				this.predicaat();
 				}
 				break;
@@ -11545,17 +11563,17 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2112;
-			this.match(RegelSpraakParser.DE);
-			this.state = 2113;
-			this.naamwoord();
-			this.state = 2114;
-			this.match(RegelSpraakParser.VANAF);
-			this.state = 2115;
-			this.naamwoord();
-			this.state = 2116;
-			this.match(RegelSpraakParser.TM);
 			this.state = 2117;
+			this.match(RegelSpraakParser.DE);
+			this.state = 2118;
+			this.naamwoord();
+			this.state = 2119;
+			this.match(RegelSpraakParser.VANAF);
+			this.state = 2120;
+			this.naamwoord();
+			this.state = 2121;
+			this.match(RegelSpraakParser.TM);
+			this.state = 2122;
 			this.naamwoord();
 			}
 		}
@@ -11581,37 +11599,37 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2119;
+			this.state = 2124;
 			this.match(RegelSpraakParser.DE);
-			this.state = 2120;
+			this.state = 2125;
 			this.naamwoord();
-			this.state = 2121;
+			this.state = 2126;
 			this.match(RegelSpraakParser.IN);
-			this.state = 2122;
+			this.state = 2127;
 			this.match(RegelSpraakParser.LBRACE);
-			this.state = 2123;
-			this.naamwoord();
 			this.state = 2128;
+			this.naamwoord();
+			this.state = 2133;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===276) {
+			while (_la===272) {
 				{
 				{
-				this.state = 2124;
+				this.state = 2129;
 				this.match(RegelSpraakParser.COMMA);
-				this.state = 2125;
+				this.state = 2130;
 				this.naamwoord();
 				}
 				}
-				this.state = 2130;
+				this.state = 2135;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
-			this.state = 2131;
+			this.state = 2136;
 			this.match(RegelSpraakParser.EN);
-			this.state = 2132;
+			this.state = 2137;
 			this.naamwoord();
-			this.state = 2133;
+			this.state = 2138;
 			this.match(RegelSpraakParser.RBRACE);
 			}
 		}
@@ -11635,16 +11653,16 @@ export default class RegelSpraakParser extends Parser {
 		this.enterRule(localctx, 332, RegelSpraakParser.RULE_unaryCondition);
 		let _la: number;
 		try {
-			this.state = 2161;
+			this.state = 2162;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 241, this._ctx) ) {
 			case 1:
 				localctx = new UnaryCheckConditionContext(this, localctx);
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 2135;
+				this.state = 2140;
 				(localctx as UnaryCheckConditionContext)._expr = this.primaryExpression(0);
-				this.state = 2136;
+				this.state = 2141;
 				(localctx as UnaryCheckConditionContext)._op = this._input.LT(1);
 				_la = this._input.LA(1);
 				if(!(((((_la - 64)) & ~0x1F) === 0 && ((1 << (_la - 64)) & 61455) !== 0))) {
@@ -11660,9 +11678,9 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new UnaryNumeriekExactConditionContext(this, localctx);
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 2138;
+				this.state = 2143;
 				(localctx as UnaryNumeriekExactConditionContext)._expr = this.primaryExpression(0);
-				this.state = 2139;
+				this.state = 2144;
 				(localctx as UnaryNumeriekExactConditionContext)._op = this._input.LT(1);
 				_la = this._input.LA(1);
 				if(!(((((_la - 80)) & ~0x1F) === 0 && ((1 << (_la - 80)) & 15) !== 0))) {
@@ -11672,39 +11690,19 @@ export default class RegelSpraakParser extends Parser {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 2140;
+				this.state = 2145;
 				this.match(RegelSpraakParser.NUMBER);
-				this.state = 2141;
+				this.state = 2146;
 				this.match(RegelSpraakParser.CIJFERS);
 				}
 				break;
 			case 3:
-				localctx = new UnaryDagsoortConditionContext(this, localctx);
+				localctx = new UnaryKenmerkConditionContext(this, localctx);
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 2143;
-				(localctx as UnaryDagsoortConditionContext)._expr = this.primaryExpression(0);
-				this.state = 2144;
-				(localctx as UnaryDagsoortConditionContext)._op = this._input.LT(1);
-				_la = this._input.LA(1);
-				if(!(((((_la - 84)) & ~0x1F) === 0 && ((1 << (_la - 84)) & 15) !== 0))) {
-				    (localctx as UnaryDagsoortConditionContext)._op = this._errHandler.recoverInline(this);
-				}
-				else {
-					this._errHandler.reportMatch(this);
-				    this.consume();
-				}
-				this.state = 2145;
-				(localctx as UnaryDagsoortConditionContext)._dagsoort = this.identifier();
-				}
-				break;
-			case 4:
-				localctx = new UnaryKenmerkConditionContext(this, localctx);
-				this.enterOuterAlt(localctx, 4);
-				{
-				this.state = 2147;
-				(localctx as UnaryKenmerkConditionContext)._expr = this.primaryExpression(0);
 				this.state = 2148;
+				(localctx as UnaryKenmerkConditionContext)._expr = this.primaryExpression(0);
+				this.state = 2149;
 				(localctx as UnaryKenmerkConditionContext)._op = this._input.LT(1);
 				_la = this._input.LA(1);
 				if(!(((((_la - 68)) & ~0x1F) === 0 && ((1 << (_la - 68)) & 85) !== 0))) {
@@ -11714,17 +11712,17 @@ export default class RegelSpraakParser extends Parser {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 2149;
+				this.state = 2150;
 				(localctx as UnaryKenmerkConditionContext)._kenmerk = this.identifier();
 				}
 				break;
-			case 5:
+			case 4:
 				localctx = new UnaryRolConditionContext(this, localctx);
-				this.enterOuterAlt(localctx, 5);
+				this.enterOuterAlt(localctx, 4);
 				{
-				this.state = 2151;
-				(localctx as UnaryRolConditionContext)._expr = this.primaryExpression(0);
 				this.state = 2152;
+				(localctx as UnaryRolConditionContext)._expr = this.primaryExpression(0);
+				this.state = 2153;
 				(localctx as UnaryRolConditionContext)._op = this._input.LT(1);
 				_la = this._input.LA(1);
 				if(!(((((_la - 69)) & ~0x1F) === 0 && ((1 << (_la - 69)) & 85) !== 0))) {
@@ -11734,27 +11732,27 @@ export default class RegelSpraakParser extends Parser {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 2153;
+				this.state = 2154;
 				(localctx as UnaryRolConditionContext)._rol = this.identifier();
 				}
 				break;
-			case 6:
+			case 5:
 				localctx = new UnaryUniekConditionContext(this, localctx);
-				this.enterOuterAlt(localctx, 6);
+				this.enterOuterAlt(localctx, 5);
 				{
-				this.state = 2155;
-				(localctx as UnaryUniekConditionContext)._ref = this.onderwerpReferentie();
 				this.state = 2156;
+				(localctx as UnaryUniekConditionContext)._ref = this.onderwerpReferentie();
+				this.state = 2157;
 				this.match(RegelSpraakParser.MOETEN_UNIEK_ZIJN);
 				}
 				break;
-			case 7:
+			case 6:
 				localctx = new UnaryInconsistentDataConditionContext(this, localctx);
-				this.enterOuterAlt(localctx, 7);
+				this.enterOuterAlt(localctx, 6);
 				{
-				this.state = 2158;
-				(localctx as UnaryInconsistentDataConditionContext)._expr = this.primaryExpression(0);
 				this.state = 2159;
+				(localctx as UnaryInconsistentDataConditionContext)._expr = this.primaryExpression(0);
+				this.state = 2160;
 				this.match(RegelSpraakParser.IS_INCONSISTENT);
 				}
 				break;
@@ -11779,18 +11777,18 @@ export default class RegelSpraakParser extends Parser {
 		let localctx: RegelStatusConditionContext = new RegelStatusConditionContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 334, RegelSpraakParser.RULE_regelStatusCondition);
 		try {
-			this.state = 2171;
+			this.state = 2172;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 242, this._ctx) ) {
 			case 1:
 				localctx = new RegelStatusGevuurdCheckContext(this, localctx);
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 2163;
-				this.match(RegelSpraakParser.REGELVERSIE);
 				this.state = 2164;
-				(localctx as RegelStatusGevuurdCheckContext)._name = this.naamwoord();
+				this.match(RegelSpraakParser.REGELVERSIE);
 				this.state = 2165;
+				(localctx as RegelStatusGevuurdCheckContext)._name = this.naamwoord();
+				this.state = 2166;
 				this.match(RegelSpraakParser.IS_GEVUURD);
 				}
 				break;
@@ -11798,11 +11796,11 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new RegelStatusInconsistentCheckContext(this, localctx);
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 2167;
-				this.match(RegelSpraakParser.REGELVERSIE);
 				this.state = 2168;
-				(localctx as RegelStatusInconsistentCheckContext)._name = this.naamwoord();
+				this.match(RegelSpraakParser.REGELVERSIE);
 				this.state = 2169;
+				(localctx as RegelStatusInconsistentCheckContext)._name = this.naamwoord();
+				this.state = 2170;
 				this.match(RegelSpraakParser.IS_INCONSISTENT);
 				}
 				break;
@@ -11827,18 +11825,18 @@ export default class RegelSpraakParser extends Parser {
 		let localctx: SubordinateClauseExpressionContext = new SubordinateClauseExpressionContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 336, RegelSpraakParser.RULE_subordinateClauseExpression);
 		try {
-			this.state = 2185;
+			this.state = 2186;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 243, this._ctx) ) {
 			case 1:
 				localctx = new SubordinateHasExprContext(this, localctx);
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 2173;
-				(localctx as SubordinateHasExprContext)._subject = this.onderwerpReferentie();
 				this.state = 2174;
-				(localctx as SubordinateHasExprContext)._object = this.naamwoordWithNumbers();
+				(localctx as SubordinateHasExprContext)._subject = this.onderwerpReferentie();
 				this.state = 2175;
+				(localctx as SubordinateHasExprContext)._object = this.naamwoordWithNumbers();
+				this.state = 2176;
 				(localctx as SubordinateHasExprContext)._verb = this.match(RegelSpraakParser.HEEFT);
 				}
 				break;
@@ -11846,11 +11844,11 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new SubordinateIsWithExprContext(this, localctx);
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 2177;
-				(localctx as SubordinateIsWithExprContext)._subject = this.onderwerpReferentie();
 				this.state = 2178;
-				(localctx as SubordinateIsWithExprContext)._prepPhrase = this.naamwoordWithNumbers();
+				(localctx as SubordinateIsWithExprContext)._subject = this.onderwerpReferentie();
 				this.state = 2179;
+				(localctx as SubordinateIsWithExprContext)._prepPhrase = this.naamwoordWithNumbers();
+				this.state = 2180;
 				(localctx as SubordinateIsWithExprContext)._verb = this.match(RegelSpraakParser.IS);
 				}
 				break;
@@ -11858,11 +11856,11 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new SubordinateIsKenmerkExprContext(this, localctx);
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 2181;
-				(localctx as SubordinateIsKenmerkExprContext)._subject = this.onderwerpReferentie();
 				this.state = 2182;
-				(localctx as SubordinateIsKenmerkExprContext)._verb = this.match(RegelSpraakParser.IS);
+				(localctx as SubordinateIsKenmerkExprContext)._subject = this.onderwerpReferentie();
 				this.state = 2183;
+				(localctx as SubordinateIsKenmerkExprContext)._verb = this.match(RegelSpraakParser.IS);
+				this.state = 2184;
 				(localctx as SubordinateIsKenmerkExprContext)._kenmerk = this.naamwoordWithNumbers();
 				}
 				break;
@@ -11890,43 +11888,43 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2187;
-			this.match(RegelSpraakParser.DAGSOORT);
 			this.state = 2188;
+			this.match(RegelSpraakParser.DAGSOORT);
+			this.state = 2189;
 			this.naamwoord();
-			this.state = 2196;
+			this.state = 2197;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===174) {
+			if (_la===170) {
 				{
-				this.state = 2189;
+				this.state = 2190;
 				this.match(RegelSpraakParser.MV_START);
-				this.state = 2191;
+				this.state = 2192;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				do {
 					{
 					{
-					this.state = 2190;
+					this.state = 2191;
 					localctx._IDENTIFIER = this.match(RegelSpraakParser.IDENTIFIER);
 					localctx._plural.push(localctx._IDENTIFIER);
 					}
 					}
-					this.state = 2193;
+					this.state = 2194;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
-				} while (_la===265);
-				this.state = 2195;
+				} while (_la===261);
+				this.state = 2196;
 				this.match(RegelSpraakParser.RPAREN);
 				}
 			}
 
-			this.state = 2199;
+			this.state = 2200;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===279) {
+			if (_la===275) {
 				{
-				this.state = 2198;
+				this.state = 2199;
 				this.match(RegelSpraakParser.SEMICOLON);
 				}
 			}
@@ -11954,7 +11952,7 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2201;
+			this.state = 2202;
 			this.match(RegelSpraakParser.STRING_LITERAL);
 			}
 		}
@@ -11980,45 +11978,45 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2203;
-			localctx._sourceAmount = this.expressie();
 			this.state = 2204;
-			this.match(RegelSpraakParser.WORDT_VERDEELD_OVER);
+			localctx._sourceAmount = this.expressie();
 			this.state = 2205;
-			localctx._targetCollection = this.expressie();
+			this.match(RegelSpraakParser.WORDT_VERDEELD_OVER);
 			this.state = 2206;
-			this.match(RegelSpraakParser.COMMA);
+			localctx._targetCollection = this.expressie();
 			this.state = 2207;
+			this.match(RegelSpraakParser.COMMA);
+			this.state = 2208;
 			this.match(RegelSpraakParser.WAARBIJ_WORDT_VERDEELD);
-			this.state = 2210;
+			this.state = 2211;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 21:
 			case 33:
 			case 34:
 			case 35:
-			case 119:
-			case 194:
+			case 115:
+			case 190:
 				{
-				this.state = 2208;
+				this.state = 2209;
 				this.verdelingMethodeSimple();
 				}
 				break;
-			case 278:
+			case 274:
 				{
-				this.state = 2209;
+				this.state = 2210;
 				this.verdelingMethodeMultiLine();
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
-			this.state = 2213;
+			this.state = 2214;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la===19) {
 				{
-				this.state = 2212;
+				this.state = 2213;
 				this.verdelingRest();
 				}
 			}
@@ -12046,7 +12044,7 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2215;
+			this.state = 2216;
 			this.verdelingMethode();
 			}
 		}
@@ -12071,16 +12069,16 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2217;
-			this.match(RegelSpraakParser.COLON);
 			this.state = 2218;
+			this.match(RegelSpraakParser.COLON);
+			this.state = 2219;
 			this.verdelingMethodeBulletList();
-			this.state = 2220;
+			this.state = 2221;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 249, this._ctx) ) {
 			case 1:
 				{
-				this.state = 2219;
+				this.state = 2220;
 				this.match(RegelSpraakParser.DOT);
 				}
 				break;
@@ -12109,19 +12107,19 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2222;
+			this.state = 2223;
 			this.verdelingMethodeBullet();
-			this.state = 2226;
+			this.state = 2227;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===292) {
+			while (_la===288) {
 				{
 				{
-				this.state = 2223;
+				this.state = 2224;
 				this.verdelingMethodeBullet();
 				}
 				}
-				this.state = 2228;
+				this.state = 2229;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
@@ -12149,18 +12147,18 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2229;
-			this.match(RegelSpraakParser.MINUS);
 			this.state = 2230;
+			this.match(RegelSpraakParser.MINUS);
+			this.state = 2231;
 			this.verdelingMethode();
-			this.state = 2232;
+			this.state = 2233;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 251, this._ctx) ) {
 			case 1:
 				{
-				this.state = 2231;
+				this.state = 2232;
 				_la = this._input.LA(1);
-				if(!(_la===276 || _la===277)) {
+				if(!(_la===272 || _la===273)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -12192,14 +12190,14 @@ export default class RegelSpraakParser extends Parser {
 		this.enterRule(localctx, 352, RegelSpraakParser.RULE_verdelingMethode);
 		let _la: number;
 		try {
-			this.state = 2248;
+			this.state = 2249;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 194:
+			case 190:
 				localctx = new VerdelingGelijkeDelenContext(this, localctx);
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 2234;
+				this.state = 2235;
 				this.match(RegelSpraakParser.IN_GELIJKE_DELEN);
 				}
 				break;
@@ -12207,9 +12205,9 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new VerdelingNaarRatoContext(this, localctx);
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 2235;
-				this.match(RegelSpraakParser.NAAR_RATO_VAN);
 				this.state = 2236;
+				this.match(RegelSpraakParser.NAAR_RATO_VAN);
+				this.state = 2237;
 				(localctx as VerdelingNaarRatoContext)._ratioExpression = this.expressie();
 				}
 				break;
@@ -12217,19 +12215,19 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new VerdelingOpVolgordeContext(this, localctx);
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 2237;
-				this.match(RegelSpraakParser.OP_VOLGORDE_VAN);
 				this.state = 2238;
+				this.match(RegelSpraakParser.OP_VOLGORDE_VAN);
+				this.state = 2239;
 				(localctx as VerdelingOpVolgordeContext)._orderDirection = this._input.LT(1);
 				_la = this._input.LA(1);
-				if(!(_la===193 || _la===196)) {
+				if(!(_la===189 || _la===192)) {
 				    (localctx as VerdelingOpVolgordeContext)._orderDirection = this._errHandler.recoverInline(this);
 				}
 				else {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 2239;
+				this.state = 2240;
 				(localctx as VerdelingOpVolgordeContext)._orderExpression = this.expressie();
 				}
 				break;
@@ -12237,9 +12235,9 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new VerdelingTieBreakContext(this, localctx);
 				this.enterOuterAlt(localctx, 4);
 				{
-				this.state = 2240;
-				this.match(RegelSpraakParser.BIJ_EVEN_GROOT_CRITERIUM);
 				this.state = 2241;
+				this.match(RegelSpraakParser.BIJ_EVEN_GROOT_CRITERIUM);
+				this.state = 2242;
 				(localctx as VerdelingTieBreakContext)._tieBreakMethod = this.verdelingMethode();
 				}
 				break;
@@ -12247,23 +12245,23 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new VerdelingMaximumContext(this, localctx);
 				this.enterOuterAlt(localctx, 5);
 				{
-				this.state = 2242;
-				this.match(RegelSpraakParser.MET_EEN_MAXIMUM_VAN);
 				this.state = 2243;
+				this.match(RegelSpraakParser.MET_EEN_MAXIMUM_VAN);
+				this.state = 2244;
 				(localctx as VerdelingMaximumContext)._maxExpression = this.attribuutMetLidwoord();
 				}
 				break;
-			case 119:
+			case 115:
 				localctx = new VerdelingAfrondingContext(this, localctx);
 				this.enterOuterAlt(localctx, 6);
 				{
-				this.state = 2244;
-				this.match(RegelSpraakParser.AFGEROND_OP);
 				this.state = 2245;
-				(localctx as VerdelingAfrondingContext)._decimals = this.match(RegelSpraakParser.NUMBER);
+				this.match(RegelSpraakParser.AFGEROND_OP);
 				this.state = 2246;
-				this.match(RegelSpraakParser.DECIMALEN);
+				(localctx as VerdelingAfrondingContext)._decimals = this.match(RegelSpraakParser.NUMBER);
 				this.state = 2247;
+				this.match(RegelSpraakParser.DECIMALEN);
+				this.state = 2248;
 				this.match(RegelSpraakParser.NAAR_BENEDEN);
 				}
 				break;
@@ -12293,16 +12291,16 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2250;
-			this.match(RegelSpraakParser.ALS_ONVERDEELDE_REST_BLIJFT);
 			this.state = 2251;
+			this.match(RegelSpraakParser.ALS_ONVERDEELDE_REST_BLIJFT);
+			this.state = 2252;
 			localctx._remainderTarget = this.expressie();
-			this.state = 2253;
+			this.state = 2254;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===195) {
+			if (_la===191) {
 				{
-				this.state = 2252;
+				this.state = 2253;
 				this.match(RegelSpraakParser.OVER_VERDELING);
 				}
 			}
@@ -12345,7 +12343,7 @@ export default class RegelSpraakParser extends Parser {
 		return true;
 	}
 
-	public static readonly _serializedATN: number[] = [4,1,294,2256,2,0,7,0,
+	public static readonly _serializedATN: number[] = [4,1,290,2257,2,0,7,0,
 	2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,7,7,2,8,7,8,2,9,7,9,
 	2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,2,15,7,15,2,16,7,16,2,
 	17,7,17,2,18,7,18,2,19,7,19,2,20,7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,
@@ -12484,191 +12482,191 @@ export default class RegelSpraakParser extends Parser {
 	138,1,138,1,138,1,138,1,138,1,138,1,138,1,138,1,138,1,138,1,138,1,138,1,
 	138,3,138,1638,8,138,1,139,1,139,1,139,3,139,1643,8,139,1,140,1,140,1,140,
 	1,140,1,140,1,140,1,140,1,140,1,140,1,140,1,140,1,140,1,140,1,140,1,140,
-	5,140,1660,8,140,10,140,12,140,1663,9,140,1,140,1,140,1,140,1,140,1,140,
-	1,140,1,140,3,140,1672,8,140,1,140,1,140,3,140,1676,8,140,1,141,1,141,1,
-	141,1,141,3,141,1682,8,141,1,141,1,141,1,141,3,141,1687,8,141,1,142,1,142,
-	1,143,1,143,1,144,1,144,1,144,1,144,5,144,1697,8,144,10,144,12,144,1700,
-	9,144,1,145,1,145,1,146,1,146,1,146,1,146,5,146,1708,8,146,10,146,12,146,
-	1711,9,146,1,147,1,147,1,148,1,148,1,148,1,148,5,148,1719,8,148,10,148,
-	12,148,1722,9,148,1,149,1,149,1,150,1,150,1,150,1,150,1,150,1,150,1,150,
-	1,150,1,150,1,150,1,150,1,150,1,150,3,150,1739,8,150,1,150,1,150,1,150,
-	1,150,1,150,1,150,3,150,1747,8,150,1,150,1,150,1,150,1,150,5,150,1753,8,
-	150,10,150,12,150,1756,9,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,
-	1,150,1,150,1,150,1,150,1,150,3,150,1770,8,150,1,150,1,150,1,150,1,150,
-	1,150,1,150,1,150,1,150,1,150,3,150,1781,8,150,1,150,3,150,1784,8,150,1,
-	150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,5,150,1795,8,150,10,
-	150,12,150,1798,9,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,
-	150,1,150,1,150,1,150,1,150,1,150,5,150,1814,8,150,10,150,12,150,1817,9,
-	150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,5,150,1829,
-	8,150,10,150,12,150,1832,9,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,
-	1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,
-	1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,
-	1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,5,150,1875,
-	8,150,10,150,12,150,1878,9,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,
-	5,150,1887,8,150,10,150,12,150,1890,9,150,1,150,1,150,1,150,1,150,1,150,
-	1,150,3,150,1898,8,150,1,150,1,150,1,150,1,150,1,150,3,150,1905,8,150,1,
-	150,1,150,3,150,1909,8,150,1,150,3,150,1912,8,150,1,150,1,150,1,150,4,150,
-	1917,8,150,11,150,12,150,1918,1,150,1,150,1,150,3,150,1924,8,150,1,150,
-	1,150,1,150,1,150,1,150,3,150,1931,8,150,1,150,4,150,1934,8,150,11,150,
-	12,150,1935,1,150,1,150,1,150,1,150,1,150,3,150,1943,8,150,1,150,1,150,
-	3,150,1947,8,150,1,150,1,150,1,150,1,150,1,150,3,150,1954,8,150,1,150,1,
-	150,3,150,1958,8,150,1,150,1,150,1,150,1,150,1,150,3,150,1965,8,150,1,150,
-	1,150,3,150,1969,8,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,
-	1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,3,150,1989,
-	8,150,1,150,1,150,1,150,4,150,1994,8,150,11,150,12,150,1995,1,150,1,150,
+	1,140,1,140,1,140,1,140,1,140,5,140,1665,8,140,10,140,12,140,1668,9,140,
+	1,140,1,140,1,140,1,140,1,140,1,140,1,140,3,140,1677,8,140,1,140,1,140,
+	3,140,1681,8,140,1,141,1,141,1,141,1,141,3,141,1687,8,141,1,141,1,141,1,
+	141,3,141,1692,8,141,1,142,1,142,1,143,1,143,1,144,1,144,1,144,1,144,5,
+	144,1702,8,144,10,144,12,144,1705,9,144,1,145,1,145,1,146,1,146,1,146,1,
+	146,5,146,1713,8,146,10,146,12,146,1716,9,146,1,147,1,147,1,148,1,148,1,
+	148,1,148,5,148,1724,8,148,10,148,12,148,1727,9,148,1,149,1,149,1,150,1,
+	150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,3,
+	150,1744,8,150,1,150,1,150,1,150,1,150,1,150,1,150,3,150,1752,8,150,1,150,
+	1,150,1,150,1,150,5,150,1758,8,150,10,150,12,150,1761,9,150,1,150,1,150,
+	1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,3,150,1775,
+	8,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,3,150,1786,
+	8,150,1,150,3,150,1789,8,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,
+	1,150,1,150,5,150,1800,8,150,10,150,12,150,1803,9,150,1,150,1,150,1,150,
 	1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,5,150,
-	2011,8,150,10,150,12,150,2014,9,150,1,151,1,151,1,151,1,151,1,151,1,152,
-	1,152,1,152,1,152,1,152,1,152,3,152,2027,8,152,1,153,1,153,1,153,1,154,
-	1,154,1,154,1,155,1,155,1,155,3,155,2038,8,155,1,156,1,156,1,156,1,157,
-	1,157,1,157,1,157,1,157,1,157,1,157,1,157,1,157,1,157,1,157,1,157,1,157,
-	1,157,1,157,1,157,3,157,2059,8,157,1,158,1,158,1,158,1,158,1,158,1,158,
-	1,158,1,158,1,158,1,158,1,158,1,158,1,158,1,158,1,158,1,158,3,158,2077,
-	8,158,1,159,1,159,1,159,1,159,3,159,2083,8,159,1,160,1,160,1,160,1,160,
-	1,160,1,160,3,160,2091,8,160,1,161,1,161,1,162,1,162,1,162,1,162,3,162,
-	2099,8,162,1,162,1,162,1,162,1,162,3,162,2105,8,162,1,163,1,163,1,163,1,
-	163,3,163,2111,8,163,1,164,1,164,1,164,1,164,1,164,1,164,1,164,1,165,1,
-	165,1,165,1,165,1,165,1,165,1,165,5,165,2127,8,165,10,165,12,165,2130,9,
-	165,1,165,1,165,1,165,1,165,1,166,1,166,1,166,1,166,1,166,1,166,1,166,1,
-	166,1,166,1,166,1,166,1,166,1,166,1,166,1,166,1,166,1,166,1,166,1,166,1,
-	166,1,166,1,166,1,166,1,166,1,166,1,166,3,166,2162,8,166,1,167,1,167,1,
-	167,1,167,1,167,1,167,1,167,1,167,3,167,2172,8,167,1,168,1,168,1,168,1,
-	168,1,168,1,168,1,168,1,168,1,168,1,168,1,168,1,168,3,168,2186,8,168,1,
-	169,1,169,1,169,1,169,4,169,2192,8,169,11,169,12,169,2193,1,169,3,169,2197,
-	8,169,1,169,3,169,2200,8,169,1,170,1,170,1,171,1,171,1,171,1,171,1,171,
-	1,171,1,171,3,171,2211,8,171,1,171,3,171,2214,8,171,1,172,1,172,1,173,1,
-	173,1,173,3,173,2221,8,173,1,174,1,174,5,174,2225,8,174,10,174,12,174,2228,
-	9,174,1,175,1,175,1,175,3,175,2233,8,175,1,176,1,176,1,176,1,176,1,176,
-	1,176,1,176,1,176,1,176,1,176,1,176,1,176,1,176,1,176,3,176,2249,8,176,
-	1,177,1,177,1,177,3,177,2254,8,177,1,177,0,1,300,178,0,2,4,6,8,10,12,14,
-	16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,
-	64,66,68,70,72,74,76,78,80,82,84,86,88,90,92,94,96,98,100,102,104,106,108,
-	110,112,114,116,118,120,122,124,126,128,130,132,134,136,138,140,142,144,
-	146,148,150,152,154,156,158,160,162,164,166,168,170,172,174,176,178,180,
-	182,184,186,188,190,192,194,196,198,200,202,204,206,208,210,212,214,216,
-	218,220,222,224,226,228,230,232,234,236,238,240,242,244,246,248,250,252,
-	254,256,258,260,262,264,266,268,270,272,274,276,278,280,282,284,286,288,
-	290,292,294,296,298,300,302,304,306,308,310,312,314,316,318,320,322,324,
-	326,328,330,332,334,336,338,340,342,344,346,348,350,352,354,0,52,1,0,293,
-	293,2,0,106,106,109,109,3,0,208,208,211,211,213,213,4,0,115,115,208,208,
-	211,211,213,213,12,0,142,142,144,144,172,172,204,204,212,212,216,216,225,
-	225,227,227,229,229,237,237,240,240,244,244,18,0,92,92,106,106,109,109,
-	120,120,128,128,157,157,186,186,197,198,201,202,205,206,217,224,228,228,
-	230,230,234,235,238,239,246,247,249,249,265,265,17,0,92,92,106,106,120,
-	120,128,128,157,157,186,186,197,198,201,202,205,206,217,224,228,228,230,
-	230,234,235,238,239,246,247,249,249,265,265,7,0,205,206,217,218,220,221,
-	223,224,234,235,238,239,246,247,1,0,159,160,2,0,3,3,164,164,2,0,175,176,
-	179,179,2,0,208,208,213,213,6,0,133,133,222,224,234,235,238,239,249,253,
-	256,265,1,0,183,185,2,0,186,186,265,265,2,0,186,186,265,266,4,0,28,28,91,
-	96,98,102,279,279,2,0,144,144,236,236,2,0,43,44,124,124,6,0,44,46,48,48,
-	124,124,127,127,129,129,137,138,9,0,142,142,172,172,204,204,212,212,216,
-	216,227,227,229,229,237,237,244,244,3,0,208,208,213,213,248,248,1,0,241,
-	242,1,0,153,154,4,0,197,198,201,202,211,211,266,266,2,0,282,282,292,292,
-	3,0,282,283,287,287,292,292,2,0,207,207,210,210,1,0,115,117,2,0,105,105,
-	115,115,1,0,149,150,2,0,109,109,115,115,1,0,50,55,1,0,50,51,2,0,50,51,60,
-	63,2,0,212,212,225,225,3,0,43,44,50,50,124,124,12,0,22,25,38,39,43,63,109,
-	109,121,121,124,124,127,127,129,130,136,136,138,138,216,216,254,255,3,0,
-	133,133,139,139,148,148,2,0,122,123,132,132,2,0,143,143,286,286,2,0,133,
-	133,139,139,2,0,217,217,220,220,3,0,134,135,140,141,151,151,2,0,187,187,
-	189,189,2,0,64,67,76,79,1,0,80,83,1,0,84,87,4,0,68,68,70,70,72,72,74,74,
-	4,0,69,69,71,71,73,73,75,75,1,0,276,277,2,0,193,193,196,196,2502,0,364,
-	1,0,0,0,2,375,1,0,0,0,4,377,1,0,0,0,6,384,1,0,0,0,8,391,1,0,0,0,10,407,
-	1,0,0,0,12,427,1,0,0,0,14,443,1,0,0,0,16,446,1,0,0,0,18,459,1,0,0,0,20,
-	475,1,0,0,0,22,477,1,0,0,0,24,482,1,0,0,0,26,492,1,0,0,0,28,500,1,0,0,0,
-	30,504,1,0,0,0,32,506,1,0,0,0,34,508,1,0,0,0,36,510,1,0,0,0,38,569,1,0,
-	0,0,40,628,1,0,0,0,42,632,1,0,0,0,44,682,1,0,0,0,46,684,1,0,0,0,48,693,
-	1,0,0,0,50,702,1,0,0,0,52,711,1,0,0,0,54,713,1,0,0,0,56,715,1,0,0,0,58,
-	717,1,0,0,0,60,719,1,0,0,0,62,741,1,0,0,0,64,750,1,0,0,0,66,759,1,0,0,0,
-	68,789,1,0,0,0,70,791,1,0,0,0,72,798,1,0,0,0,74,805,1,0,0,0,76,807,1,0,
-	0,0,78,814,1,0,0,0,80,816,1,0,0,0,82,819,1,0,0,0,84,829,1,0,0,0,86,845,
-	1,0,0,0,88,847,1,0,0,0,90,853,1,0,0,0,92,855,1,0,0,0,94,857,1,0,0,0,96,
-	865,1,0,0,0,98,885,1,0,0,0,100,897,1,0,0,0,102,911,1,0,0,0,104,913,1,0,
-	0,0,106,921,1,0,0,0,108,926,1,0,0,0,110,946,1,0,0,0,112,948,1,0,0,0,114,
-	952,1,0,0,0,116,954,1,0,0,0,118,956,1,0,0,0,120,975,1,0,0,0,122,986,1,0,
-	0,0,124,1006,1,0,0,0,126,1023,1,0,0,0,128,1025,1,0,0,0,130,1041,1,0,0,0,
-	132,1046,1,0,0,0,134,1050,1,0,0,0,136,1052,1,0,0,0,138,1062,1,0,0,0,140,
-	1074,1,0,0,0,142,1085,1,0,0,0,144,1106,1,0,0,0,146,1108,1,0,0,0,148,1120,
-	1,0,0,0,150,1124,1,0,0,0,152,1166,1,0,0,0,154,1168,1,0,0,0,156,1170,1,0,
-	0,0,158,1183,1,0,0,0,160,1188,1,0,0,0,162,1197,1,0,0,0,164,1201,1,0,0,0,
-	166,1203,1,0,0,0,168,1205,1,0,0,0,170,1215,1,0,0,0,172,1228,1,0,0,0,174,
-	1232,1,0,0,0,176,1234,1,0,0,0,178,1247,1,0,0,0,180,1252,1,0,0,0,182,1259,
-	1,0,0,0,184,1264,1,0,0,0,186,1311,1,0,0,0,188,1328,1,0,0,0,190,1330,1,0,
-	0,0,192,1335,1,0,0,0,194,1340,1,0,0,0,196,1343,1,0,0,0,198,1347,1,0,0,0,
-	200,1352,1,0,0,0,202,1364,1,0,0,0,204,1369,1,0,0,0,206,1374,1,0,0,0,208,
-	1379,1,0,0,0,210,1388,1,0,0,0,212,1404,1,0,0,0,214,1413,1,0,0,0,216,1415,
-	1,0,0,0,218,1419,1,0,0,0,220,1422,1,0,0,0,222,1427,1,0,0,0,224,1437,1,0,
-	0,0,226,1447,1,0,0,0,228,1451,1,0,0,0,230,1458,1,0,0,0,232,1460,1,0,0,0,
-	234,1463,1,0,0,0,236,1471,1,0,0,0,238,1474,1,0,0,0,240,1481,1,0,0,0,242,
-	1484,1,0,0,0,244,1487,1,0,0,0,246,1490,1,0,0,0,248,1506,1,0,0,0,250,1508,
-	1,0,0,0,252,1528,1,0,0,0,254,1534,1,0,0,0,256,1545,1,0,0,0,258,1547,1,0,
-	0,0,260,1549,1,0,0,0,262,1551,1,0,0,0,264,1553,1,0,0,0,266,1579,1,0,0,0,
-	268,1581,1,0,0,0,270,1591,1,0,0,0,272,1597,1,0,0,0,274,1622,1,0,0,0,276,
-	1637,1,0,0,0,278,1639,1,0,0,0,280,1675,1,0,0,0,282,1686,1,0,0,0,284,1688,
-	1,0,0,0,286,1690,1,0,0,0,288,1692,1,0,0,0,290,1701,1,0,0,0,292,1703,1,0,
-	0,0,294,1712,1,0,0,0,296,1714,1,0,0,0,298,1723,1,0,0,0,300,1988,1,0,0,0,
-	302,2015,1,0,0,0,304,2026,1,0,0,0,306,2028,1,0,0,0,308,2031,1,0,0,0,310,
-	2037,1,0,0,0,312,2039,1,0,0,0,314,2058,1,0,0,0,316,2076,1,0,0,0,318,2082,
-	1,0,0,0,320,2090,1,0,0,0,322,2092,1,0,0,0,324,2104,1,0,0,0,326,2106,1,0,
-	0,0,328,2112,1,0,0,0,330,2119,1,0,0,0,332,2161,1,0,0,0,334,2171,1,0,0,0,
-	336,2185,1,0,0,0,338,2187,1,0,0,0,340,2201,1,0,0,0,342,2203,1,0,0,0,344,
-	2215,1,0,0,0,346,2217,1,0,0,0,348,2222,1,0,0,0,350,2229,1,0,0,0,352,2248,
-	1,0,0,0,354,2250,1,0,0,0,356,363,3,2,1,0,357,363,3,136,68,0,358,363,3,140,
-	70,0,359,363,3,4,2,0,360,363,3,176,88,0,361,363,3,94,47,0,362,356,1,0,0,
-	0,362,357,1,0,0,0,362,358,1,0,0,0,362,359,1,0,0,0,362,360,1,0,0,0,362,361,
-	1,0,0,0,363,366,1,0,0,0,364,362,1,0,0,0,364,365,1,0,0,0,365,367,1,0,0,0,
-	366,364,1,0,0,0,367,368,5,0,0,1,368,1,1,0,0,0,369,376,3,60,30,0,370,376,
-	3,84,42,0,371,376,3,118,59,0,372,376,3,108,54,0,373,376,3,126,63,0,374,
-	376,3,338,169,0,375,369,1,0,0,0,375,370,1,0,0,0,375,371,1,0,0,0,375,372,
-	1,0,0,0,375,373,1,0,0,0,375,374,1,0,0,0,376,3,1,0,0,0,377,378,5,94,0,0,
-	378,380,3,46,23,0,379,381,3,146,73,0,380,379,1,0,0,0,380,381,1,0,0,0,381,
-	382,1,0,0,0,382,383,3,6,3,0,383,5,1,0,0,0,384,385,3,8,4,0,385,387,3,10,
-	5,0,386,388,3,12,6,0,387,386,1,0,0,0,388,389,1,0,0,0,389,387,1,0,0,0,389,
-	390,1,0,0,0,390,7,1,0,0,0,391,393,5,293,0,0,392,394,5,293,0,0,393,392,1,
-	0,0,0,393,394,1,0,0,0,394,395,1,0,0,0,395,400,3,16,8,0,396,397,5,293,0,
-	0,397,399,3,16,8,0,398,396,1,0,0,0,399,402,1,0,0,0,400,398,1,0,0,0,400,
-	401,1,0,0,0,401,404,1,0,0,0,402,400,1,0,0,0,403,405,5,293,0,0,404,403,1,
-	0,0,0,404,405,1,0,0,0,405,9,1,0,0,0,406,408,5,293,0,0,407,406,1,0,0,0,407,
-	408,1,0,0,0,408,417,1,0,0,0,409,411,5,292,0,0,410,409,1,0,0,0,411,412,1,
-	0,0,0,412,410,1,0,0,0,412,413,1,0,0,0,413,415,1,0,0,0,414,416,5,293,0,0,
-	415,414,1,0,0,0,415,416,1,0,0,0,416,418,1,0,0,0,417,410,1,0,0,0,418,419,
-	1,0,0,0,419,417,1,0,0,0,419,420,1,0,0,0,420,424,1,0,0,0,421,423,5,292,0,
-	0,422,421,1,0,0,0,423,426,1,0,0,0,424,422,1,0,0,0,424,425,1,0,0,0,425,11,
-	1,0,0,0,426,424,1,0,0,0,427,428,5,293,0,0,428,429,5,266,0,0,429,430,5,293,
-	0,0,430,435,3,14,7,0,431,432,5,293,0,0,432,434,3,14,7,0,433,431,1,0,0,0,
-	434,437,1,0,0,0,435,433,1,0,0,0,435,436,1,0,0,0,436,439,1,0,0,0,437,435,
-	1,0,0,0,438,440,5,293,0,0,439,438,1,0,0,0,439,440,1,0,0,0,440,13,1,0,0,
-	0,441,444,3,274,137,0,442,444,5,294,0,0,443,441,1,0,0,0,443,442,1,0,0,0,
-	444,15,1,0,0,0,445,447,8,0,0,0,446,445,1,0,0,0,447,448,1,0,0,0,448,446,
-	1,0,0,0,448,449,1,0,0,0,449,17,1,0,0,0,450,451,3,22,11,0,451,452,5,9,0,
-	0,452,453,5,0,0,1,453,460,1,0,0,0,454,455,3,204,102,0,455,456,7,1,0,0,456,
-	457,3,220,110,0,457,458,5,0,0,1,458,460,1,0,0,0,459,450,1,0,0,0,459,454,
-	1,0,0,0,460,19,1,0,0,0,461,462,5,107,0,0,462,463,3,22,11,0,463,464,3,286,
-	143,0,464,465,5,0,0,1,465,476,1,0,0,0,466,467,5,107,0,0,467,469,3,204,102,
-	0,468,470,7,2,0,0,469,468,1,0,0,0,469,470,1,0,0,0,470,471,1,0,0,0,471,472,
-	3,220,110,0,472,473,5,106,0,0,473,474,5,0,0,1,474,476,1,0,0,0,475,461,1,
-	0,0,0,475,466,1,0,0,0,476,21,1,0,0,0,477,480,3,24,12,0,478,479,5,240,0,
-	0,479,481,3,204,102,0,480,478,1,0,0,0,480,481,1,0,0,0,481,23,1,0,0,0,482,
-	488,3,26,13,0,483,484,3,30,15,0,484,485,3,28,14,0,485,487,1,0,0,0,486,483,
-	1,0,0,0,487,490,1,0,0,0,488,486,1,0,0,0,488,489,1,0,0,0,489,25,1,0,0,0,
-	490,488,1,0,0,0,491,493,7,3,0,0,492,491,1,0,0,0,492,493,1,0,0,0,493,495,
-	1,0,0,0,494,496,3,36,18,0,495,494,1,0,0,0,496,497,1,0,0,0,497,495,1,0,0,
-	0,497,498,1,0,0,0,498,27,1,0,0,0,499,501,3,36,18,0,500,499,1,0,0,0,501,
-	502,1,0,0,0,502,500,1,0,0,0,502,503,1,0,0,0,503,29,1,0,0,0,504,505,7,4,
-	0,0,505,31,1,0,0,0,506,507,5,265,0,0,507,33,1,0,0,0,508,509,7,5,0,0,509,
-	35,1,0,0,0,510,511,7,6,0,0,511,37,1,0,0,0,512,514,7,3,0,0,513,512,1,0,0,
-	0,513,514,1,0,0,0,514,516,1,0,0,0,515,517,3,34,17,0,516,515,1,0,0,0,517,
-	518,1,0,0,0,518,516,1,0,0,0,518,519,1,0,0,0,519,570,1,0,0,0,520,522,3,34,
-	17,0,521,520,1,0,0,0,522,523,1,0,0,0,523,521,1,0,0,0,523,524,1,0,0,0,524,
-	570,1,0,0,0,525,527,5,41,0,0,526,528,3,34,17,0,527,526,1,0,0,0,528,529,
-	1,0,0,0,529,527,1,0,0,0,529,530,1,0,0,0,530,570,1,0,0,0,531,533,5,41,0,
-	0,532,534,3,34,17,0,533,532,1,0,0,0,534,535,1,0,0,0,535,533,1,0,0,0,535,
-	536,1,0,0,0,536,537,1,0,0,0,537,539,5,172,0,0,538,540,3,34,17,0,539,538,
+	1819,8,150,10,150,12,150,1822,9,150,1,150,1,150,1,150,1,150,1,150,1,150,
+	1,150,1,150,1,150,1,150,5,150,1834,8,150,10,150,12,150,1837,9,150,1,150,
+	1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,
+	1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,
+	1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,
+	1,150,1,150,1,150,1,150,5,150,1880,8,150,10,150,12,150,1883,9,150,1,150,
+	1,150,1,150,1,150,1,150,1,150,1,150,5,150,1892,8,150,10,150,12,150,1895,
+	9,150,1,150,1,150,1,150,1,150,1,150,1,150,3,150,1903,8,150,1,150,1,150,
+	1,150,1,150,1,150,3,150,1910,8,150,1,150,1,150,3,150,1914,8,150,1,150,3,
+	150,1917,8,150,1,150,1,150,1,150,4,150,1922,8,150,11,150,12,150,1923,1,
+	150,1,150,1,150,3,150,1929,8,150,1,150,1,150,1,150,1,150,1,150,3,150,1936,
+	8,150,1,150,4,150,1939,8,150,11,150,12,150,1940,1,150,1,150,1,150,1,150,
+	1,150,3,150,1948,8,150,1,150,1,150,3,150,1952,8,150,1,150,1,150,1,150,1,
+	150,1,150,3,150,1959,8,150,1,150,1,150,3,150,1963,8,150,1,150,1,150,1,150,
+	1,150,1,150,3,150,1970,8,150,1,150,1,150,3,150,1974,8,150,1,150,1,150,1,
+	150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,
+	150,1,150,1,150,1,150,3,150,1994,8,150,1,150,1,150,1,150,4,150,1999,8,150,
+	11,150,12,150,2000,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,1,150,
+	1,150,1,150,1,150,1,150,5,150,2016,8,150,10,150,12,150,2019,9,150,1,151,
+	1,151,1,151,1,151,1,151,1,152,1,152,1,152,1,152,1,152,1,152,3,152,2032,
+	8,152,1,153,1,153,1,153,1,154,1,154,1,154,1,155,1,155,1,155,3,155,2043,
+	8,155,1,156,1,156,1,156,1,157,1,157,1,157,1,157,1,157,1,157,1,157,1,157,
+	1,157,1,157,1,157,1,157,1,157,1,157,1,157,1,157,3,157,2064,8,157,1,158,
+	1,158,1,158,1,158,1,158,1,158,1,158,1,158,1,158,1,158,1,158,1,158,1,158,
+	1,158,1,158,1,158,3,158,2082,8,158,1,159,1,159,1,159,1,159,3,159,2088,8,
+	159,1,160,1,160,1,160,1,160,1,160,1,160,3,160,2096,8,160,1,161,1,161,1,
+	162,1,162,1,162,1,162,3,162,2104,8,162,1,162,1,162,1,162,1,162,3,162,2110,
+	8,162,1,163,1,163,1,163,1,163,3,163,2116,8,163,1,164,1,164,1,164,1,164,
+	1,164,1,164,1,164,1,165,1,165,1,165,1,165,1,165,1,165,1,165,5,165,2132,
+	8,165,10,165,12,165,2135,9,165,1,165,1,165,1,165,1,165,1,166,1,166,1,166,
+	1,166,1,166,1,166,1,166,1,166,1,166,1,166,1,166,1,166,1,166,1,166,1,166,
+	1,166,1,166,1,166,1,166,1,166,1,166,1,166,3,166,2163,8,166,1,167,1,167,
+	1,167,1,167,1,167,1,167,1,167,1,167,3,167,2173,8,167,1,168,1,168,1,168,
+	1,168,1,168,1,168,1,168,1,168,1,168,1,168,1,168,1,168,3,168,2187,8,168,
+	1,169,1,169,1,169,1,169,4,169,2193,8,169,11,169,12,169,2194,1,169,3,169,
+	2198,8,169,1,169,3,169,2201,8,169,1,170,1,170,1,171,1,171,1,171,1,171,1,
+	171,1,171,1,171,3,171,2212,8,171,1,171,3,171,2215,8,171,1,172,1,172,1,173,
+	1,173,1,173,3,173,2222,8,173,1,174,1,174,5,174,2226,8,174,10,174,12,174,
+	2229,9,174,1,175,1,175,1,175,3,175,2234,8,175,1,176,1,176,1,176,1,176,1,
+	176,1,176,1,176,1,176,1,176,1,176,1,176,1,176,1,176,1,176,3,176,2250,8,
+	176,1,177,1,177,1,177,3,177,2255,8,177,1,177,0,1,300,178,0,2,4,6,8,10,12,
+	14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,
+	62,64,66,68,70,72,74,76,78,80,82,84,86,88,90,92,94,96,98,100,102,104,106,
+	108,110,112,114,116,118,120,122,124,126,128,130,132,134,136,138,140,142,
+	144,146,148,150,152,154,156,158,160,162,164,166,168,170,172,174,176,178,
+	180,182,184,186,188,190,192,194,196,198,200,202,204,206,208,210,212,214,
+	216,218,220,222,224,226,228,230,232,234,236,238,240,242,244,246,248,250,
+	252,254,256,258,260,262,264,266,268,270,272,274,276,278,280,282,284,286,
+	288,290,292,294,296,298,300,302,304,306,308,310,312,314,316,318,320,322,
+	324,326,328,330,332,334,336,338,340,342,344,346,348,350,352,354,0,52,1,
+	0,289,289,2,0,102,102,105,105,3,0,204,204,207,207,209,209,4,0,111,111,204,
+	204,207,207,209,209,12,0,138,138,140,140,168,168,200,200,208,208,212,212,
+	221,221,223,223,225,225,233,233,236,236,240,240,18,0,88,88,102,102,105,
+	105,116,116,124,124,153,153,182,182,193,194,197,198,201,202,213,220,224,
+	224,226,226,230,231,234,235,242,243,245,245,261,261,17,0,88,88,102,102,
+	116,116,124,124,153,153,182,182,193,194,197,198,201,202,213,220,224,224,
+	226,226,230,231,234,235,242,243,245,245,261,261,7,0,201,202,213,214,216,
+	217,219,220,230,231,234,235,242,243,1,0,155,156,2,0,3,3,160,160,2,0,171,
+	172,175,175,2,0,204,204,209,209,6,0,129,129,218,220,230,231,234,235,245,
+	249,252,261,1,0,179,181,2,0,182,182,261,261,2,0,182,182,261,262,4,0,28,
+	28,87,92,94,98,275,275,2,0,140,140,232,232,2,0,43,44,120,120,6,0,44,46,
+	48,48,120,120,123,123,125,125,133,134,9,0,138,138,168,168,200,200,208,208,
+	212,212,223,223,225,225,233,233,240,240,3,0,204,204,209,209,244,244,1,0,
+	237,238,1,0,149,150,4,0,193,194,197,198,207,207,262,262,2,0,278,278,288,
+	288,3,0,278,279,283,283,288,288,2,0,203,203,206,206,1,0,111,113,2,0,101,
+	101,111,111,1,0,145,146,2,0,105,105,111,111,1,0,50,55,1,0,50,51,2,0,50,
+	51,60,63,2,0,208,208,221,221,2,0,196,196,207,207,3,0,43,44,50,50,120,120,
+	12,0,22,25,38,39,43,63,105,105,117,117,120,120,123,123,125,126,132,132,
+	134,134,212,212,250,251,3,0,129,129,135,135,144,144,2,0,118,119,128,128,
+	2,0,139,139,282,282,2,0,129,129,135,135,2,0,213,213,216,216,3,0,130,131,
+	136,137,147,147,2,0,183,183,185,185,2,0,64,67,76,79,1,0,80,83,4,0,68,68,
+	70,70,72,72,74,74,4,0,69,69,71,71,73,73,75,75,1,0,272,273,2,0,189,189,192,
+	192,2503,0,364,1,0,0,0,2,375,1,0,0,0,4,377,1,0,0,0,6,384,1,0,0,0,8,391,
+	1,0,0,0,10,407,1,0,0,0,12,427,1,0,0,0,14,443,1,0,0,0,16,446,1,0,0,0,18,
+	459,1,0,0,0,20,475,1,0,0,0,22,477,1,0,0,0,24,482,1,0,0,0,26,492,1,0,0,0,
+	28,500,1,0,0,0,30,504,1,0,0,0,32,506,1,0,0,0,34,508,1,0,0,0,36,510,1,0,
+	0,0,38,569,1,0,0,0,40,628,1,0,0,0,42,632,1,0,0,0,44,682,1,0,0,0,46,684,
+	1,0,0,0,48,693,1,0,0,0,50,702,1,0,0,0,52,711,1,0,0,0,54,713,1,0,0,0,56,
+	715,1,0,0,0,58,717,1,0,0,0,60,719,1,0,0,0,62,741,1,0,0,0,64,750,1,0,0,0,
+	66,759,1,0,0,0,68,789,1,0,0,0,70,791,1,0,0,0,72,798,1,0,0,0,74,805,1,0,
+	0,0,76,807,1,0,0,0,78,814,1,0,0,0,80,816,1,0,0,0,82,819,1,0,0,0,84,829,
+	1,0,0,0,86,845,1,0,0,0,88,847,1,0,0,0,90,853,1,0,0,0,92,855,1,0,0,0,94,
+	857,1,0,0,0,96,865,1,0,0,0,98,885,1,0,0,0,100,897,1,0,0,0,102,911,1,0,0,
+	0,104,913,1,0,0,0,106,921,1,0,0,0,108,926,1,0,0,0,110,946,1,0,0,0,112,948,
+	1,0,0,0,114,952,1,0,0,0,116,954,1,0,0,0,118,956,1,0,0,0,120,975,1,0,0,0,
+	122,986,1,0,0,0,124,1006,1,0,0,0,126,1023,1,0,0,0,128,1025,1,0,0,0,130,
+	1041,1,0,0,0,132,1046,1,0,0,0,134,1050,1,0,0,0,136,1052,1,0,0,0,138,1062,
+	1,0,0,0,140,1074,1,0,0,0,142,1085,1,0,0,0,144,1106,1,0,0,0,146,1108,1,0,
+	0,0,148,1120,1,0,0,0,150,1124,1,0,0,0,152,1166,1,0,0,0,154,1168,1,0,0,0,
+	156,1170,1,0,0,0,158,1183,1,0,0,0,160,1188,1,0,0,0,162,1197,1,0,0,0,164,
+	1201,1,0,0,0,166,1203,1,0,0,0,168,1205,1,0,0,0,170,1215,1,0,0,0,172,1228,
+	1,0,0,0,174,1232,1,0,0,0,176,1234,1,0,0,0,178,1247,1,0,0,0,180,1252,1,0,
+	0,0,182,1259,1,0,0,0,184,1264,1,0,0,0,186,1311,1,0,0,0,188,1328,1,0,0,0,
+	190,1330,1,0,0,0,192,1335,1,0,0,0,194,1340,1,0,0,0,196,1343,1,0,0,0,198,
+	1347,1,0,0,0,200,1352,1,0,0,0,202,1364,1,0,0,0,204,1369,1,0,0,0,206,1374,
+	1,0,0,0,208,1379,1,0,0,0,210,1388,1,0,0,0,212,1404,1,0,0,0,214,1413,1,0,
+	0,0,216,1415,1,0,0,0,218,1419,1,0,0,0,220,1422,1,0,0,0,222,1427,1,0,0,0,
+	224,1437,1,0,0,0,226,1447,1,0,0,0,228,1451,1,0,0,0,230,1458,1,0,0,0,232,
+	1460,1,0,0,0,234,1463,1,0,0,0,236,1471,1,0,0,0,238,1474,1,0,0,0,240,1481,
+	1,0,0,0,242,1484,1,0,0,0,244,1487,1,0,0,0,246,1490,1,0,0,0,248,1506,1,0,
+	0,0,250,1508,1,0,0,0,252,1528,1,0,0,0,254,1534,1,0,0,0,256,1545,1,0,0,0,
+	258,1547,1,0,0,0,260,1549,1,0,0,0,262,1551,1,0,0,0,264,1553,1,0,0,0,266,
+	1579,1,0,0,0,268,1581,1,0,0,0,270,1591,1,0,0,0,272,1597,1,0,0,0,274,1622,
+	1,0,0,0,276,1637,1,0,0,0,278,1639,1,0,0,0,280,1680,1,0,0,0,282,1691,1,0,
+	0,0,284,1693,1,0,0,0,286,1695,1,0,0,0,288,1697,1,0,0,0,290,1706,1,0,0,0,
+	292,1708,1,0,0,0,294,1717,1,0,0,0,296,1719,1,0,0,0,298,1728,1,0,0,0,300,
+	1993,1,0,0,0,302,2020,1,0,0,0,304,2031,1,0,0,0,306,2033,1,0,0,0,308,2036,
+	1,0,0,0,310,2042,1,0,0,0,312,2044,1,0,0,0,314,2063,1,0,0,0,316,2081,1,0,
+	0,0,318,2087,1,0,0,0,320,2095,1,0,0,0,322,2097,1,0,0,0,324,2109,1,0,0,0,
+	326,2111,1,0,0,0,328,2117,1,0,0,0,330,2124,1,0,0,0,332,2162,1,0,0,0,334,
+	2172,1,0,0,0,336,2186,1,0,0,0,338,2188,1,0,0,0,340,2202,1,0,0,0,342,2204,
+	1,0,0,0,344,2216,1,0,0,0,346,2218,1,0,0,0,348,2223,1,0,0,0,350,2230,1,0,
+	0,0,352,2249,1,0,0,0,354,2251,1,0,0,0,356,363,3,2,1,0,357,363,3,136,68,
+	0,358,363,3,140,70,0,359,363,3,4,2,0,360,363,3,176,88,0,361,363,3,94,47,
+	0,362,356,1,0,0,0,362,357,1,0,0,0,362,358,1,0,0,0,362,359,1,0,0,0,362,360,
+	1,0,0,0,362,361,1,0,0,0,363,366,1,0,0,0,364,362,1,0,0,0,364,365,1,0,0,0,
+	365,367,1,0,0,0,366,364,1,0,0,0,367,368,5,0,0,1,368,1,1,0,0,0,369,376,3,
+	60,30,0,370,376,3,84,42,0,371,376,3,118,59,0,372,376,3,108,54,0,373,376,
+	3,126,63,0,374,376,3,338,169,0,375,369,1,0,0,0,375,370,1,0,0,0,375,371,
+	1,0,0,0,375,372,1,0,0,0,375,373,1,0,0,0,375,374,1,0,0,0,376,3,1,0,0,0,377,
+	378,5,90,0,0,378,380,3,46,23,0,379,381,3,146,73,0,380,379,1,0,0,0,380,381,
+	1,0,0,0,381,382,1,0,0,0,382,383,3,6,3,0,383,5,1,0,0,0,384,385,3,8,4,0,385,
+	387,3,10,5,0,386,388,3,12,6,0,387,386,1,0,0,0,388,389,1,0,0,0,389,387,1,
+	0,0,0,389,390,1,0,0,0,390,7,1,0,0,0,391,393,5,289,0,0,392,394,5,289,0,0,
+	393,392,1,0,0,0,393,394,1,0,0,0,394,395,1,0,0,0,395,400,3,16,8,0,396,397,
+	5,289,0,0,397,399,3,16,8,0,398,396,1,0,0,0,399,402,1,0,0,0,400,398,1,0,
+	0,0,400,401,1,0,0,0,401,404,1,0,0,0,402,400,1,0,0,0,403,405,5,289,0,0,404,
+	403,1,0,0,0,404,405,1,0,0,0,405,9,1,0,0,0,406,408,5,289,0,0,407,406,1,0,
+	0,0,407,408,1,0,0,0,408,417,1,0,0,0,409,411,5,288,0,0,410,409,1,0,0,0,411,
+	412,1,0,0,0,412,410,1,0,0,0,412,413,1,0,0,0,413,415,1,0,0,0,414,416,5,289,
+	0,0,415,414,1,0,0,0,415,416,1,0,0,0,416,418,1,0,0,0,417,410,1,0,0,0,418,
+	419,1,0,0,0,419,417,1,0,0,0,419,420,1,0,0,0,420,424,1,0,0,0,421,423,5,288,
+	0,0,422,421,1,0,0,0,423,426,1,0,0,0,424,422,1,0,0,0,424,425,1,0,0,0,425,
+	11,1,0,0,0,426,424,1,0,0,0,427,428,5,289,0,0,428,429,5,262,0,0,429,430,
+	5,289,0,0,430,435,3,14,7,0,431,432,5,289,0,0,432,434,3,14,7,0,433,431,1,
+	0,0,0,434,437,1,0,0,0,435,433,1,0,0,0,435,436,1,0,0,0,436,439,1,0,0,0,437,
+	435,1,0,0,0,438,440,5,289,0,0,439,438,1,0,0,0,439,440,1,0,0,0,440,13,1,
+	0,0,0,441,444,3,274,137,0,442,444,5,290,0,0,443,441,1,0,0,0,443,442,1,0,
+	0,0,444,15,1,0,0,0,445,447,8,0,0,0,446,445,1,0,0,0,447,448,1,0,0,0,448,
+	446,1,0,0,0,448,449,1,0,0,0,449,17,1,0,0,0,450,451,3,22,11,0,451,452,5,
+	9,0,0,452,453,5,0,0,1,453,460,1,0,0,0,454,455,3,204,102,0,455,456,7,1,0,
+	0,456,457,3,220,110,0,457,458,5,0,0,1,458,460,1,0,0,0,459,450,1,0,0,0,459,
+	454,1,0,0,0,460,19,1,0,0,0,461,462,5,103,0,0,462,463,3,22,11,0,463,464,
+	3,286,143,0,464,465,5,0,0,1,465,476,1,0,0,0,466,467,5,103,0,0,467,469,3,
+	204,102,0,468,470,7,2,0,0,469,468,1,0,0,0,469,470,1,0,0,0,470,471,1,0,0,
+	0,471,472,3,220,110,0,472,473,5,102,0,0,473,474,5,0,0,1,474,476,1,0,0,0,
+	475,461,1,0,0,0,475,466,1,0,0,0,476,21,1,0,0,0,477,480,3,24,12,0,478,479,
+	5,236,0,0,479,481,3,204,102,0,480,478,1,0,0,0,480,481,1,0,0,0,481,23,1,
+	0,0,0,482,488,3,26,13,0,483,484,3,30,15,0,484,485,3,28,14,0,485,487,1,0,
+	0,0,486,483,1,0,0,0,487,490,1,0,0,0,488,486,1,0,0,0,488,489,1,0,0,0,489,
+	25,1,0,0,0,490,488,1,0,0,0,491,493,7,3,0,0,492,491,1,0,0,0,492,493,1,0,
+	0,0,493,495,1,0,0,0,494,496,3,36,18,0,495,494,1,0,0,0,496,497,1,0,0,0,497,
+	495,1,0,0,0,497,498,1,0,0,0,498,27,1,0,0,0,499,501,3,36,18,0,500,499,1,
+	0,0,0,501,502,1,0,0,0,502,500,1,0,0,0,502,503,1,0,0,0,503,29,1,0,0,0,504,
+	505,7,4,0,0,505,31,1,0,0,0,506,507,5,261,0,0,507,33,1,0,0,0,508,509,7,5,
+	0,0,509,35,1,0,0,0,510,511,7,6,0,0,511,37,1,0,0,0,512,514,7,3,0,0,513,512,
+	1,0,0,0,513,514,1,0,0,0,514,516,1,0,0,0,515,517,3,34,17,0,516,515,1,0,0,
+	0,517,518,1,0,0,0,518,516,1,0,0,0,518,519,1,0,0,0,519,570,1,0,0,0,520,522,
+	3,34,17,0,521,520,1,0,0,0,522,523,1,0,0,0,523,521,1,0,0,0,523,524,1,0,0,
+	0,524,570,1,0,0,0,525,527,5,41,0,0,526,528,3,34,17,0,527,526,1,0,0,0,528,
+	529,1,0,0,0,529,527,1,0,0,0,529,530,1,0,0,0,530,570,1,0,0,0,531,533,5,41,
+	0,0,532,534,3,34,17,0,533,532,1,0,0,0,534,535,1,0,0,0,535,533,1,0,0,0,535,
+	536,1,0,0,0,536,537,1,0,0,0,537,539,5,168,0,0,538,540,3,34,17,0,539,538,
 	1,0,0,0,540,541,1,0,0,0,541,539,1,0,0,0,541,542,1,0,0,0,542,570,1,0,0,0,
 	543,545,3,34,17,0,544,543,1,0,0,0,545,546,1,0,0,0,546,544,1,0,0,0,546,547,
-	1,0,0,0,547,548,1,0,0,0,548,550,5,172,0,0,549,551,3,34,17,0,550,549,1,0,
+	1,0,0,0,547,548,1,0,0,0,548,550,5,168,0,0,549,551,3,34,17,0,550,549,1,0,
 	0,0,551,552,1,0,0,0,552,550,1,0,0,0,552,553,1,0,0,0,553,570,1,0,0,0,554,
-	556,5,136,0,0,555,557,3,34,17,0,556,555,1,0,0,0,557,558,1,0,0,0,558,556,
-	1,0,0,0,558,559,1,0,0,0,559,570,1,0,0,0,560,561,5,213,0,0,561,562,5,186,
-	0,0,562,563,5,206,0,0,563,565,5,216,0,0,564,566,3,34,17,0,565,564,1,0,0,
+	556,5,132,0,0,555,557,3,34,17,0,556,555,1,0,0,0,557,558,1,0,0,0,558,556,
+	1,0,0,0,558,559,1,0,0,0,559,570,1,0,0,0,560,561,5,209,0,0,561,562,5,182,
+	0,0,562,563,5,202,0,0,563,565,5,212,0,0,564,566,3,34,17,0,565,564,1,0,0,
 	0,566,567,1,0,0,0,567,565,1,0,0,0,567,568,1,0,0,0,568,570,1,0,0,0,569,513,
 	1,0,0,0,569,521,1,0,0,0,569,525,1,0,0,0,569,531,1,0,0,0,569,544,1,0,0,0,
 	569,554,1,0,0,0,569,560,1,0,0,0,570,39,1,0,0,0,571,573,7,3,0,0,572,571,
@@ -12678,30 +12676,30 @@ export default class RegelSpraakParser extends Parser {
 	0,583,629,1,0,0,0,584,586,5,41,0,0,585,587,3,42,21,0,586,585,1,0,0,0,587,
 	588,1,0,0,0,588,586,1,0,0,0,588,589,1,0,0,0,589,629,1,0,0,0,590,592,5,41,
 	0,0,591,593,3,42,21,0,592,591,1,0,0,0,593,594,1,0,0,0,594,592,1,0,0,0,594,
-	595,1,0,0,0,595,596,1,0,0,0,596,598,5,172,0,0,597,599,3,42,21,0,598,597,
+	595,1,0,0,0,595,596,1,0,0,0,596,598,5,168,0,0,597,599,3,42,21,0,598,597,
 	1,0,0,0,599,600,1,0,0,0,600,598,1,0,0,0,600,601,1,0,0,0,601,629,1,0,0,0,
 	602,604,3,42,21,0,603,602,1,0,0,0,604,605,1,0,0,0,605,603,1,0,0,0,605,606,
-	1,0,0,0,606,607,1,0,0,0,607,609,5,172,0,0,608,610,3,42,21,0,609,608,1,0,
+	1,0,0,0,606,607,1,0,0,0,607,609,5,168,0,0,608,610,3,42,21,0,609,608,1,0,
 	0,0,610,611,1,0,0,0,611,609,1,0,0,0,611,612,1,0,0,0,612,629,1,0,0,0,613,
-	615,5,136,0,0,614,616,3,42,21,0,615,614,1,0,0,0,616,617,1,0,0,0,617,615,
-	1,0,0,0,617,618,1,0,0,0,618,629,1,0,0,0,619,620,5,213,0,0,620,621,5,186,
-	0,0,621,622,5,206,0,0,622,624,5,216,0,0,623,625,3,42,21,0,624,623,1,0,0,
+	615,5,132,0,0,614,616,3,42,21,0,615,614,1,0,0,0,616,617,1,0,0,0,617,615,
+	1,0,0,0,617,618,1,0,0,0,618,629,1,0,0,0,619,620,5,209,0,0,620,621,5,182,
+	0,0,621,622,5,202,0,0,622,624,5,212,0,0,623,625,3,42,21,0,624,623,1,0,0,
 	0,625,626,1,0,0,0,626,624,1,0,0,0,626,627,1,0,0,0,627,629,1,0,0,0,628,572,
 	1,0,0,0,628,580,1,0,0,0,628,584,1,0,0,0,628,590,1,0,0,0,628,603,1,0,0,0,
 	628,613,1,0,0,0,628,619,1,0,0,0,629,41,1,0,0,0,630,633,3,34,17,0,631,633,
-	5,266,0,0,632,630,1,0,0,0,632,631,1,0,0,0,633,43,1,0,0,0,634,636,7,3,0,
+	5,262,0,0,632,630,1,0,0,0,632,631,1,0,0,0,633,43,1,0,0,0,634,636,7,3,0,
 	0,635,634,1,0,0,0,635,636,1,0,0,0,636,638,1,0,0,0,637,639,3,36,18,0,638,
 	637,1,0,0,0,639,640,1,0,0,0,640,638,1,0,0,0,640,641,1,0,0,0,641,683,1,0,
 	0,0,642,644,3,36,18,0,643,642,1,0,0,0,644,645,1,0,0,0,645,643,1,0,0,0,645,
 	646,1,0,0,0,646,683,1,0,0,0,647,649,5,41,0,0,648,650,3,36,18,0,649,648,
 	1,0,0,0,650,651,1,0,0,0,651,649,1,0,0,0,651,652,1,0,0,0,652,683,1,0,0,0,
 	653,655,5,41,0,0,654,656,3,36,18,0,655,654,1,0,0,0,656,657,1,0,0,0,657,
-	655,1,0,0,0,657,658,1,0,0,0,658,659,1,0,0,0,659,661,5,172,0,0,660,662,3,
+	655,1,0,0,0,657,658,1,0,0,0,658,659,1,0,0,0,659,661,5,168,0,0,660,662,3,
 	36,18,0,661,660,1,0,0,0,662,663,1,0,0,0,663,661,1,0,0,0,663,664,1,0,0,0,
 	664,683,1,0,0,0,665,667,3,36,18,0,666,665,1,0,0,0,667,668,1,0,0,0,668,666,
-	1,0,0,0,668,669,1,0,0,0,669,670,1,0,0,0,670,672,5,172,0,0,671,673,3,36,
+	1,0,0,0,668,669,1,0,0,0,669,670,1,0,0,0,670,672,5,168,0,0,671,673,3,36,
 	18,0,672,671,1,0,0,0,673,674,1,0,0,0,674,672,1,0,0,0,674,675,1,0,0,0,675,
-	683,1,0,0,0,676,678,5,136,0,0,677,679,3,36,18,0,678,677,1,0,0,0,679,680,
+	683,1,0,0,0,676,678,5,132,0,0,677,679,3,36,18,0,678,677,1,0,0,0,679,680,
 	1,0,0,0,680,678,1,0,0,0,680,681,1,0,0,0,681,683,1,0,0,0,682,635,1,0,0,0,
 	682,643,1,0,0,0,682,647,1,0,0,0,682,653,1,0,0,0,682,666,1,0,0,0,682,676,
 	1,0,0,0,683,45,1,0,0,0,684,690,3,38,19,0,685,686,3,52,26,0,686,687,3,38,
@@ -12711,81 +12709,81 @@ export default class RegelSpraakParser extends Parser {
 	0,699,697,1,0,0,0,699,700,1,0,0,0,700,49,1,0,0,0,701,699,1,0,0,0,702,708,
 	3,44,22,0,703,704,3,52,26,0,704,705,3,44,22,0,705,707,1,0,0,0,706,703,1,
 	0,0,0,707,710,1,0,0,0,708,706,1,0,0,0,708,709,1,0,0,0,709,51,1,0,0,0,710,
-	708,1,0,0,0,711,712,7,4,0,0,712,53,1,0,0,0,713,714,5,268,0,0,714,55,1,0,
-	0,0,715,716,5,265,0,0,716,57,1,0,0,0,717,718,7,7,0,0,718,59,1,0,0,0,719,
-	720,5,95,0,0,720,728,3,50,25,0,721,723,5,174,0,0,722,724,5,265,0,0,723,
+	708,1,0,0,0,711,712,7,4,0,0,712,53,1,0,0,0,713,714,5,264,0,0,714,55,1,0,
+	0,0,715,716,5,261,0,0,716,57,1,0,0,0,717,718,7,7,0,0,718,59,1,0,0,0,719,
+	720,5,91,0,0,720,728,3,50,25,0,721,723,5,170,0,0,722,724,5,261,0,0,723,
 	722,1,0,0,0,724,725,1,0,0,0,725,723,1,0,0,0,725,726,1,0,0,0,726,727,1,0,
-	0,0,727,729,5,273,0,0,728,721,1,0,0,0,728,729,1,0,0,0,729,731,1,0,0,0,730,
-	732,5,161,0,0,731,730,1,0,0,0,731,732,1,0,0,0,732,736,1,0,0,0,733,735,3,
+	0,0,727,729,5,269,0,0,728,721,1,0,0,0,728,729,1,0,0,0,729,731,1,0,0,0,730,
+	732,5,157,0,0,731,730,1,0,0,0,731,732,1,0,0,0,732,736,1,0,0,0,733,735,3,
 	62,31,0,734,733,1,0,0,0,735,738,1,0,0,0,736,734,1,0,0,0,736,737,1,0,0,0,
 	737,61,1,0,0,0,738,736,1,0,0,0,739,742,3,64,32,0,740,742,3,66,33,0,741,
-	739,1,0,0,0,741,740,1,0,0,0,742,743,1,0,0,0,743,744,5,279,0,0,744,63,1,
-	0,0,0,745,747,5,109,0,0,746,745,1,0,0,0,746,747,1,0,0,0,747,748,1,0,0,0,
+	739,1,0,0,0,741,740,1,0,0,0,742,743,1,0,0,0,743,744,5,275,0,0,744,63,1,
+	0,0,0,745,747,5,105,0,0,746,745,1,0,0,0,746,747,1,0,0,0,747,748,1,0,0,0,
 	748,751,3,32,16,0,749,751,3,48,24,0,750,746,1,0,0,0,750,749,1,0,0,0,751,
-	752,1,0,0,0,752,754,5,170,0,0,753,755,7,8,0,0,754,753,1,0,0,0,754,755,1,
+	752,1,0,0,0,752,754,5,166,0,0,753,755,7,8,0,0,754,753,1,0,0,0,754,755,1,
 	0,0,0,755,757,1,0,0,0,756,758,3,114,57,0,757,756,1,0,0,0,757,758,1,0,0,
 	0,758,65,1,0,0,0,759,763,3,48,24,0,760,764,3,68,34,0,761,764,3,90,45,0,
 	762,764,3,92,46,0,763,760,1,0,0,0,763,761,1,0,0,0,763,762,1,0,0,0,764,767,
-	1,0,0,0,765,766,5,173,0,0,766,768,3,102,51,0,767,765,1,0,0,0,767,768,1,
-	0,0,0,768,778,1,0,0,0,769,770,5,167,0,0,770,775,3,116,58,0,771,772,5,212,
+	1,0,0,0,765,766,5,169,0,0,766,768,3,102,51,0,767,765,1,0,0,0,767,768,1,
+	0,0,0,768,778,1,0,0,0,769,770,5,163,0,0,770,775,3,116,58,0,771,772,5,208,
 	0,0,772,774,3,116,58,0,773,771,1,0,0,0,774,777,1,0,0,0,775,773,1,0,0,0,
 	775,776,1,0,0,0,776,779,1,0,0,0,777,775,1,0,0,0,778,769,1,0,0,0,778,779,
 	1,0,0,0,779,781,1,0,0,0,780,782,3,114,57,0,781,780,1,0,0,0,781,782,1,0,
 	0,0,782,67,1,0,0,0,783,790,3,72,36,0,784,790,3,74,37,0,785,790,3,78,39,
 	0,786,790,3,80,40,0,787,790,3,70,35,0,788,790,3,76,38,0,789,783,1,0,0,0,
 	789,784,1,0,0,0,789,785,1,0,0,0,789,786,1,0,0,0,789,787,1,0,0,0,789,788,
-	1,0,0,0,790,69,1,0,0,0,791,792,5,97,0,0,792,796,5,240,0,0,793,797,3,68,
+	1,0,0,0,790,69,1,0,0,0,791,792,5,93,0,0,792,796,5,236,0,0,793,797,3,68,
 	34,0,794,797,3,90,45,0,795,797,3,92,46,0,796,793,1,0,0,0,796,794,1,0,0,
-	0,796,795,1,0,0,0,797,71,1,0,0,0,798,803,5,177,0,0,799,800,5,272,0,0,800,
-	801,3,82,41,0,801,802,5,273,0,0,802,804,1,0,0,0,803,799,1,0,0,0,803,804,
-	1,0,0,0,804,73,1,0,0,0,805,806,5,182,0,0,806,75,1,0,0,0,807,812,5,178,0,
-	0,808,809,5,272,0,0,809,810,3,82,41,0,810,811,5,273,0,0,811,813,1,0,0,0,
-	812,808,1,0,0,0,812,813,1,0,0,0,813,77,1,0,0,0,814,815,5,162,0,0,815,79,
+	0,796,795,1,0,0,0,797,71,1,0,0,0,798,803,5,173,0,0,799,800,5,268,0,0,800,
+	801,3,82,41,0,801,802,5,269,0,0,802,804,1,0,0,0,803,799,1,0,0,0,803,804,
+	1,0,0,0,804,73,1,0,0,0,805,806,5,178,0,0,806,75,1,0,0,0,807,812,5,174,0,
+	0,808,809,5,268,0,0,809,810,3,82,41,0,810,811,5,269,0,0,811,813,1,0,0,0,
+	812,808,1,0,0,0,812,813,1,0,0,0,813,77,1,0,0,0,814,815,5,158,0,0,815,79,
 	1,0,0,0,816,817,7,9,0,0,817,81,1,0,0,0,818,820,7,10,0,0,819,818,1,0,0,0,
-	819,820,1,0,0,0,820,827,1,0,0,0,821,828,5,168,0,0,822,823,5,169,0,0,823,
-	824,5,172,0,0,824,825,5,266,0,0,825,828,5,165,0,0,826,828,5,169,0,0,827,
-	821,1,0,0,0,827,822,1,0,0,0,827,826,1,0,0,0,828,83,1,0,0,0,829,830,5,96,
-	0,0,830,831,5,265,0,0,831,832,5,29,0,0,832,835,3,86,43,0,833,834,5,173,
+	819,820,1,0,0,0,820,827,1,0,0,0,821,828,5,164,0,0,822,823,5,165,0,0,823,
+	824,5,168,0,0,824,825,5,262,0,0,825,828,5,161,0,0,826,828,5,165,0,0,827,
+	821,1,0,0,0,827,822,1,0,0,0,827,826,1,0,0,0,828,83,1,0,0,0,829,830,5,92,
+	0,0,830,831,5,261,0,0,831,832,5,29,0,0,832,835,3,86,43,0,833,834,5,169,
 	0,0,834,836,3,102,51,0,835,833,1,0,0,0,835,836,1,0,0,0,836,838,1,0,0,0,
-	837,839,5,279,0,0,838,837,1,0,0,0,838,839,1,0,0,0,839,85,1,0,0,0,840,846,
+	837,839,5,275,0,0,838,837,1,0,0,0,838,839,1,0,0,0,839,85,1,0,0,0,840,846,
 	3,88,44,0,841,846,3,72,36,0,842,846,3,74,37,0,843,846,3,78,39,0,844,846,
 	3,80,40,0,845,840,1,0,0,0,845,841,1,0,0,0,845,842,1,0,0,0,845,843,1,0,0,
-	0,845,844,1,0,0,0,846,87,1,0,0,0,847,849,5,166,0,0,848,850,5,271,0,0,849,
+	0,845,844,1,0,0,0,846,87,1,0,0,0,847,849,5,162,0,0,848,850,5,267,0,0,849,
 	848,1,0,0,0,850,851,1,0,0,0,851,849,1,0,0,0,851,852,1,0,0,0,852,89,1,0,
-	0,0,853,854,5,265,0,0,854,91,1,0,0,0,855,856,5,265,0,0,856,93,1,0,0,0,857,
-	858,5,99,0,0,858,862,3,32,16,0,859,861,3,96,48,0,860,859,1,0,0,0,861,864,
+	0,0,853,854,5,261,0,0,854,91,1,0,0,0,855,856,5,261,0,0,856,93,1,0,0,0,857,
+	858,5,95,0,0,858,862,3,32,16,0,859,861,3,96,48,0,860,859,1,0,0,0,861,864,
 	1,0,0,0,862,860,1,0,0,0,862,863,1,0,0,0,863,95,1,0,0,0,864,862,1,0,0,0,
-	865,866,7,11,0,0,866,871,3,100,50,0,867,868,5,174,0,0,868,869,3,100,50,
-	0,869,870,5,273,0,0,870,872,1,0,0,0,871,867,1,0,0,0,871,872,1,0,0,0,872,
+	865,866,7,11,0,0,866,871,3,100,50,0,867,868,5,170,0,0,868,869,3,100,50,
+	0,869,870,5,269,0,0,870,872,1,0,0,0,871,867,1,0,0,0,871,872,1,0,0,0,872,
 	873,1,0,0,0,873,875,3,100,50,0,874,876,3,100,50,0,875,874,1,0,0,0,875,876,
-	1,0,0,0,876,883,1,0,0,0,877,879,5,267,0,0,878,880,5,280,0,0,879,878,1,0,
-	0,0,879,880,1,0,0,0,880,881,1,0,0,0,881,882,5,266,0,0,882,884,3,100,50,
+	1,0,0,0,876,883,1,0,0,0,877,879,5,263,0,0,878,880,5,276,0,0,879,878,1,0,
+	0,0,879,880,1,0,0,0,880,881,1,0,0,0,881,882,5,262,0,0,882,884,3,100,50,
 	0,883,877,1,0,0,0,883,884,1,0,0,0,884,97,1,0,0,0,885,886,7,12,0,0,886,99,
-	1,0,0,0,887,898,3,98,49,0,888,898,5,205,0,0,889,898,5,206,0,0,890,898,5,
-	220,0,0,891,898,5,221,0,0,892,898,5,217,0,0,893,898,5,218,0,0,894,898,5,
-	246,0,0,895,898,5,247,0,0,896,898,5,219,0,0,897,887,1,0,0,0,897,888,1,0,
+	1,0,0,0,887,898,3,98,49,0,888,898,5,201,0,0,889,898,5,202,0,0,890,898,5,
+	216,0,0,891,898,5,217,0,0,892,898,5,213,0,0,893,898,5,214,0,0,894,898,5,
+	242,0,0,895,898,5,243,0,0,896,898,5,215,0,0,897,887,1,0,0,0,897,888,1,0,
 	0,0,897,889,1,0,0,0,897,890,1,0,0,0,897,891,1,0,0,0,897,892,1,0,0,0,897,
 	893,1,0,0,0,897,894,1,0,0,0,897,895,1,0,0,0,897,896,1,0,0,0,898,101,1,0,
-	0,0,899,904,3,104,52,0,900,901,5,280,0,0,901,903,3,104,52,0,902,900,1,0,
+	0,0,899,904,3,104,52,0,900,901,5,276,0,0,901,903,3,104,52,0,902,900,1,0,
 	0,0,903,906,1,0,0,0,904,902,1,0,0,0,904,905,1,0,0,0,905,912,1,0,0,0,906,
-	904,1,0,0,0,907,912,5,266,0,0,908,912,5,281,0,0,909,912,5,262,0,0,910,912,
-	5,263,0,0,911,899,1,0,0,0,911,907,1,0,0,0,911,908,1,0,0,0,911,909,1,0,0,
-	0,911,910,1,0,0,0,912,103,1,0,0,0,913,918,3,106,53,0,914,915,5,283,0,0,
+	904,1,0,0,0,907,912,5,262,0,0,908,912,5,277,0,0,909,912,5,258,0,0,910,912,
+	5,259,0,0,911,899,1,0,0,0,911,907,1,0,0,0,911,908,1,0,0,0,911,909,1,0,0,
+	0,911,910,1,0,0,0,912,103,1,0,0,0,913,918,3,106,53,0,914,915,5,279,0,0,
 	915,917,3,106,53,0,916,914,1,0,0,0,917,920,1,0,0,0,918,916,1,0,0,0,918,
 	919,1,0,0,0,919,105,1,0,0,0,920,918,1,0,0,0,921,924,3,98,49,0,922,923,5,
-	286,0,0,923,925,5,266,0,0,924,922,1,0,0,0,924,925,1,0,0,0,925,107,1,0,0,
-	0,926,927,5,98,0,0,927,929,3,46,23,0,928,930,5,276,0,0,929,928,1,0,0,0,
+	282,0,0,923,925,5,262,0,0,924,922,1,0,0,0,924,925,1,0,0,0,925,107,1,0,0,
+	0,926,927,5,94,0,0,927,929,3,46,23,0,928,930,5,272,0,0,929,928,1,0,0,0,
 	929,930,1,0,0,0,930,931,1,0,0,0,931,932,5,27,0,0,932,933,3,46,23,0,933,
 	935,3,110,55,0,934,936,3,112,56,0,935,934,1,0,0,0,936,937,1,0,0,0,937,935,
 	1,0,0,0,937,938,1,0,0,0,938,109,1,0,0,0,939,940,5,2,0,0,940,941,3,52,26,
-	0,941,943,5,273,0,0,942,944,5,278,0,0,943,942,1,0,0,0,943,944,1,0,0,0,944,
+	0,941,943,5,269,0,0,942,944,5,274,0,0,943,942,1,0,0,0,943,944,1,0,0,0,944,
 	947,1,0,0,0,945,947,5,1,0,0,946,939,1,0,0,0,946,945,1,0,0,0,947,111,1,0,
-	0,0,948,949,5,266,0,0,949,950,5,277,0,0,950,951,3,46,23,0,951,113,1,0,0,
-	0,952,953,7,13,0,0,953,115,1,0,0,0,954,955,5,265,0,0,955,117,1,0,0,0,956,
-	957,5,100,0,0,957,958,3,120,60,0,958,961,5,278,0,0,959,962,3,68,34,0,960,
+	0,0,948,949,5,262,0,0,949,950,5,273,0,0,950,951,3,46,23,0,951,113,1,0,0,
+	0,952,953,7,13,0,0,953,115,1,0,0,0,954,955,5,261,0,0,955,117,1,0,0,0,956,
+	957,5,96,0,0,957,958,3,120,60,0,958,961,5,274,0,0,959,962,3,68,34,0,960,
 	962,3,90,45,0,961,959,1,0,0,0,961,960,1,0,0,0,962,965,1,0,0,0,963,964,5,
-	173,0,0,964,966,3,102,51,0,965,963,1,0,0,0,965,966,1,0,0,0,966,969,1,0,
-	0,0,967,968,5,109,0,0,968,970,3,274,137,0,969,967,1,0,0,0,969,970,1,0,0,
+	169,0,0,964,966,3,102,51,0,965,963,1,0,0,0,965,966,1,0,0,0,966,969,1,0,
+	0,0,967,968,5,105,0,0,968,970,3,274,137,0,969,967,1,0,0,0,969,970,1,0,0,
 	0,970,972,1,0,0,0,971,973,3,114,57,0,972,971,1,0,0,0,972,973,1,0,0,0,973,
 	119,1,0,0,0,974,976,7,11,0,0,975,974,1,0,0,0,975,976,1,0,0,0,976,977,1,
 	0,0,0,977,983,3,122,61,0,978,979,3,52,26,0,979,980,3,122,61,0,980,982,1,
@@ -12796,119 +12794,119 @@ export default class RegelSpraakParser extends Parser {
 	0,0,0,996,1002,3,122,61,0,997,998,3,52,26,0,998,999,3,122,61,0,999,1001,
 	1,0,0,0,1000,997,1,0,0,0,1001,1004,1,0,0,0,1002,1000,1,0,0,0,1002,1003,
 	1,0,0,0,1003,1007,1,0,0,0,1004,1002,1,0,0,0,1005,1007,3,46,23,0,1006,994,
-	1,0,0,0,1006,1005,1,0,0,0,1007,125,1,0,0,0,1008,1009,5,101,0,0,1009,1010,
+	1,0,0,0,1006,1005,1,0,0,0,1007,125,1,0,0,0,1008,1009,5,97,0,0,1009,1010,
 	3,46,23,0,1010,1012,3,128,64,0,1011,1013,3,128,64,0,1012,1011,1,0,0,0,1013,
 	1014,1,0,0,0,1014,1012,1,0,0,0,1014,1015,1,0,0,0,1015,1016,1,0,0,0,1016,
 	1017,3,132,66,0,1017,1024,1,0,0,0,1018,1019,5,28,0,0,1019,1020,3,46,23,
 	0,1020,1021,3,128,64,0,1021,1022,3,132,66,0,1022,1024,1,0,0,0,1023,1008,
 	1,0,0,0,1023,1018,1,0,0,0,1024,127,1,0,0,0,1025,1026,7,11,0,0,1026,1031,
-	3,130,65,0,1027,1028,5,174,0,0,1028,1029,3,46,23,0,1029,1030,5,273,0,0,
+	3,130,65,0,1027,1028,5,170,0,0,1028,1029,3,46,23,0,1029,1030,5,269,0,0,
 	1030,1032,1,0,0,0,1031,1027,1,0,0,0,1031,1032,1,0,0,0,1032,1033,1,0,0,0,
-	1033,1035,5,289,0,0,1034,1036,5,265,0,0,1035,1034,1,0,0,0,1036,1037,1,0,
+	1033,1035,5,285,0,0,1034,1036,5,261,0,0,1035,1034,1,0,0,0,1036,1037,1,0,
 	0,0,1037,1035,1,0,0,0,1037,1038,1,0,0,0,1038,129,1,0,0,0,1039,1042,3,34,
 	17,0,1040,1042,3,52,26,0,1041,1039,1,0,0,0,1041,1040,1,0,0,0,1042,1043,
 	1,0,0,0,1043,1041,1,0,0,0,1043,1044,1,0,0,0,1044,131,1,0,0,0,1045,1047,
 	3,134,67,0,1046,1045,1,0,0,0,1047,1048,1,0,0,0,1048,1046,1,0,0,0,1048,1049,
 	1,0,0,0,1049,133,1,0,0,0,1050,1051,8,16,0,0,1051,135,1,0,0,0,1052,1053,
-	5,92,0,0,1053,1055,3,142,71,0,1054,1056,5,266,0,0,1055,1054,1,0,0,0,1055,
+	5,88,0,0,1053,1055,3,142,71,0,1054,1056,5,262,0,0,1055,1054,1,0,0,0,1055,
 	1056,1,0,0,0,1056,1058,1,0,0,0,1057,1059,3,138,69,0,1058,1057,1,0,0,0,1059,
 	1060,1,0,0,0,1060,1058,1,0,0,0,1060,1061,1,0,0,0,1061,137,1,0,0,0,1062,
-	1063,3,146,73,0,1063,1069,3,152,76,0,1064,1066,3,184,92,0,1065,1067,5,277,
-	0,0,1066,1065,1,0,0,0,1066,1067,1,0,0,0,1067,1070,1,0,0,0,1068,1070,5,277,
+	1063,3,146,73,0,1063,1069,3,152,76,0,1064,1066,3,184,92,0,1065,1067,5,273,
+	0,0,1066,1065,1,0,0,0,1066,1067,1,0,0,0,1067,1070,1,0,0,0,1068,1070,5,273,
 	0,0,1069,1064,1,0,0,0,1069,1068,1,0,0,0,1069,1070,1,0,0,0,1070,1072,1,0,
 	0,0,1071,1073,3,268,134,0,1072,1071,1,0,0,0,1072,1073,1,0,0,0,1073,139,
-	1,0,0,0,1074,1075,5,93,0,0,1075,1077,3,46,23,0,1076,1078,5,108,0,0,1077,
+	1,0,0,0,1074,1075,5,89,0,0,1075,1077,3,46,23,0,1076,1078,5,104,0,0,1077,
 	1076,1,0,0,0,1077,1078,1,0,0,0,1078,1081,1,0,0,0,1079,1082,3,136,68,0,1080,
 	1082,3,176,88,0,1081,1079,1,0,0,0,1081,1080,1,0,0,0,1082,1083,1,0,0,0,1083,
 	1081,1,0,0,0,1083,1084,1,0,0,0,1084,141,1,0,0,0,1085,1089,3,48,24,0,1086,
 	1088,3,144,72,0,1087,1086,1,0,0,0,1088,1091,1,0,0,0,1089,1087,1,0,0,0,1089,
-	1090,1,0,0,0,1090,143,1,0,0,0,1091,1089,1,0,0,0,1092,1107,5,194,0,0,1093,
-	1094,5,276,0,0,1094,1107,3,48,24,0,1095,1096,5,276,0,0,1096,1097,5,172,
-	0,0,1097,1107,3,48,24,0,1098,1099,5,212,0,0,1099,1107,3,48,24,0,1100,1101,
-	5,109,0,0,1101,1107,3,48,24,0,1102,1103,5,200,0,0,1103,1104,3,48,24,0,1104,
-	1105,5,109,0,0,1105,1107,1,0,0,0,1106,1092,1,0,0,0,1106,1093,1,0,0,0,1106,
+	1090,1,0,0,0,1090,143,1,0,0,0,1091,1089,1,0,0,0,1092,1107,5,190,0,0,1093,
+	1094,5,272,0,0,1094,1107,3,48,24,0,1095,1096,5,272,0,0,1096,1097,5,168,
+	0,0,1097,1107,3,48,24,0,1098,1099,5,208,0,0,1099,1107,3,48,24,0,1100,1101,
+	5,105,0,0,1101,1107,3,48,24,0,1102,1103,5,196,0,0,1103,1104,3,48,24,0,1104,
+	1105,5,105,0,0,1105,1107,1,0,0,0,1106,1092,1,0,0,0,1106,1093,1,0,0,0,1106,
 	1095,1,0,0,0,1106,1098,1,0,0,0,1106,1100,1,0,0,0,1106,1102,1,0,0,0,1107,
-	145,1,0,0,0,1108,1109,5,104,0,0,1109,1110,3,148,74,0,1110,147,1,0,0,0,1111,
-	1121,5,203,0,0,1112,1113,5,146,0,0,1113,1116,3,150,75,0,1114,1115,7,17,
+	145,1,0,0,0,1108,1109,5,100,0,0,1109,1110,3,148,74,0,1110,147,1,0,0,0,1111,
+	1121,5,199,0,0,1112,1113,5,142,0,0,1113,1116,3,150,75,0,1114,1115,7,17,
 	0,0,1115,1117,3,150,75,0,1116,1114,1,0,0,0,1116,1117,1,0,0,0,1117,1121,
 	1,0,0,0,1118,1119,7,17,0,0,1119,1121,3,150,75,0,1120,1111,1,0,0,0,1120,
 	1112,1,0,0,0,1120,1118,1,0,0,0,1121,149,1,0,0,0,1122,1125,3,54,27,0,1123,
-	1125,5,266,0,0,1124,1122,1,0,0,0,1124,1123,1,0,0,0,1125,151,1,0,0,0,1126,
-	1127,5,211,0,0,1127,1128,5,205,0,0,1128,1129,5,109,0,0,1129,1130,5,211,
+	1125,5,262,0,0,1124,1122,1,0,0,0,1124,1123,1,0,0,0,1125,151,1,0,0,0,1126,
+	1127,5,207,0,0,1127,1128,5,201,0,0,1128,1129,5,105,0,0,1129,1130,5,207,
 	0,0,1130,1167,3,46,23,0,1131,1138,3,216,108,0,1132,1133,5,8,0,0,1133,1139,
 	3,274,137,0,1134,1135,5,9,0,0,1135,1139,3,274,137,0,1136,1137,5,10,0,0,
 	1137,1139,3,274,137,0,1138,1132,1,0,0,0,1138,1134,1,0,0,0,1138,1136,1,0,
 	0,0,1139,1141,1,0,0,0,1140,1142,3,310,155,0,1141,1140,1,0,0,0,1141,1142,
-	1,0,0,0,1142,1167,1,0,0,0,1143,1144,3,216,108,0,1144,1145,5,110,0,0,1145,
+	1,0,0,0,1142,1167,1,0,0,0,1143,1144,3,216,108,0,1144,1145,5,106,0,0,1145,
 	1146,3,154,77,0,1146,1147,3,274,137,0,1147,1167,1,0,0,0,1148,1167,3,156,
-	78,0,1149,1167,3,168,84,0,1150,1151,3,204,102,0,1151,1152,5,106,0,0,1152,
-	1153,7,11,0,0,1153,1154,3,46,23,0,1154,1155,5,172,0,0,1155,1156,3,218,109,
+	78,0,1149,1167,3,168,84,0,1150,1151,3,204,102,0,1151,1152,5,102,0,0,1152,
+	1153,7,11,0,0,1153,1154,3,46,23,0,1154,1155,5,168,0,0,1155,1156,3,218,109,
 	0,1156,1157,7,18,0,0,1157,1158,3,274,137,0,1158,1167,1,0,0,0,1159,1160,
 	3,204,102,0,1160,1161,7,1,0,0,1161,1163,3,220,110,0,1162,1164,3,310,155,
 	0,1163,1162,1,0,0,0,1163,1164,1,0,0,0,1164,1167,1,0,0,0,1165,1167,3,342,
 	171,0,1166,1126,1,0,0,0,1166,1131,1,0,0,0,1166,1143,1,0,0,0,1166,1148,1,
 	0,0,0,1166,1149,1,0,0,0,1166,1150,1,0,0,0,1166,1159,1,0,0,0,1166,1165,1,
 	0,0,0,1167,153,1,0,0,0,1168,1169,7,19,0,0,1169,155,1,0,0,0,1170,1171,5,
-	211,0,0,1171,1172,3,158,79,0,1172,1173,5,240,0,0,1173,1174,5,211,0,0,1174,
-	1175,3,160,80,0,1175,1176,5,109,0,0,1176,1177,7,2,0,0,1177,1178,3,158,79,
-	0,1178,1179,5,240,0,0,1179,1180,7,2,0,0,1180,1181,3,160,80,0,1181,157,1,
+	207,0,0,1171,1172,3,158,79,0,1172,1173,5,236,0,0,1173,1174,5,207,0,0,1174,
+	1175,3,160,80,0,1175,1176,5,105,0,0,1176,1177,7,2,0,0,1177,1178,3,158,79,
+	0,1178,1179,5,236,0,0,1179,1180,7,2,0,0,1180,1181,3,160,80,0,1181,157,1,
 	0,0,0,1182,1184,3,164,82,0,1183,1182,1,0,0,0,1184,1185,1,0,0,0,1185,1183,
 	1,0,0,0,1185,1186,1,0,0,0,1186,159,1,0,0,0,1187,1189,3,162,81,0,1188,1187,
 	1,0,0,0,1189,1190,1,0,0,0,1190,1188,1,0,0,0,1190,1191,1,0,0,0,1191,161,
-	1,0,0,0,1192,1198,3,34,17,0,1193,1198,3,52,26,0,1194,1198,5,208,0,0,1195,
-	1198,5,213,0,0,1196,1198,5,211,0,0,1197,1192,1,0,0,0,1197,1193,1,0,0,0,
+	1,0,0,0,1192,1198,3,34,17,0,1193,1198,3,52,26,0,1194,1198,5,204,0,0,1195,
+	1198,5,209,0,0,1196,1198,5,207,0,0,1197,1192,1,0,0,0,1197,1193,1,0,0,0,
 	1197,1194,1,0,0,0,1197,1195,1,0,0,0,1197,1196,1,0,0,0,1198,163,1,0,0,0,
 	1199,1202,3,34,17,0,1200,1202,3,166,83,0,1201,1199,1,0,0,0,1201,1200,1,
 	0,0,0,1202,165,1,0,0,0,1203,1204,7,20,0,0,1204,167,1,0,0,0,1205,1206,3,
-	204,102,0,1206,1207,5,106,0,0,1207,1208,7,2,0,0,1208,1210,3,46,23,0,1209,
+	204,102,0,1206,1207,5,102,0,0,1207,1208,7,2,0,0,1208,1210,3,46,23,0,1209,
 	1211,3,170,85,0,1210,1209,1,0,0,0,1210,1211,1,0,0,0,1211,1213,1,0,0,0,1212,
-	1214,5,277,0,0,1213,1212,1,0,0,0,1213,1214,1,0,0,0,1214,169,1,0,0,0,1215,
-	1216,5,172,0,0,1216,1221,3,172,86,0,1217,1218,5,276,0,0,1218,1220,3,172,
+	1214,5,273,0,0,1213,1212,1,0,0,0,1213,1214,1,0,0,0,1214,169,1,0,0,0,1215,
+	1216,5,168,0,0,1216,1221,3,172,86,0,1217,1218,5,272,0,0,1218,1220,3,172,
 	86,0,1219,1217,1,0,0,0,1220,1223,1,0,0,0,1221,1219,1,0,0,0,1221,1222,1,
-	0,0,0,1222,1226,1,0,0,0,1223,1221,1,0,0,0,1224,1225,5,212,0,0,1225,1227,
+	0,0,0,1222,1226,1,0,0,0,1223,1221,1,0,0,0,1224,1225,5,208,0,0,1225,1227,
 	3,172,86,0,1226,1224,1,0,0,0,1226,1227,1,0,0,0,1227,171,1,0,0,0,1228,1229,
-	3,174,87,0,1229,1230,5,124,0,0,1230,1231,3,276,138,0,1231,173,1,0,0,0,1232,
-	1233,3,38,19,0,1233,175,1,0,0,0,1234,1235,5,91,0,0,1235,1245,3,46,23,0,
+	3,174,87,0,1229,1230,5,120,0,0,1230,1231,3,276,138,0,1231,173,1,0,0,0,1232,
+	1233,3,38,19,0,1233,175,1,0,0,0,1234,1235,5,87,0,0,1235,1245,3,46,23,0,
 	1236,1246,3,178,89,0,1237,1243,3,182,91,0,1238,1240,3,184,92,0,1239,1241,
-	5,277,0,0,1240,1239,1,0,0,0,1240,1241,1,0,0,0,1241,1244,1,0,0,0,1242,1244,
-	5,277,0,0,1243,1238,1,0,0,0,1243,1242,1,0,0,0,1243,1244,1,0,0,0,1244,1246,
+	5,273,0,0,1240,1239,1,0,0,0,1240,1241,1,0,0,0,1241,1244,1,0,0,0,1242,1244,
+	5,273,0,0,1243,1238,1,0,0,0,1243,1242,1,0,0,0,1243,1244,1,0,0,0,1244,1246,
 	1,0,0,0,1245,1236,1,0,0,0,1245,1237,1,0,0,0,1246,177,1,0,0,0,1247,1248,
-	3,180,90,0,1248,1250,5,88,0,0,1249,1251,5,277,0,0,1250,1249,1,0,0,0,1250,
-	1251,1,0,0,0,1251,179,1,0,0,0,1252,1253,5,208,0,0,1253,1254,3,46,23,0,1254,
-	1255,5,240,0,0,1255,1256,5,120,0,0,1256,1257,3,46,23,0,1257,181,1,0,0,0,
+	3,180,90,0,1248,1250,5,84,0,0,1249,1251,5,273,0,0,1250,1249,1,0,0,0,1250,
+	1251,1,0,0,0,1251,179,1,0,0,0,1252,1253,5,204,0,0,1253,1254,3,46,23,0,1254,
+	1255,5,236,0,0,1255,1256,5,116,0,0,1256,1257,3,46,23,0,1257,181,1,0,0,0,
 	1258,1260,7,21,0,0,1259,1258,1,0,0,0,1259,1260,1,0,0,0,1260,1261,1,0,0,
-	0,1261,1262,3,46,23,0,1262,1263,5,90,0,0,1263,183,1,0,0,0,1264,1267,5,107,
+	0,1261,1262,3,46,23,0,1262,1263,5,86,0,0,1263,183,1,0,0,0,1264,1267,5,103,
 	0,0,1265,1268,3,274,137,0,1266,1268,3,186,93,0,1267,1265,1,0,0,0,1267,1266,
 	1,0,0,0,1268,185,1,0,0,0,1269,1270,5,42,0,0,1270,1271,3,188,94,0,1271,1272,
-	7,22,0,0,1272,1273,5,40,0,0,1273,1275,5,278,0,0,1274,1276,3,190,95,0,1275,
+	7,22,0,0,1272,1273,5,40,0,0,1273,1275,5,274,0,0,1274,1276,3,190,95,0,1275,
 	1274,1,0,0,0,1276,1277,1,0,0,0,1277,1275,1,0,0,0,1277,1278,1,0,0,0,1278,
-	1312,1,0,0,0,1279,1284,3,204,102,0,1280,1284,5,215,0,0,1281,1284,5,213,
-	0,0,1282,1284,5,248,0,0,1283,1279,1,0,0,0,1283,1280,1,0,0,0,1283,1281,1,
-	0,0,0,1283,1282,1,0,0,0,1284,1285,1,0,0,0,1285,1286,5,118,0,0,1286,1287,
-	3,188,94,0,1287,1288,7,22,0,0,1288,1289,5,150,0,0,1289,1291,5,278,0,0,1290,
+	1312,1,0,0,0,1279,1284,3,204,102,0,1280,1284,5,211,0,0,1281,1284,5,209,
+	0,0,1282,1284,5,244,0,0,1283,1279,1,0,0,0,1283,1280,1,0,0,0,1283,1281,1,
+	0,0,0,1283,1282,1,0,0,0,1284,1285,1,0,0,0,1285,1286,5,114,0,0,1286,1287,
+	3,188,94,0,1287,1288,7,22,0,0,1288,1289,5,146,0,0,1289,1291,5,274,0,0,1290,
 	1292,3,190,95,0,1291,1290,1,0,0,0,1292,1293,1,0,0,0,1293,1291,1,0,0,0,1293,
-	1294,1,0,0,0,1294,1312,1,0,0,0,1295,1300,3,204,102,0,1296,1300,5,215,0,
-	0,1297,1300,5,213,0,0,1298,1300,5,248,0,0,1299,1295,1,0,0,0,1299,1296,1,
+	1294,1,0,0,0,1294,1312,1,0,0,0,1295,1300,3,204,102,0,1296,1300,5,211,0,
+	0,1297,1300,5,209,0,0,1298,1300,5,244,0,0,1299,1295,1,0,0,0,1299,1296,1,
 	0,0,0,1299,1297,1,0,0,0,1299,1298,1,0,0,0,1300,1301,1,0,0,0,1301,1302,5,
-	150,0,0,1302,1303,5,118,0,0,1303,1304,3,188,94,0,1304,1305,7,22,0,0,1305,
-	1307,5,278,0,0,1306,1308,3,190,95,0,1307,1306,1,0,0,0,1308,1309,1,0,0,0,
+	146,0,0,1302,1303,5,114,0,0,1303,1304,3,188,94,0,1304,1305,7,22,0,0,1305,
+	1307,5,274,0,0,1306,1308,3,190,95,0,1307,1306,1,0,0,0,1308,1309,1,0,0,0,
 	1309,1307,1,0,0,0,1309,1310,1,0,0,0,1310,1312,1,0,0,0,1311,1269,1,0,0,0,
-	1311,1283,1,0,0,0,1311,1299,1,0,0,0,1312,187,1,0,0,0,1313,1329,5,208,0,
-	0,1314,1329,5,120,0,0,1315,1329,5,199,0,0,1316,1317,7,23,0,0,1317,1318,
-	7,24,0,0,1318,1319,5,240,0,0,1319,1329,5,208,0,0,1320,1321,5,155,0,0,1321,
-	1322,7,24,0,0,1322,1323,5,240,0,0,1323,1329,5,208,0,0,1324,1325,5,156,0,
-	0,1325,1326,7,24,0,0,1326,1327,5,240,0,0,1327,1329,5,208,0,0,1328,1313,
+	1311,1283,1,0,0,0,1311,1299,1,0,0,0,1312,187,1,0,0,0,1313,1329,5,204,0,
+	0,1314,1329,5,116,0,0,1315,1329,5,195,0,0,1316,1317,7,23,0,0,1317,1318,
+	7,24,0,0,1318,1319,5,236,0,0,1319,1329,5,204,0,0,1320,1321,5,151,0,0,1321,
+	1322,7,24,0,0,1322,1323,5,236,0,0,1323,1329,5,204,0,0,1324,1325,5,152,0,
+	0,1325,1326,7,24,0,0,1326,1327,5,236,0,0,1327,1329,5,204,0,0,1328,1313,
 	1,0,0,0,1328,1314,1,0,0,0,1328,1315,1,0,0,0,1328,1316,1,0,0,0,1328,1320,
 	1,0,0,0,1328,1324,1,0,0,0,1329,189,1,0,0,0,1330,1333,3,192,96,0,1331,1334,
 	3,198,99,0,1332,1334,3,200,100,0,1333,1331,1,0,0,0,1333,1332,1,0,0,0,1334,
-	191,1,0,0,0,1335,1336,7,25,0,0,1336,193,1,0,0,0,1337,1341,5,287,0,0,1338,
-	1339,5,282,0,0,1339,1341,5,282,0,0,1340,1337,1,0,0,0,1340,1338,1,0,0,0,
+	191,1,0,0,0,1335,1336,7,25,0,0,1336,193,1,0,0,0,1337,1341,5,283,0,0,1338,
+	1339,5,278,0,0,1339,1341,5,278,0,0,1340,1337,1,0,0,0,1340,1338,1,0,0,0,
 	1341,195,1,0,0,0,1342,1344,7,26,0,0,1343,1342,1,0,0,0,1344,1345,1,0,0,0,
 	1345,1343,1,0,0,0,1345,1346,1,0,0,0,1346,197,1,0,0,0,1347,1348,3,274,137,
-	0,1348,199,1,0,0,0,1349,1353,3,204,102,0,1350,1353,5,215,0,0,1351,1353,
-	5,248,0,0,1352,1349,1,0,0,0,1352,1350,1,0,0,0,1352,1351,1,0,0,0,1353,1354,
-	1,0,0,0,1354,1355,5,150,0,0,1355,1356,5,118,0,0,1356,1357,3,188,94,0,1357,
-	1358,7,22,0,0,1358,1360,5,278,0,0,1359,1361,3,202,101,0,1360,1359,1,0,0,
+	0,1348,199,1,0,0,0,1349,1353,3,204,102,0,1350,1353,5,211,0,0,1351,1353,
+	5,244,0,0,1352,1349,1,0,0,0,1352,1350,1,0,0,0,1352,1351,1,0,0,0,1353,1354,
+	1,0,0,0,1354,1355,5,146,0,0,1355,1356,5,114,0,0,1356,1357,3,188,94,0,1357,
+	1358,7,22,0,0,1358,1360,5,274,0,0,1359,1361,3,202,101,0,1360,1359,1,0,0,
 	0,1361,1362,1,0,0,0,1362,1360,1,0,0,0,1362,1363,1,0,0,0,1363,201,1,0,0,
 	0,1364,1367,3,194,97,0,1365,1368,3,198,99,0,1366,1368,3,200,100,0,1367,
 	1365,1,0,0,0,1367,1366,1,0,0,0,1368,203,1,0,0,0,1369,1372,3,208,104,0,1370,
@@ -12922,35 +12920,35 @@ export default class RegelSpraakParser extends Parser {
 	0,0,1394,1392,1,0,0,0,1394,1395,1,0,0,0,1395,211,1,0,0,0,1396,1394,1,0,
 	0,0,1397,1399,7,3,0,0,1398,1400,3,34,17,0,1399,1398,1,0,0,0,1400,1401,1,
 	0,0,0,1401,1399,1,0,0,0,1401,1402,1,0,0,0,1402,1405,1,0,0,0,1403,1405,5,
-	215,0,0,1404,1397,1,0,0,0,1404,1403,1,0,0,0,1405,213,1,0,0,0,1406,1408,
+	211,0,0,1404,1397,1,0,0,0,1404,1403,1,0,0,0,1405,213,1,0,0,0,1406,1408,
 	7,3,0,0,1407,1409,3,42,21,0,1408,1407,1,0,0,0,1409,1410,1,0,0,0,1410,1408,
-	1,0,0,0,1410,1411,1,0,0,0,1411,1414,1,0,0,0,1412,1414,5,215,0,0,1413,1406,
+	1,0,0,0,1410,1411,1,0,0,0,1411,1414,1,0,0,0,1412,1414,5,211,0,0,1413,1406,
 	1,0,0,0,1413,1412,1,0,0,0,1414,215,1,0,0,0,1415,1416,3,218,109,0,1416,1417,
-	5,240,0,0,1417,1418,3,204,102,0,1418,217,1,0,0,0,1419,1420,3,50,25,0,1420,
+	5,236,0,0,1417,1418,3,204,102,0,1418,217,1,0,0,0,1419,1420,3,50,25,0,1420,
 	219,1,0,0,0,1421,1423,3,52,26,0,1422,1421,1,0,0,0,1422,1423,1,0,0,0,1423,
 	1424,1,0,0,0,1424,1425,3,48,24,0,1425,221,1,0,0,0,1426,1428,3,52,26,0,1427,
 	1426,1,0,0,0,1427,1428,1,0,0,0,1428,1430,1,0,0,0,1429,1431,7,2,0,0,1430,
 	1429,1,0,0,0,1430,1431,1,0,0,0,1431,1433,1,0,0,0,1432,1434,3,42,21,0,1433,
 	1432,1,0,0,0,1434,1435,1,0,0,0,1435,1433,1,0,0,0,1435,1436,1,0,0,0,1436,
 	223,1,0,0,0,1437,1438,7,28,0,0,1438,1439,3,46,23,0,1439,225,1,0,0,0,1440,
-	1441,5,120,0,0,1441,1448,3,46,23,0,1442,1445,3,46,23,0,1443,1444,7,27,0,
+	1441,5,116,0,0,1441,1448,3,46,23,0,1442,1445,3,46,23,0,1443,1444,7,27,0,
 	0,1444,1446,3,228,114,0,1445,1443,1,0,0,0,1445,1446,1,0,0,0,1446,1448,1,
 	0,0,0,1447,1440,1,0,0,0,1447,1442,1,0,0,0,1448,227,1,0,0,0,1449,1452,3,
 	230,115,0,1450,1452,3,246,123,0,1451,1449,1,0,0,0,1451,1450,1,0,0,0,1452,
 	229,1,0,0,0,1453,1459,3,238,119,0,1454,1459,3,232,116,0,1455,1459,3,240,
 	120,0,1456,1459,3,242,121,0,1457,1459,3,244,122,0,1458,1453,1,0,0,0,1458,
 	1454,1,0,0,0,1458,1455,1,0,0,0,1458,1456,1,0,0,0,1458,1457,1,0,0,0,1459,
-	231,1,0,0,0,1460,1461,3,234,117,0,1461,233,1,0,0,0,1462,1464,5,211,0,0,
+	231,1,0,0,0,1460,1461,3,234,117,0,1461,233,1,0,0,0,1462,1464,5,207,0,0,
 	1463,1462,1,0,0,0,1463,1464,1,0,0,0,1464,1467,1,0,0,0,1465,1468,3,220,110,
 	0,1466,1468,3,236,118,0,1467,1465,1,0,0,0,1467,1466,1,0,0,0,1468,1469,1,
 	0,0,0,1469,1470,7,29,0,0,1470,235,1,0,0,0,1471,1472,3,46,23,0,1472,237,
-	1,0,0,0,1473,1475,5,211,0,0,1474,1473,1,0,0,0,1474,1475,1,0,0,0,1475,1476,
-	1,0,0,0,1476,1477,3,46,23,0,1477,1478,5,105,0,0,1478,1479,3,286,143,0,1479,
+	1,0,0,0,1473,1475,5,207,0,0,1474,1473,1,0,0,0,1474,1475,1,0,0,0,1475,1476,
+	1,0,0,0,1476,1477,3,46,23,0,1477,1478,5,101,0,0,1478,1479,3,286,143,0,1479,
 	1480,3,274,137,0,1480,239,1,0,0,0,1481,1482,3,256,128,0,1482,1483,3,262,
 	131,0,1483,241,1,0,0,0,1484,1485,3,258,129,0,1485,1486,3,264,132,0,1486,
 	243,1,0,0,0,1487,1488,3,260,130,0,1488,1489,3,266,133,0,1489,245,1,0,0,
-	0,1490,1491,5,118,0,0,1491,1492,3,188,94,0,1492,1493,7,22,0,0,1493,1494,
-	7,30,0,0,1494,1496,5,278,0,0,1495,1497,3,248,124,0,1496,1495,1,0,0,0,1497,
+	0,1490,1491,5,114,0,0,1491,1492,3,188,94,0,1492,1493,7,22,0,0,1493,1494,
+	7,30,0,0,1494,1496,5,274,0,0,1495,1497,3,248,124,0,1496,1495,1,0,0,0,1497,
 	1498,1,0,0,0,1498,1496,1,0,0,0,1498,1499,1,0,0,0,1499,247,1,0,0,0,1500,
 	1501,3,196,98,0,1501,1502,3,250,125,0,1502,1507,1,0,0,0,1503,1504,3,196,
 	98,0,1504,1505,3,254,127,0,1505,1507,1,0,0,0,1506,1500,1,0,0,0,1506,1503,
@@ -12961,261 +12959,261 @@ export default class RegelSpraakParser extends Parser {
 	1,0,0,0,1520,1521,1,0,0,0,1521,1522,3,286,143,0,1522,1523,3,274,137,0,1523,
 	1529,1,0,0,0,1524,1525,3,204,102,0,1525,1526,3,234,117,0,1526,1529,1,0,
 	0,0,1527,1529,3,234,117,0,1528,1512,1,0,0,0,1528,1519,1,0,0,0,1528,1524,
-	1,0,0,0,1528,1527,1,0,0,0,1529,253,1,0,0,0,1530,1535,5,150,0,0,1531,1535,
-	5,149,0,0,1532,1533,5,113,0,0,1533,1535,5,114,0,0,1534,1530,1,0,0,0,1534,
-	1531,1,0,0,0,1534,1532,1,0,0,0,1535,1536,1,0,0,0,1536,1537,5,118,0,0,1537,
-	1538,3,188,94,0,1538,1539,7,22,0,0,1539,1541,5,278,0,0,1540,1542,3,248,
+	1,0,0,0,1528,1527,1,0,0,0,1529,253,1,0,0,0,1530,1535,5,146,0,0,1531,1535,
+	5,145,0,0,1532,1533,5,109,0,0,1533,1535,5,110,0,0,1534,1530,1,0,0,0,1534,
+	1531,1,0,0,0,1534,1532,1,0,0,0,1535,1536,1,0,0,0,1536,1537,5,114,0,0,1537,
+	1538,3,188,94,0,1538,1539,7,22,0,0,1539,1541,5,274,0,0,1540,1542,3,248,
 	124,0,1541,1540,1,0,0,0,1542,1543,1,0,0,0,1543,1541,1,0,0,0,1543,1544,1,
 	0,0,0,1544,255,1,0,0,0,1545,1546,7,32,0,0,1546,257,1,0,0,0,1547,1548,7,
 	33,0,0,1548,259,1,0,0,0,1549,1550,7,34,0,0,1550,261,1,0,0,0,1551,1552,3,
 	274,137,0,1552,263,1,0,0,0,1553,1554,3,274,137,0,1554,265,1,0,0,0,1555,
-	1580,3,54,27,0,1556,1580,5,231,0,0,1557,1580,5,232,0,0,1558,1559,5,17,0,
-	0,1559,1560,5,272,0,0,1560,1561,3,300,150,0,1561,1562,5,276,0,0,1562,1563,
-	3,300,150,0,1563,1564,5,276,0,0,1564,1565,3,300,150,0,1565,1566,5,273,0,
-	0,1566,1580,1,0,0,0,1567,1568,5,18,0,0,1568,1569,5,272,0,0,1569,1570,3,
-	300,150,0,1570,1571,5,273,0,0,1571,1580,1,0,0,0,1572,1580,3,216,108,0,1573,
-	1580,3,224,112,0,1574,1580,3,124,62,0,1575,1576,5,272,0,0,1576,1577,3,274,
-	137,0,1577,1578,5,273,0,0,1578,1580,1,0,0,0,1579,1555,1,0,0,0,1579,1556,
+	1580,3,54,27,0,1556,1580,5,227,0,0,1557,1580,5,228,0,0,1558,1559,5,17,0,
+	0,1559,1560,5,268,0,0,1560,1561,3,300,150,0,1561,1562,5,272,0,0,1562,1563,
+	3,300,150,0,1563,1564,5,272,0,0,1564,1565,3,300,150,0,1565,1566,5,269,0,
+	0,1566,1580,1,0,0,0,1567,1568,5,18,0,0,1568,1569,5,268,0,0,1569,1570,3,
+	300,150,0,1570,1571,5,269,0,0,1571,1580,1,0,0,0,1572,1580,3,216,108,0,1573,
+	1580,3,224,112,0,1574,1580,3,124,62,0,1575,1576,5,268,0,0,1576,1577,3,274,
+	137,0,1577,1578,5,269,0,0,1578,1580,1,0,0,0,1579,1555,1,0,0,0,1579,1556,
 	1,0,0,0,1579,1557,1,0,0,0,1579,1558,1,0,0,0,1579,1567,1,0,0,0,1579,1572,
 	1,0,0,0,1579,1573,1,0,0,0,1579,1574,1,0,0,0,1579,1575,1,0,0,0,1580,267,
-	1,0,0,0,1581,1585,5,103,0,0,1582,1584,3,270,135,0,1583,1582,1,0,0,0,1584,
+	1,0,0,0,1581,1585,5,99,0,0,1582,1584,3,270,135,0,1583,1582,1,0,0,0,1584,
 	1587,1,0,0,0,1585,1583,1,0,0,0,1585,1586,1,0,0,0,1586,1588,1,0,0,0,1587,
-	1585,1,0,0,0,1588,1589,5,277,0,0,1589,269,1,0,0,0,1590,1592,7,11,0,0,1591,
-	1590,1,0,0,0,1591,1592,1,0,0,0,1592,1593,1,0,0,0,1593,1594,5,265,0,0,1594,
-	1595,5,109,0,0,1595,1596,3,272,136,0,1596,271,1,0,0,0,1597,1606,3,300,150,
+	1585,1,0,0,0,1588,1589,5,273,0,0,1589,269,1,0,0,0,1590,1592,7,11,0,0,1591,
+	1590,1,0,0,0,1591,1592,1,0,0,0,1592,1593,1,0,0,0,1593,1594,5,261,0,0,1594,
+	1595,5,105,0,0,1595,1596,3,272,136,0,1596,271,1,0,0,0,1597,1606,3,300,150,
 	0,1598,1601,3,290,145,0,1599,1601,3,294,147,0,1600,1598,1,0,0,0,1600,1599,
 	1,0,0,0,1601,1602,1,0,0,0,1602,1603,3,300,150,0,1603,1605,1,0,0,0,1604,
 	1600,1,0,0,0,1605,1608,1,0,0,0,1606,1604,1,0,0,0,1606,1607,1,0,0,0,1607,
-	273,1,0,0,0,1608,1606,1,0,0,0,1609,1610,3,278,139,0,1610,1611,5,276,0,0,
+	273,1,0,0,0,1608,1606,1,0,0,0,1609,1610,3,278,139,0,1610,1611,5,272,0,0,
 	1611,1612,3,304,152,0,1612,1613,3,302,151,0,1613,1623,1,0,0,0,1614,1615,
-	3,278,139,0,1615,1616,5,276,0,0,1616,1617,3,304,152,0,1617,1623,1,0,0,0,
+	3,278,139,0,1615,1616,5,272,0,0,1616,1617,3,304,152,0,1617,1623,1,0,0,0,
 	1618,1619,3,278,139,0,1619,1620,3,302,151,0,1620,1623,1,0,0,0,1621,1623,
 	3,278,139,0,1622,1609,1,0,0,0,1622,1614,1,0,0,0,1622,1618,1,0,0,0,1622,
-	1621,1,0,0,0,1623,275,1,0,0,0,1624,1625,3,280,140,0,1625,1626,5,276,0,0,
+	1621,1,0,0,0,1623,275,1,0,0,0,1624,1625,3,280,140,0,1625,1626,5,272,0,0,
 	1626,1627,3,304,152,0,1627,1628,3,302,151,0,1628,1638,1,0,0,0,1629,1630,
-	3,280,140,0,1630,1631,5,276,0,0,1631,1632,3,304,152,0,1632,1638,1,0,0,0,
+	3,280,140,0,1630,1631,5,272,0,0,1631,1632,3,304,152,0,1632,1638,1,0,0,0,
 	1633,1634,3,280,140,0,1634,1635,3,302,151,0,1635,1638,1,0,0,0,1636,1638,
 	3,280,140,0,1637,1624,1,0,0,0,1637,1629,1,0,0,0,1637,1633,1,0,0,0,1637,
 	1636,1,0,0,0,1638,277,1,0,0,0,1639,1642,3,280,140,0,1640,1641,7,35,0,0,
 	1641,1643,3,278,139,0,1642,1640,1,0,0,0,1642,1643,1,0,0,0,1643,279,1,0,
-	0,0,1644,1676,3,336,168,0,1645,1676,3,312,156,0,1646,1647,3,288,144,0,1647,
-	1648,5,109,0,0,1648,1649,3,48,24,0,1649,1676,1,0,0,0,1650,1651,3,288,144,
-	0,1651,1652,5,106,0,0,1652,1653,3,48,24,0,1653,1676,1,0,0,0,1654,1655,3,
-	288,144,0,1655,1656,3,284,142,0,1656,1661,3,282,141,0,1657,1658,5,276,0,
-	0,1658,1660,3,282,141,0,1659,1657,1,0,0,0,1660,1663,1,0,0,0,1661,1659,1,
-	0,0,0,1661,1662,1,0,0,0,1662,1664,1,0,0,0,1663,1661,1,0,0,0,1664,1665,5,
-	225,0,0,1665,1666,3,282,141,0,1666,1676,1,0,0,0,1667,1671,3,288,144,0,1668,
-	1669,3,286,143,0,1669,1670,3,288,144,0,1670,1672,1,0,0,0,1671,1668,1,0,
-	0,0,1671,1672,1,0,0,0,1672,1676,1,0,0,0,1673,1676,3,332,166,0,1674,1676,
-	3,334,167,0,1675,1644,1,0,0,0,1675,1645,1,0,0,0,1675,1646,1,0,0,0,1675,
-	1650,1,0,0,0,1675,1654,1,0,0,0,1675,1667,1,0,0,0,1675,1673,1,0,0,0,1675,
-	1674,1,0,0,0,1676,281,1,0,0,0,1677,1687,5,271,0,0,1678,1687,5,270,0,0,1679,
-	1681,5,266,0,0,1680,1682,3,102,51,0,1681,1680,1,0,0,0,1681,1682,1,0,0,0,
-	1682,1687,1,0,0,0,1683,1687,5,269,0,0,1684,1687,3,54,27,0,1685,1687,3,32,
-	16,0,1686,1677,1,0,0,0,1686,1678,1,0,0,0,1686,1679,1,0,0,0,1686,1683,1,
-	0,0,0,1686,1684,1,0,0,0,1686,1685,1,0,0,0,1687,283,1,0,0,0,1688,1689,7,
-	36,0,0,1689,285,1,0,0,0,1690,1691,7,37,0,0,1691,287,1,0,0,0,1692,1698,3,
-	292,146,0,1693,1694,3,290,145,0,1694,1695,3,292,146,0,1695,1697,1,0,0,0,
-	1696,1693,1,0,0,0,1697,1700,1,0,0,0,1698,1696,1,0,0,0,1698,1699,1,0,0,0,
-	1699,289,1,0,0,0,1700,1698,1,0,0,0,1701,1702,7,38,0,0,1702,291,1,0,0,0,
-	1703,1709,3,296,148,0,1704,1705,3,294,147,0,1705,1706,3,296,148,0,1706,
-	1708,1,0,0,0,1707,1704,1,0,0,0,1708,1711,1,0,0,0,1709,1707,1,0,0,0,1709,
-	1710,1,0,0,0,1710,293,1,0,0,0,1711,1709,1,0,0,0,1712,1713,7,39,0,0,1713,
-	295,1,0,0,0,1714,1720,3,300,150,0,1715,1716,3,298,149,0,1716,1717,3,300,
-	150,0,1717,1719,1,0,0,0,1718,1715,1,0,0,0,1719,1722,1,0,0,0,1720,1718,1,
-	0,0,0,1720,1721,1,0,0,0,1721,297,1,0,0,0,1722,1720,1,0,0,0,1723,1724,7,
-	40,0,0,1724,299,1,0,0,0,1725,1726,6,150,-1,0,1726,1727,5,133,0,0,1727,1989,
-	3,300,150,55,1728,1729,5,292,0,0,1729,1989,3,300,150,54,1730,1731,5,136,
-	0,0,1731,1989,3,300,150,53,1732,1733,5,11,0,0,1733,1734,3,300,150,0,1734,
-	1735,5,142,0,0,1735,1738,3,300,150,0,1736,1737,5,188,0,0,1737,1739,3,100,
-	50,0,1738,1736,1,0,0,0,1738,1739,1,0,0,0,1739,1989,1,0,0,0,1740,1741,5,
-	192,0,0,1741,1742,3,300,150,0,1742,1743,5,142,0,0,1743,1746,3,300,150,0,
-	1744,1745,5,188,0,0,1745,1747,3,100,50,0,1746,1744,1,0,0,0,1746,1747,1,
-	0,0,0,1747,1989,1,0,0,0,1748,1749,5,191,0,0,1749,1754,3,300,150,0,1750,
-	1751,5,276,0,0,1751,1753,3,300,150,0,1752,1750,1,0,0,0,1753,1756,1,0,0,
-	0,1754,1752,1,0,0,0,1754,1755,1,0,0,0,1755,1757,1,0,0,0,1756,1754,1,0,0,
-	0,1757,1758,5,212,0,0,1758,1759,3,300,150,50,1759,1989,1,0,0,0,1760,1761,
-	5,191,0,0,1761,1762,5,120,0,0,1762,1989,3,46,23,0,1763,1764,5,191,0,0,1764,
-	1765,5,120,0,0,1765,1989,3,216,108,0,1766,1767,5,213,0,0,1767,1770,5,186,
-	0,0,1768,1770,5,186,0,0,1769,1766,1,0,0,0,1769,1768,1,0,0,0,1770,1771,1,
-	0,0,0,1771,1989,3,226,113,0,1772,1773,5,213,0,0,1773,1774,5,186,0,0,1774,
-	1989,3,216,108,0,1775,1776,5,186,0,0,1776,1989,3,216,108,0,1777,1780,5,
-	266,0,0,1778,1781,5,281,0,0,1779,1781,5,265,0,0,1780,1778,1,0,0,0,1780,
-	1779,1,0,0,0,1781,1784,1,0,0,0,1782,1784,5,269,0,0,1783,1777,1,0,0,0,1783,
-	1782,1,0,0,0,1784,1785,1,0,0,0,1785,1786,5,240,0,0,1786,1989,3,300,150,
-	44,1787,1788,5,269,0,0,1788,1789,5,240,0,0,1789,1989,3,300,150,43,1790,
-	1791,5,30,0,0,1791,1796,3,300,150,0,1792,1793,5,276,0,0,1793,1795,3,300,
-	150,0,1794,1792,1,0,0,0,1795,1798,1,0,0,0,1796,1794,1,0,0,0,1796,1797,1,
-	0,0,0,1797,1799,1,0,0,0,1798,1796,1,0,0,0,1799,1800,7,35,0,0,1800,1801,
-	3,300,150,39,1801,1989,1,0,0,0,1802,1803,5,152,0,0,1803,1989,3,300,150,
-	37,1804,1805,5,12,0,0,1805,1806,5,272,0,0,1806,1807,3,274,137,0,1807,1808,
-	5,273,0,0,1808,1989,1,0,0,0,1809,1810,5,14,0,0,1810,1815,3,300,150,0,1811,
-	1812,5,276,0,0,1812,1814,3,300,150,0,1813,1811,1,0,0,0,1814,1817,1,0,0,
-	0,1815,1813,1,0,0,0,1815,1816,1,0,0,0,1816,1818,1,0,0,0,1817,1815,1,0,0,
-	0,1818,1819,5,212,0,0,1819,1820,3,300,150,35,1820,1989,1,0,0,0,1821,1822,
-	5,14,0,0,1822,1823,5,120,0,0,1823,1989,3,216,108,0,1824,1825,5,13,0,0,1825,
-	1830,3,300,150,0,1826,1827,5,276,0,0,1827,1829,3,300,150,0,1828,1826,1,
-	0,0,0,1829,1832,1,0,0,0,1830,1828,1,0,0,0,1830,1831,1,0,0,0,1831,1833,1,
-	0,0,0,1832,1830,1,0,0,0,1833,1834,5,212,0,0,1834,1835,3,300,150,33,1835,
-	1989,1,0,0,0,1836,1837,5,13,0,0,1837,1838,5,120,0,0,1838,1989,3,216,108,
-	0,1839,1840,5,213,0,0,1840,1841,5,217,0,0,1841,1842,5,237,0,0,1842,1989,
-	3,300,150,31,1843,1844,5,208,0,0,1844,1845,5,220,0,0,1845,1846,5,237,0,
-	0,1846,1989,3,300,150,30,1847,1848,5,208,0,0,1848,1849,5,205,0,0,1849,1850,
-	5,237,0,0,1850,1989,3,300,150,29,1851,1852,5,17,0,0,1852,1853,5,272,0,0,
-	1853,1854,3,300,150,0,1854,1855,5,276,0,0,1855,1856,3,300,150,0,1856,1857,
-	5,276,0,0,1857,1858,3,300,150,0,1858,1859,5,273,0,0,1859,1989,1,0,0,0,1860,
-	1861,5,18,0,0,1861,1862,5,272,0,0,1862,1863,3,300,150,0,1863,1864,5,273,
-	0,0,1864,1989,1,0,0,0,1865,1866,3,266,133,0,1866,1867,7,41,0,0,1867,1868,
-	3,300,150,0,1868,1869,3,58,29,0,1869,1989,1,0,0,0,1870,1871,5,187,0,0,1871,
-	1876,3,300,150,0,1872,1873,5,276,0,0,1873,1875,3,300,150,0,1874,1872,1,
-	0,0,0,1875,1878,1,0,0,0,1876,1874,1,0,0,0,1876,1877,1,0,0,0,1877,1879,1,
-	0,0,0,1878,1876,1,0,0,0,1879,1880,5,212,0,0,1880,1881,3,300,150,25,1881,
-	1989,1,0,0,0,1882,1883,5,189,0,0,1883,1888,3,300,150,0,1884,1885,5,276,
-	0,0,1885,1887,3,300,150,0,1886,1884,1,0,0,0,1887,1890,1,0,0,0,1888,1886,
-	1,0,0,0,1888,1889,1,0,0,0,1889,1891,1,0,0,0,1890,1888,1,0,0,0,1891,1892,
-	5,212,0,0,1892,1893,3,300,150,24,1893,1989,1,0,0,0,1894,1895,5,15,0,0,1895,
-	1897,3,274,137,0,1896,1898,3,310,155,0,1897,1896,1,0,0,0,1897,1898,1,0,
-	0,0,1898,1989,1,0,0,0,1899,1900,5,213,0,0,1900,1901,5,186,0,0,1901,1902,
-	5,206,0,0,1902,1911,5,216,0,0,1903,1905,5,208,0,0,1904,1903,1,0,0,0,1904,
-	1905,1,0,0,0,1905,1906,1,0,0,0,1906,1912,5,220,0,0,1907,1909,5,213,0,0,
-	1908,1907,1,0,0,0,1908,1909,1,0,0,0,1909,1910,1,0,0,0,1910,1912,5,217,0,
-	0,1911,1904,1,0,0,0,1911,1908,1,0,0,0,1912,1913,1,0,0,0,1913,1914,5,207,
-	0,0,1914,1989,3,274,137,0,1915,1917,3,32,16,0,1916,1915,1,0,0,0,1917,1918,
-	1,0,0,0,1918,1916,1,0,0,0,1918,1919,1,0,0,0,1919,1920,1,0,0,0,1920,1921,
-	5,15,0,0,1921,1923,3,274,137,0,1922,1924,3,310,155,0,1923,1922,1,0,0,0,
-	1923,1924,1,0,0,0,1924,1989,1,0,0,0,1925,1926,5,16,0,0,1926,1927,7,42,0,
-	0,1927,1928,5,240,0,0,1928,1930,3,274,137,0,1929,1931,3,310,155,0,1930,
-	1929,1,0,0,0,1930,1931,1,0,0,0,1931,1989,1,0,0,0,1932,1934,3,32,16,0,1933,
-	1932,1,0,0,0,1934,1935,1,0,0,0,1935,1933,1,0,0,0,1935,1936,1,0,0,0,1936,
-	1937,1,0,0,0,1937,1938,5,16,0,0,1938,1939,7,42,0,0,1939,1940,5,240,0,0,
-	1940,1942,3,274,137,0,1941,1943,3,310,155,0,1942,1941,1,0,0,0,1942,1943,
-	1,0,0,0,1943,1989,1,0,0,0,1944,1947,3,320,160,0,1945,1947,3,322,161,0,1946,
-	1944,1,0,0,0,1946,1945,1,0,0,0,1947,1948,1,0,0,0,1948,1949,3,218,109,0,
-	1949,1950,3,324,162,0,1950,1989,1,0,0,0,1951,1954,3,320,160,0,1952,1954,
-	3,322,161,0,1953,1951,1,0,0,0,1953,1952,1,0,0,0,1954,1957,1,0,0,0,1955,
-	1958,3,224,112,0,1956,1958,3,216,108,0,1957,1955,1,0,0,0,1957,1956,1,0,
-	0,0,1958,1959,1,0,0,0,1959,1960,5,146,0,0,1960,1961,3,46,23,0,1961,1962,
-	5,236,0,0,1962,1964,3,46,23,0,1963,1965,5,277,0,0,1964,1963,1,0,0,0,1964,
-	1965,1,0,0,0,1965,1989,1,0,0,0,1966,1968,5,266,0,0,1967,1969,3,102,51,0,
-	1968,1967,1,0,0,0,1968,1969,1,0,0,0,1969,1989,1,0,0,0,1970,1989,5,231,0,
-	0,1971,1989,3,32,16,0,1972,1989,3,224,112,0,1973,1989,3,216,108,0,1974,
-	1989,3,204,102,0,1975,1989,3,46,23,0,1976,1989,3,124,62,0,1977,1989,5,269,
-	0,0,1978,1989,5,270,0,0,1979,1989,5,271,0,0,1980,1989,3,54,27,0,1981,1989,
-	5,245,0,0,1982,1989,5,226,0,0,1983,1989,5,215,0,0,1984,1985,5,272,0,0,1985,
-	1986,3,274,137,0,1986,1987,5,273,0,0,1987,1989,1,0,0,0,1988,1725,1,0,0,
-	0,1988,1728,1,0,0,0,1988,1730,1,0,0,0,1988,1732,1,0,0,0,1988,1740,1,0,0,
-	0,1988,1748,1,0,0,0,1988,1760,1,0,0,0,1988,1763,1,0,0,0,1988,1769,1,0,0,
-	0,1988,1772,1,0,0,0,1988,1775,1,0,0,0,1988,1783,1,0,0,0,1988,1787,1,0,0,
-	0,1988,1790,1,0,0,0,1988,1802,1,0,0,0,1988,1804,1,0,0,0,1988,1809,1,0,0,
-	0,1988,1821,1,0,0,0,1988,1824,1,0,0,0,1988,1836,1,0,0,0,1988,1839,1,0,0,
-	0,1988,1843,1,0,0,0,1988,1847,1,0,0,0,1988,1851,1,0,0,0,1988,1860,1,0,0,
-	0,1988,1865,1,0,0,0,1988,1870,1,0,0,0,1988,1882,1,0,0,0,1988,1894,1,0,0,
-	0,1988,1899,1,0,0,0,1988,1916,1,0,0,0,1988,1925,1,0,0,0,1988,1933,1,0,0,
-	0,1988,1946,1,0,0,0,1988,1953,1,0,0,0,1988,1966,1,0,0,0,1988,1970,1,0,0,
-	0,1988,1971,1,0,0,0,1988,1972,1,0,0,0,1988,1973,1,0,0,0,1988,1974,1,0,0,
-	0,1988,1975,1,0,0,0,1988,1976,1,0,0,0,1988,1977,1,0,0,0,1988,1978,1,0,0,
-	0,1988,1979,1,0,0,0,1988,1980,1,0,0,0,1988,1981,1,0,0,0,1988,1982,1,0,0,
-	0,1988,1983,1,0,0,0,1988,1984,1,0,0,0,1989,2012,1,0,0,0,1990,1993,10,38,
-	0,0,1991,1992,5,276,0,0,1992,1994,3,300,150,0,1993,1991,1,0,0,0,1994,1995,
-	1,0,0,0,1995,1993,1,0,0,0,1995,1996,1,0,0,0,1996,1997,1,0,0,0,1997,1998,
-	7,35,0,0,1998,1999,3,300,150,39,1999,2011,1,0,0,0,2000,2001,10,42,0,0,2001,
-	2011,3,302,151,0,2002,2003,10,41,0,0,2003,2004,5,276,0,0,2004,2005,3,304,
-	152,0,2005,2006,3,302,151,0,2006,2011,1,0,0,0,2007,2008,10,40,0,0,2008,
-	2009,5,276,0,0,2009,2011,3,304,152,0,2010,1990,1,0,0,0,2010,2000,1,0,0,
-	0,2010,2002,1,0,0,0,2010,2007,1,0,0,0,2011,2014,1,0,0,0,2012,2010,1,0,0,
-	0,2012,2013,1,0,0,0,2013,301,1,0,0,0,2014,2012,1,0,0,0,2015,2016,7,43,0,
-	0,2016,2017,5,119,0,0,2017,2018,5,266,0,0,2018,2019,5,165,0,0,2019,303,
-	1,0,0,0,2020,2027,3,306,153,0,2021,2027,3,308,154,0,2022,2023,3,306,153,
-	0,2023,2024,5,212,0,0,2024,2025,3,308,154,0,2025,2027,1,0,0,0,2026,2020,
-	1,0,0,0,2026,2021,1,0,0,0,2026,2022,1,0,0,0,2027,305,1,0,0,0,2028,2029,
-	5,20,0,0,2029,2030,3,274,137,0,2030,307,1,0,0,0,2031,2032,5,21,0,0,2032,
-	2033,3,274,137,0,2033,309,1,0,0,0,2034,2035,5,4,0,0,2035,2038,3,274,137,
-	0,2036,2038,3,314,157,0,2037,2034,1,0,0,0,2037,2036,1,0,0,0,2038,311,1,
-	0,0,0,2039,2040,5,7,0,0,2040,2041,3,314,157,0,2041,313,1,0,0,0,2042,2043,
-	5,146,0,0,2043,2059,3,266,133,0,2044,2045,5,240,0,0,2045,2046,3,266,133,
-	0,2046,2047,5,142,0,0,2047,2048,3,266,133,0,2048,2059,1,0,0,0,2049,2050,
-	5,240,0,0,2050,2051,3,266,133,0,2051,2052,5,144,0,0,2052,2053,3,266,133,
-	0,2053,2059,1,0,0,0,2054,2055,5,142,0,0,2055,2059,3,266,133,0,2056,2057,
-	5,144,0,0,2057,2059,3,266,133,0,2058,2042,1,0,0,0,2058,2044,1,0,0,0,2058,
-	2049,1,0,0,0,2058,2054,1,0,0,0,2058,2056,1,0,0,0,2059,315,1,0,0,0,2060,
-	2061,5,146,0,0,2061,2077,3,318,159,0,2062,2063,5,142,0,0,2063,2077,3,318,
-	159,0,2064,2065,5,144,0,0,2065,2077,3,318,159,0,2066,2067,5,240,0,0,2067,
-	2068,3,318,159,0,2068,2069,5,142,0,0,2069,2070,3,318,159,0,2070,2077,1,
-	0,0,0,2071,2072,5,240,0,0,2072,2073,3,318,159,0,2073,2074,5,144,0,0,2074,
-	2075,3,318,159,0,2075,2077,1,0,0,0,2076,2060,1,0,0,0,2076,2062,1,0,0,0,
-	2076,2064,1,0,0,0,2076,2066,1,0,0,0,2076,2071,1,0,0,0,2077,317,1,0,0,0,
-	2078,2083,3,54,27,0,2079,2083,5,231,0,0,2080,2083,5,232,0,0,2081,2083,3,
-	216,108,0,2082,2078,1,0,0,0,2082,2079,1,0,0,0,2082,2080,1,0,0,0,2082,2081,
-	1,0,0,0,2083,319,1,0,0,0,2084,2085,5,213,0,0,2085,2091,5,186,0,0,2086,2091,
-	5,186,0,0,2087,2091,5,13,0,0,2088,2091,5,14,0,0,2089,2091,5,191,0,0,2090,
-	2084,1,0,0,0,2090,2086,1,0,0,0,2090,2087,1,0,0,0,2090,2088,1,0,0,0,2090,
-	2089,1,0,0,0,2091,321,1,0,0,0,2092,2093,7,44,0,0,2093,323,1,0,0,0,2094,
-	2098,5,229,0,0,2095,2099,3,326,163,0,2096,2099,3,328,164,0,2097,2099,3,
-	330,165,0,2098,2095,1,0,0,0,2098,2096,1,0,0,0,2098,2097,1,0,0,0,2099,2100,
-	1,0,0,0,2100,2101,5,277,0,0,2101,2105,1,0,0,0,2102,2103,5,240,0,0,2103,
-	2105,3,326,163,0,2104,2094,1,0,0,0,2104,2102,1,0,0,0,2105,325,1,0,0,0,2106,
-	2107,5,120,0,0,2107,2110,3,46,23,0,2108,2109,7,27,0,0,2109,2111,3,228,114,
-	0,2110,2108,1,0,0,0,2110,2111,1,0,0,0,2111,327,1,0,0,0,2112,2113,5,208,
-	0,0,2113,2114,3,46,23,0,2114,2115,5,146,0,0,2115,2116,3,46,23,0,2116,2117,
-	5,236,0,0,2117,2118,3,46,23,0,2118,329,1,0,0,0,2119,2120,5,208,0,0,2120,
-	2121,3,46,23,0,2121,2122,5,216,0,0,2122,2123,5,274,0,0,2123,2128,3,46,23,
-	0,2124,2125,5,276,0,0,2125,2127,3,46,23,0,2126,2124,1,0,0,0,2127,2130,1,
-	0,0,0,2128,2126,1,0,0,0,2128,2129,1,0,0,0,2129,2131,1,0,0,0,2130,2128,1,
-	0,0,0,2131,2132,5,212,0,0,2132,2133,3,46,23,0,2133,2134,5,275,0,0,2134,
-	331,1,0,0,0,2135,2136,3,300,150,0,2136,2137,7,45,0,0,2137,2162,1,0,0,0,
-	2138,2139,3,300,150,0,2139,2140,7,46,0,0,2140,2141,5,266,0,0,2141,2142,
-	5,163,0,0,2142,2162,1,0,0,0,2143,2144,3,300,150,0,2144,2145,7,47,0,0,2145,
-	2146,3,32,16,0,2146,2162,1,0,0,0,2147,2148,3,300,150,0,2148,2149,7,48,0,
-	0,2149,2150,3,32,16,0,2150,2162,1,0,0,0,2151,2152,3,300,150,0,2152,2153,
-	7,49,0,0,2153,2154,3,32,16,0,2154,2162,1,0,0,0,2155,2156,3,204,102,0,2156,
-	2157,5,88,0,0,2157,2162,1,0,0,0,2158,2159,3,300,150,0,2159,2160,5,90,0,
-	0,2160,2162,1,0,0,0,2161,2135,1,0,0,0,2161,2138,1,0,0,0,2161,2143,1,0,0,
-	0,2161,2147,1,0,0,0,2161,2151,1,0,0,0,2161,2155,1,0,0,0,2161,2158,1,0,0,
-	0,2162,333,1,0,0,0,2163,2164,5,233,0,0,2164,2165,3,46,23,0,2165,2166,5,
-	89,0,0,2166,2172,1,0,0,0,2167,2168,5,233,0,0,2168,2169,3,46,23,0,2169,2170,
-	5,90,0,0,2170,2172,1,0,0,0,2171,2163,1,0,0,0,2171,2167,1,0,0,0,2172,335,
-	1,0,0,0,2173,2174,3,204,102,0,2174,2175,3,48,24,0,2175,2176,5,106,0,0,2176,
-	2186,1,0,0,0,2177,2178,3,204,102,0,2178,2179,3,48,24,0,2179,2180,5,109,
-	0,0,2180,2186,1,0,0,0,2181,2182,3,204,102,0,2182,2183,5,109,0,0,2183,2184,
-	3,48,24,0,2184,2186,1,0,0,0,2185,2173,1,0,0,0,2185,2177,1,0,0,0,2185,2181,
-	1,0,0,0,2186,337,1,0,0,0,2187,2188,5,102,0,0,2188,2196,3,46,23,0,2189,2191,
-	5,174,0,0,2190,2192,5,265,0,0,2191,2190,1,0,0,0,2192,2193,1,0,0,0,2193,
-	2191,1,0,0,0,2193,2194,1,0,0,0,2194,2195,1,0,0,0,2195,2197,5,273,0,0,2196,
-	2189,1,0,0,0,2196,2197,1,0,0,0,2197,2199,1,0,0,0,2198,2200,5,279,0,0,2199,
-	2198,1,0,0,0,2199,2200,1,0,0,0,2200,339,1,0,0,0,2201,2202,5,270,0,0,2202,
-	341,1,0,0,0,2203,2204,3,274,137,0,2204,2205,5,112,0,0,2205,2206,3,274,137,
-	0,2206,2207,5,276,0,0,2207,2210,5,26,0,0,2208,2211,3,344,172,0,2209,2211,
-	3,346,173,0,2210,2208,1,0,0,0,2210,2209,1,0,0,0,2211,2213,1,0,0,0,2212,
-	2214,3,354,177,0,2213,2212,1,0,0,0,2213,2214,1,0,0,0,2214,343,1,0,0,0,2215,
-	2216,3,352,176,0,2216,345,1,0,0,0,2217,2218,5,278,0,0,2218,2220,3,348,174,
-	0,2219,2221,5,277,0,0,2220,2219,1,0,0,0,2220,2221,1,0,0,0,2221,347,1,0,
-	0,0,2222,2226,3,350,175,0,2223,2225,3,350,175,0,2224,2223,1,0,0,0,2225,
-	2228,1,0,0,0,2226,2224,1,0,0,0,2226,2227,1,0,0,0,2227,349,1,0,0,0,2228,
-	2226,1,0,0,0,2229,2230,5,292,0,0,2230,2232,3,352,176,0,2231,2233,7,50,0,
-	0,2232,2231,1,0,0,0,2232,2233,1,0,0,0,2233,351,1,0,0,0,2234,2249,5,194,
-	0,0,2235,2236,5,35,0,0,2236,2249,3,274,137,0,2237,2238,5,34,0,0,2238,2239,
-	7,51,0,0,2239,2249,3,274,137,0,2240,2241,5,33,0,0,2241,2249,3,352,176,0,
-	2242,2243,5,21,0,0,2243,2249,3,218,109,0,2244,2245,5,119,0,0,2245,2246,
-	5,266,0,0,2246,2247,5,165,0,0,2247,2249,5,134,0,0,2248,2234,1,0,0,0,2248,
-	2235,1,0,0,0,2248,2237,1,0,0,0,2248,2240,1,0,0,0,2248,2242,1,0,0,0,2248,
-	2244,1,0,0,0,2249,353,1,0,0,0,2250,2251,5,19,0,0,2251,2253,3,274,137,0,
-	2252,2254,5,195,0,0,2253,2252,1,0,0,0,2253,2254,1,0,0,0,2254,355,1,0,0,
-	0,254,362,364,375,380,389,393,400,404,407,412,415,419,424,435,439,443,448,
-	459,469,475,480,488,492,497,502,513,518,523,529,535,541,546,552,558,567,
-	569,572,577,582,588,594,600,605,611,617,626,628,632,635,640,645,651,657,
-	663,668,674,680,682,690,699,708,725,728,731,736,741,746,750,754,757,763,
-	767,775,778,781,789,796,803,812,819,827,835,838,845,851,862,871,875,879,
-	883,897,904,911,918,924,929,937,943,946,961,965,969,972,975,983,990,994,
-	1002,1006,1014,1023,1031,1037,1041,1043,1048,1055,1060,1066,1069,1072,1077,
-	1081,1083,1089,1106,1116,1120,1124,1138,1141,1163,1166,1185,1190,1197,1201,
-	1210,1213,1221,1226,1240,1243,1245,1250,1259,1267,1277,1283,1293,1299,1309,
-	1311,1328,1333,1340,1345,1352,1362,1367,1372,1377,1385,1394,1401,1404,1410,
-	1413,1422,1427,1430,1435,1445,1447,1451,1458,1463,1467,1474,1498,1506,1512,
-	1519,1528,1534,1543,1579,1585,1591,1600,1606,1622,1637,1642,1661,1671,1675,
-	1681,1686,1698,1709,1720,1738,1746,1754,1769,1780,1783,1796,1815,1830,1876,
-	1888,1897,1904,1908,1911,1918,1923,1930,1935,1942,1946,1953,1957,1964,1968,
-	1988,1995,2010,2012,2026,2037,2058,2076,2082,2090,2098,2104,2110,2128,2161,
-	2171,2185,2193,2196,2199,2210,2213,2220,2226,2232,2248,2253];
+	0,0,1644,1645,3,288,144,0,1645,1646,7,31,0,0,1646,1647,7,36,0,0,1647,1648,
+	3,32,16,0,1648,1681,1,0,0,0,1649,1681,3,336,168,0,1650,1681,3,312,156,0,
+	1651,1652,3,288,144,0,1652,1653,5,105,0,0,1653,1654,3,48,24,0,1654,1681,
+	1,0,0,0,1655,1656,3,288,144,0,1656,1657,5,102,0,0,1657,1658,3,48,24,0,1658,
+	1681,1,0,0,0,1659,1660,3,288,144,0,1660,1661,3,284,142,0,1661,1666,3,282,
+	141,0,1662,1663,5,272,0,0,1663,1665,3,282,141,0,1664,1662,1,0,0,0,1665,
+	1668,1,0,0,0,1666,1664,1,0,0,0,1666,1667,1,0,0,0,1667,1669,1,0,0,0,1668,
+	1666,1,0,0,0,1669,1670,5,221,0,0,1670,1671,3,282,141,0,1671,1681,1,0,0,
+	0,1672,1676,3,288,144,0,1673,1674,3,286,143,0,1674,1675,3,288,144,0,1675,
+	1677,1,0,0,0,1676,1673,1,0,0,0,1676,1677,1,0,0,0,1677,1681,1,0,0,0,1678,
+	1681,3,332,166,0,1679,1681,3,334,167,0,1680,1644,1,0,0,0,1680,1649,1,0,
+	0,0,1680,1650,1,0,0,0,1680,1651,1,0,0,0,1680,1655,1,0,0,0,1680,1659,1,0,
+	0,0,1680,1672,1,0,0,0,1680,1678,1,0,0,0,1680,1679,1,0,0,0,1681,281,1,0,
+	0,0,1682,1692,5,267,0,0,1683,1692,5,266,0,0,1684,1686,5,262,0,0,1685,1687,
+	3,102,51,0,1686,1685,1,0,0,0,1686,1687,1,0,0,0,1687,1692,1,0,0,0,1688,1692,
+	5,265,0,0,1689,1692,3,54,27,0,1690,1692,3,32,16,0,1691,1682,1,0,0,0,1691,
+	1683,1,0,0,0,1691,1684,1,0,0,0,1691,1688,1,0,0,0,1691,1689,1,0,0,0,1691,
+	1690,1,0,0,0,1692,283,1,0,0,0,1693,1694,7,37,0,0,1694,285,1,0,0,0,1695,
+	1696,7,38,0,0,1696,287,1,0,0,0,1697,1703,3,292,146,0,1698,1699,3,290,145,
+	0,1699,1700,3,292,146,0,1700,1702,1,0,0,0,1701,1698,1,0,0,0,1702,1705,1,
+	0,0,0,1703,1701,1,0,0,0,1703,1704,1,0,0,0,1704,289,1,0,0,0,1705,1703,1,
+	0,0,0,1706,1707,7,39,0,0,1707,291,1,0,0,0,1708,1714,3,296,148,0,1709,1710,
+	3,294,147,0,1710,1711,3,296,148,0,1711,1713,1,0,0,0,1712,1709,1,0,0,0,1713,
+	1716,1,0,0,0,1714,1712,1,0,0,0,1714,1715,1,0,0,0,1715,293,1,0,0,0,1716,
+	1714,1,0,0,0,1717,1718,7,40,0,0,1718,295,1,0,0,0,1719,1725,3,300,150,0,
+	1720,1721,3,298,149,0,1721,1722,3,300,150,0,1722,1724,1,0,0,0,1723,1720,
+	1,0,0,0,1724,1727,1,0,0,0,1725,1723,1,0,0,0,1725,1726,1,0,0,0,1726,297,
+	1,0,0,0,1727,1725,1,0,0,0,1728,1729,7,41,0,0,1729,299,1,0,0,0,1730,1731,
+	6,150,-1,0,1731,1732,5,129,0,0,1732,1994,3,300,150,55,1733,1734,5,288,0,
+	0,1734,1994,3,300,150,54,1735,1736,5,132,0,0,1736,1994,3,300,150,53,1737,
+	1738,5,11,0,0,1738,1739,3,300,150,0,1739,1740,5,138,0,0,1740,1743,3,300,
+	150,0,1741,1742,5,184,0,0,1742,1744,3,100,50,0,1743,1741,1,0,0,0,1743,1744,
+	1,0,0,0,1744,1994,1,0,0,0,1745,1746,5,188,0,0,1746,1747,3,300,150,0,1747,
+	1748,5,138,0,0,1748,1751,3,300,150,0,1749,1750,5,184,0,0,1750,1752,3,100,
+	50,0,1751,1749,1,0,0,0,1751,1752,1,0,0,0,1752,1994,1,0,0,0,1753,1754,5,
+	187,0,0,1754,1759,3,300,150,0,1755,1756,5,272,0,0,1756,1758,3,300,150,0,
+	1757,1755,1,0,0,0,1758,1761,1,0,0,0,1759,1757,1,0,0,0,1759,1760,1,0,0,0,
+	1760,1762,1,0,0,0,1761,1759,1,0,0,0,1762,1763,5,208,0,0,1763,1764,3,300,
+	150,50,1764,1994,1,0,0,0,1765,1766,5,187,0,0,1766,1767,5,116,0,0,1767,1994,
+	3,46,23,0,1768,1769,5,187,0,0,1769,1770,5,116,0,0,1770,1994,3,216,108,0,
+	1771,1772,5,209,0,0,1772,1775,5,182,0,0,1773,1775,5,182,0,0,1774,1771,1,
+	0,0,0,1774,1773,1,0,0,0,1775,1776,1,0,0,0,1776,1994,3,226,113,0,1777,1778,
+	5,209,0,0,1778,1779,5,182,0,0,1779,1994,3,216,108,0,1780,1781,5,182,0,0,
+	1781,1994,3,216,108,0,1782,1785,5,262,0,0,1783,1786,5,277,0,0,1784,1786,
+	5,261,0,0,1785,1783,1,0,0,0,1785,1784,1,0,0,0,1786,1789,1,0,0,0,1787,1789,
+	5,265,0,0,1788,1782,1,0,0,0,1788,1787,1,0,0,0,1789,1790,1,0,0,0,1790,1791,
+	5,236,0,0,1791,1994,3,300,150,44,1792,1793,5,265,0,0,1793,1794,5,236,0,
+	0,1794,1994,3,300,150,43,1795,1796,5,30,0,0,1796,1801,3,300,150,0,1797,
+	1798,5,272,0,0,1798,1800,3,300,150,0,1799,1797,1,0,0,0,1800,1803,1,0,0,
+	0,1801,1799,1,0,0,0,1801,1802,1,0,0,0,1802,1804,1,0,0,0,1803,1801,1,0,0,
+	0,1804,1805,7,35,0,0,1805,1806,3,300,150,39,1806,1994,1,0,0,0,1807,1808,
+	5,148,0,0,1808,1994,3,300,150,37,1809,1810,5,12,0,0,1810,1811,5,268,0,0,
+	1811,1812,3,274,137,0,1812,1813,5,269,0,0,1813,1994,1,0,0,0,1814,1815,5,
+	14,0,0,1815,1820,3,300,150,0,1816,1817,5,272,0,0,1817,1819,3,300,150,0,
+	1818,1816,1,0,0,0,1819,1822,1,0,0,0,1820,1818,1,0,0,0,1820,1821,1,0,0,0,
+	1821,1823,1,0,0,0,1822,1820,1,0,0,0,1823,1824,5,208,0,0,1824,1825,3,300,
+	150,35,1825,1994,1,0,0,0,1826,1827,5,14,0,0,1827,1828,5,116,0,0,1828,1994,
+	3,216,108,0,1829,1830,5,13,0,0,1830,1835,3,300,150,0,1831,1832,5,272,0,
+	0,1832,1834,3,300,150,0,1833,1831,1,0,0,0,1834,1837,1,0,0,0,1835,1833,1,
+	0,0,0,1835,1836,1,0,0,0,1836,1838,1,0,0,0,1837,1835,1,0,0,0,1838,1839,5,
+	208,0,0,1839,1840,3,300,150,33,1840,1994,1,0,0,0,1841,1842,5,13,0,0,1842,
+	1843,5,116,0,0,1843,1994,3,216,108,0,1844,1845,5,209,0,0,1845,1846,5,213,
+	0,0,1846,1847,5,233,0,0,1847,1994,3,300,150,31,1848,1849,5,204,0,0,1849,
+	1850,5,216,0,0,1850,1851,5,233,0,0,1851,1994,3,300,150,30,1852,1853,5,204,
+	0,0,1853,1854,5,201,0,0,1854,1855,5,233,0,0,1855,1994,3,300,150,29,1856,
+	1857,5,17,0,0,1857,1858,5,268,0,0,1858,1859,3,300,150,0,1859,1860,5,272,
+	0,0,1860,1861,3,300,150,0,1861,1862,5,272,0,0,1862,1863,3,300,150,0,1863,
+	1864,5,269,0,0,1864,1994,1,0,0,0,1865,1866,5,18,0,0,1866,1867,5,268,0,0,
+	1867,1868,3,300,150,0,1868,1869,5,269,0,0,1869,1994,1,0,0,0,1870,1871,3,
+	266,133,0,1871,1872,7,42,0,0,1872,1873,3,300,150,0,1873,1874,3,58,29,0,
+	1874,1994,1,0,0,0,1875,1876,5,183,0,0,1876,1881,3,300,150,0,1877,1878,5,
+	272,0,0,1878,1880,3,300,150,0,1879,1877,1,0,0,0,1880,1883,1,0,0,0,1881,
+	1879,1,0,0,0,1881,1882,1,0,0,0,1882,1884,1,0,0,0,1883,1881,1,0,0,0,1884,
+	1885,5,208,0,0,1885,1886,3,300,150,25,1886,1994,1,0,0,0,1887,1888,5,185,
+	0,0,1888,1893,3,300,150,0,1889,1890,5,272,0,0,1890,1892,3,300,150,0,1891,
+	1889,1,0,0,0,1892,1895,1,0,0,0,1893,1891,1,0,0,0,1893,1894,1,0,0,0,1894,
+	1896,1,0,0,0,1895,1893,1,0,0,0,1896,1897,5,208,0,0,1897,1898,3,300,150,
+	24,1898,1994,1,0,0,0,1899,1900,5,15,0,0,1900,1902,3,274,137,0,1901,1903,
+	3,310,155,0,1902,1901,1,0,0,0,1902,1903,1,0,0,0,1903,1994,1,0,0,0,1904,
+	1905,5,209,0,0,1905,1906,5,182,0,0,1906,1907,5,202,0,0,1907,1916,5,212,
+	0,0,1908,1910,5,204,0,0,1909,1908,1,0,0,0,1909,1910,1,0,0,0,1910,1911,1,
+	0,0,0,1911,1917,5,216,0,0,1912,1914,5,209,0,0,1913,1912,1,0,0,0,1913,1914,
+	1,0,0,0,1914,1915,1,0,0,0,1915,1917,5,213,0,0,1916,1909,1,0,0,0,1916,1913,
+	1,0,0,0,1917,1918,1,0,0,0,1918,1919,5,203,0,0,1919,1994,3,274,137,0,1920,
+	1922,3,32,16,0,1921,1920,1,0,0,0,1922,1923,1,0,0,0,1923,1921,1,0,0,0,1923,
+	1924,1,0,0,0,1924,1925,1,0,0,0,1925,1926,5,15,0,0,1926,1928,3,274,137,0,
+	1927,1929,3,310,155,0,1928,1927,1,0,0,0,1928,1929,1,0,0,0,1929,1994,1,0,
+	0,0,1930,1931,5,16,0,0,1931,1932,7,43,0,0,1932,1933,5,236,0,0,1933,1935,
+	3,274,137,0,1934,1936,3,310,155,0,1935,1934,1,0,0,0,1935,1936,1,0,0,0,1936,
+	1994,1,0,0,0,1937,1939,3,32,16,0,1938,1937,1,0,0,0,1939,1940,1,0,0,0,1940,
+	1938,1,0,0,0,1940,1941,1,0,0,0,1941,1942,1,0,0,0,1942,1943,5,16,0,0,1943,
+	1944,7,43,0,0,1944,1945,5,236,0,0,1945,1947,3,274,137,0,1946,1948,3,310,
+	155,0,1947,1946,1,0,0,0,1947,1948,1,0,0,0,1948,1994,1,0,0,0,1949,1952,3,
+	320,160,0,1950,1952,3,322,161,0,1951,1949,1,0,0,0,1951,1950,1,0,0,0,1952,
+	1953,1,0,0,0,1953,1954,3,218,109,0,1954,1955,3,324,162,0,1955,1994,1,0,
+	0,0,1956,1959,3,320,160,0,1957,1959,3,322,161,0,1958,1956,1,0,0,0,1958,
+	1957,1,0,0,0,1959,1962,1,0,0,0,1960,1963,3,224,112,0,1961,1963,3,216,108,
+	0,1962,1960,1,0,0,0,1962,1961,1,0,0,0,1963,1964,1,0,0,0,1964,1965,5,142,
+	0,0,1965,1966,3,46,23,0,1966,1967,5,232,0,0,1967,1969,3,46,23,0,1968,1970,
+	5,273,0,0,1969,1968,1,0,0,0,1969,1970,1,0,0,0,1970,1994,1,0,0,0,1971,1973,
+	5,262,0,0,1972,1974,3,102,51,0,1973,1972,1,0,0,0,1973,1974,1,0,0,0,1974,
+	1994,1,0,0,0,1975,1994,5,227,0,0,1976,1994,3,32,16,0,1977,1994,3,224,112,
+	0,1978,1994,3,216,108,0,1979,1994,3,204,102,0,1980,1994,3,46,23,0,1981,
+	1994,3,124,62,0,1982,1994,5,265,0,0,1983,1994,5,266,0,0,1984,1994,5,267,
+	0,0,1985,1994,3,54,27,0,1986,1994,5,241,0,0,1987,1994,5,222,0,0,1988,1994,
+	5,211,0,0,1989,1990,5,268,0,0,1990,1991,3,274,137,0,1991,1992,5,269,0,0,
+	1992,1994,1,0,0,0,1993,1730,1,0,0,0,1993,1733,1,0,0,0,1993,1735,1,0,0,0,
+	1993,1737,1,0,0,0,1993,1745,1,0,0,0,1993,1753,1,0,0,0,1993,1765,1,0,0,0,
+	1993,1768,1,0,0,0,1993,1774,1,0,0,0,1993,1777,1,0,0,0,1993,1780,1,0,0,0,
+	1993,1788,1,0,0,0,1993,1792,1,0,0,0,1993,1795,1,0,0,0,1993,1807,1,0,0,0,
+	1993,1809,1,0,0,0,1993,1814,1,0,0,0,1993,1826,1,0,0,0,1993,1829,1,0,0,0,
+	1993,1841,1,0,0,0,1993,1844,1,0,0,0,1993,1848,1,0,0,0,1993,1852,1,0,0,0,
+	1993,1856,1,0,0,0,1993,1865,1,0,0,0,1993,1870,1,0,0,0,1993,1875,1,0,0,0,
+	1993,1887,1,0,0,0,1993,1899,1,0,0,0,1993,1904,1,0,0,0,1993,1921,1,0,0,0,
+	1993,1930,1,0,0,0,1993,1938,1,0,0,0,1993,1951,1,0,0,0,1993,1958,1,0,0,0,
+	1993,1971,1,0,0,0,1993,1975,1,0,0,0,1993,1976,1,0,0,0,1993,1977,1,0,0,0,
+	1993,1978,1,0,0,0,1993,1979,1,0,0,0,1993,1980,1,0,0,0,1993,1981,1,0,0,0,
+	1993,1982,1,0,0,0,1993,1983,1,0,0,0,1993,1984,1,0,0,0,1993,1985,1,0,0,0,
+	1993,1986,1,0,0,0,1993,1987,1,0,0,0,1993,1988,1,0,0,0,1993,1989,1,0,0,0,
+	1994,2017,1,0,0,0,1995,1998,10,38,0,0,1996,1997,5,272,0,0,1997,1999,3,300,
+	150,0,1998,1996,1,0,0,0,1999,2000,1,0,0,0,2000,1998,1,0,0,0,2000,2001,1,
+	0,0,0,2001,2002,1,0,0,0,2002,2003,7,35,0,0,2003,2004,3,300,150,39,2004,
+	2016,1,0,0,0,2005,2006,10,42,0,0,2006,2016,3,302,151,0,2007,2008,10,41,
+	0,0,2008,2009,5,272,0,0,2009,2010,3,304,152,0,2010,2011,3,302,151,0,2011,
+	2016,1,0,0,0,2012,2013,10,40,0,0,2013,2014,5,272,0,0,2014,2016,3,304,152,
+	0,2015,1995,1,0,0,0,2015,2005,1,0,0,0,2015,2007,1,0,0,0,2015,2012,1,0,0,
+	0,2016,2019,1,0,0,0,2017,2015,1,0,0,0,2017,2018,1,0,0,0,2018,301,1,0,0,
+	0,2019,2017,1,0,0,0,2020,2021,7,44,0,0,2021,2022,5,115,0,0,2022,2023,5,
+	262,0,0,2023,2024,5,161,0,0,2024,303,1,0,0,0,2025,2032,3,306,153,0,2026,
+	2032,3,308,154,0,2027,2028,3,306,153,0,2028,2029,5,208,0,0,2029,2030,3,
+	308,154,0,2030,2032,1,0,0,0,2031,2025,1,0,0,0,2031,2026,1,0,0,0,2031,2027,
+	1,0,0,0,2032,305,1,0,0,0,2033,2034,5,20,0,0,2034,2035,3,274,137,0,2035,
+	307,1,0,0,0,2036,2037,5,21,0,0,2037,2038,3,274,137,0,2038,309,1,0,0,0,2039,
+	2040,5,4,0,0,2040,2043,3,274,137,0,2041,2043,3,314,157,0,2042,2039,1,0,
+	0,0,2042,2041,1,0,0,0,2043,311,1,0,0,0,2044,2045,5,7,0,0,2045,2046,3,314,
+	157,0,2046,313,1,0,0,0,2047,2048,5,142,0,0,2048,2064,3,266,133,0,2049,2050,
+	5,236,0,0,2050,2051,3,266,133,0,2051,2052,5,138,0,0,2052,2053,3,266,133,
+	0,2053,2064,1,0,0,0,2054,2055,5,236,0,0,2055,2056,3,266,133,0,2056,2057,
+	5,140,0,0,2057,2058,3,266,133,0,2058,2064,1,0,0,0,2059,2060,5,138,0,0,2060,
+	2064,3,266,133,0,2061,2062,5,140,0,0,2062,2064,3,266,133,0,2063,2047,1,
+	0,0,0,2063,2049,1,0,0,0,2063,2054,1,0,0,0,2063,2059,1,0,0,0,2063,2061,1,
+	0,0,0,2064,315,1,0,0,0,2065,2066,5,142,0,0,2066,2082,3,318,159,0,2067,2068,
+	5,138,0,0,2068,2082,3,318,159,0,2069,2070,5,140,0,0,2070,2082,3,318,159,
+	0,2071,2072,5,236,0,0,2072,2073,3,318,159,0,2073,2074,5,138,0,0,2074,2075,
+	3,318,159,0,2075,2082,1,0,0,0,2076,2077,5,236,0,0,2077,2078,3,318,159,0,
+	2078,2079,5,140,0,0,2079,2080,3,318,159,0,2080,2082,1,0,0,0,2081,2065,1,
+	0,0,0,2081,2067,1,0,0,0,2081,2069,1,0,0,0,2081,2071,1,0,0,0,2081,2076,1,
+	0,0,0,2082,317,1,0,0,0,2083,2088,3,54,27,0,2084,2088,5,227,0,0,2085,2088,
+	5,228,0,0,2086,2088,3,216,108,0,2087,2083,1,0,0,0,2087,2084,1,0,0,0,2087,
+	2085,1,0,0,0,2087,2086,1,0,0,0,2088,319,1,0,0,0,2089,2090,5,209,0,0,2090,
+	2096,5,182,0,0,2091,2096,5,182,0,0,2092,2096,5,13,0,0,2093,2096,5,14,0,
+	0,2094,2096,5,187,0,0,2095,2089,1,0,0,0,2095,2091,1,0,0,0,2095,2092,1,0,
+	0,0,2095,2093,1,0,0,0,2095,2094,1,0,0,0,2096,321,1,0,0,0,2097,2098,7,45,
+	0,0,2098,323,1,0,0,0,2099,2103,5,225,0,0,2100,2104,3,326,163,0,2101,2104,
+	3,328,164,0,2102,2104,3,330,165,0,2103,2100,1,0,0,0,2103,2101,1,0,0,0,2103,
+	2102,1,0,0,0,2104,2105,1,0,0,0,2105,2106,5,273,0,0,2106,2110,1,0,0,0,2107,
+	2108,5,236,0,0,2108,2110,3,326,163,0,2109,2099,1,0,0,0,2109,2107,1,0,0,
+	0,2110,325,1,0,0,0,2111,2112,5,116,0,0,2112,2115,3,46,23,0,2113,2114,7,
+	27,0,0,2114,2116,3,228,114,0,2115,2113,1,0,0,0,2115,2116,1,0,0,0,2116,327,
+	1,0,0,0,2117,2118,5,204,0,0,2118,2119,3,46,23,0,2119,2120,5,142,0,0,2120,
+	2121,3,46,23,0,2121,2122,5,232,0,0,2122,2123,3,46,23,0,2123,329,1,0,0,0,
+	2124,2125,5,204,0,0,2125,2126,3,46,23,0,2126,2127,5,212,0,0,2127,2128,5,
+	270,0,0,2128,2133,3,46,23,0,2129,2130,5,272,0,0,2130,2132,3,46,23,0,2131,
+	2129,1,0,0,0,2132,2135,1,0,0,0,2133,2131,1,0,0,0,2133,2134,1,0,0,0,2134,
+	2136,1,0,0,0,2135,2133,1,0,0,0,2136,2137,5,208,0,0,2137,2138,3,46,23,0,
+	2138,2139,5,271,0,0,2139,331,1,0,0,0,2140,2141,3,300,150,0,2141,2142,7,
+	46,0,0,2142,2163,1,0,0,0,2143,2144,3,300,150,0,2144,2145,7,47,0,0,2145,
+	2146,5,262,0,0,2146,2147,5,159,0,0,2147,2163,1,0,0,0,2148,2149,3,300,150,
+	0,2149,2150,7,48,0,0,2150,2151,3,32,16,0,2151,2163,1,0,0,0,2152,2153,3,
+	300,150,0,2153,2154,7,49,0,0,2154,2155,3,32,16,0,2155,2163,1,0,0,0,2156,
+	2157,3,204,102,0,2157,2158,5,84,0,0,2158,2163,1,0,0,0,2159,2160,3,300,150,
+	0,2160,2161,5,86,0,0,2161,2163,1,0,0,0,2162,2140,1,0,0,0,2162,2143,1,0,
+	0,0,2162,2148,1,0,0,0,2162,2152,1,0,0,0,2162,2156,1,0,0,0,2162,2159,1,0,
+	0,0,2163,333,1,0,0,0,2164,2165,5,229,0,0,2165,2166,3,46,23,0,2166,2167,
+	5,85,0,0,2167,2173,1,0,0,0,2168,2169,5,229,0,0,2169,2170,3,46,23,0,2170,
+	2171,5,86,0,0,2171,2173,1,0,0,0,2172,2164,1,0,0,0,2172,2168,1,0,0,0,2173,
+	335,1,0,0,0,2174,2175,3,204,102,0,2175,2176,3,48,24,0,2176,2177,5,102,0,
+	0,2177,2187,1,0,0,0,2178,2179,3,204,102,0,2179,2180,3,48,24,0,2180,2181,
+	5,105,0,0,2181,2187,1,0,0,0,2182,2183,3,204,102,0,2183,2184,5,105,0,0,2184,
+	2185,3,48,24,0,2185,2187,1,0,0,0,2186,2174,1,0,0,0,2186,2178,1,0,0,0,2186,
+	2182,1,0,0,0,2187,337,1,0,0,0,2188,2189,5,98,0,0,2189,2197,3,46,23,0,2190,
+	2192,5,170,0,0,2191,2193,5,261,0,0,2192,2191,1,0,0,0,2193,2194,1,0,0,0,
+	2194,2192,1,0,0,0,2194,2195,1,0,0,0,2195,2196,1,0,0,0,2196,2198,5,269,0,
+	0,2197,2190,1,0,0,0,2197,2198,1,0,0,0,2198,2200,1,0,0,0,2199,2201,5,275,
+	0,0,2200,2199,1,0,0,0,2200,2201,1,0,0,0,2201,339,1,0,0,0,2202,2203,5,266,
+	0,0,2203,341,1,0,0,0,2204,2205,3,274,137,0,2205,2206,5,108,0,0,2206,2207,
+	3,274,137,0,2207,2208,5,272,0,0,2208,2211,5,26,0,0,2209,2212,3,344,172,
+	0,2210,2212,3,346,173,0,2211,2209,1,0,0,0,2211,2210,1,0,0,0,2212,2214,1,
+	0,0,0,2213,2215,3,354,177,0,2214,2213,1,0,0,0,2214,2215,1,0,0,0,2215,343,
+	1,0,0,0,2216,2217,3,352,176,0,2217,345,1,0,0,0,2218,2219,5,274,0,0,2219,
+	2221,3,348,174,0,2220,2222,5,273,0,0,2221,2220,1,0,0,0,2221,2222,1,0,0,
+	0,2222,347,1,0,0,0,2223,2227,3,350,175,0,2224,2226,3,350,175,0,2225,2224,
+	1,0,0,0,2226,2229,1,0,0,0,2227,2225,1,0,0,0,2227,2228,1,0,0,0,2228,349,
+	1,0,0,0,2229,2227,1,0,0,0,2230,2231,5,288,0,0,2231,2233,3,352,176,0,2232,
+	2234,7,50,0,0,2233,2232,1,0,0,0,2233,2234,1,0,0,0,2234,351,1,0,0,0,2235,
+	2250,5,190,0,0,2236,2237,5,35,0,0,2237,2250,3,274,137,0,2238,2239,5,34,
+	0,0,2239,2240,7,51,0,0,2240,2250,3,274,137,0,2241,2242,5,33,0,0,2242,2250,
+	3,352,176,0,2243,2244,5,21,0,0,2244,2250,3,218,109,0,2245,2246,5,115,0,
+	0,2246,2247,5,262,0,0,2247,2248,5,161,0,0,2248,2250,5,130,0,0,2249,2235,
+	1,0,0,0,2249,2236,1,0,0,0,2249,2238,1,0,0,0,2249,2241,1,0,0,0,2249,2243,
+	1,0,0,0,2249,2245,1,0,0,0,2250,353,1,0,0,0,2251,2252,5,19,0,0,2252,2254,
+	3,274,137,0,2253,2255,5,191,0,0,2254,2253,1,0,0,0,2254,2255,1,0,0,0,2255,
+	355,1,0,0,0,254,362,364,375,380,389,393,400,404,407,412,415,419,424,435,
+	439,443,448,459,469,475,480,488,492,497,502,513,518,523,529,535,541,546,
+	552,558,567,569,572,577,582,588,594,600,605,611,617,626,628,632,635,640,
+	645,651,657,663,668,674,680,682,690,699,708,725,728,731,736,741,746,750,
+	754,757,763,767,775,778,781,789,796,803,812,819,827,835,838,845,851,862,
+	871,875,879,883,897,904,911,918,924,929,937,943,946,961,965,969,972,975,
+	983,990,994,1002,1006,1014,1023,1031,1037,1041,1043,1048,1055,1060,1066,
+	1069,1072,1077,1081,1083,1089,1106,1116,1120,1124,1138,1141,1163,1166,1185,
+	1190,1197,1201,1210,1213,1221,1226,1240,1243,1245,1250,1259,1267,1277,1283,
+	1293,1299,1309,1311,1328,1333,1340,1345,1352,1362,1367,1372,1377,1385,1394,
+	1401,1404,1410,1413,1422,1427,1430,1435,1445,1447,1451,1458,1463,1467,1474,
+	1498,1506,1512,1519,1528,1534,1543,1579,1585,1591,1600,1606,1622,1637,1642,
+	1666,1676,1680,1686,1691,1703,1714,1725,1743,1751,1759,1774,1785,1788,1801,
+	1820,1835,1881,1893,1902,1909,1913,1916,1923,1928,1935,1940,1947,1951,1958,
+	1962,1969,1973,1993,2000,2015,2017,2031,2042,2063,2081,2087,2095,2103,2109,
+	2115,2133,2162,2172,2186,2194,2197,2200,2211,2214,2221,2227,2233,2249,2254];
 
 	private static __ATN: ATN;
 	public static get _ATN(): ATN {
@@ -18857,6 +18855,42 @@ export class UnaryConditionExprContext extends ComparisonExpressionContext {
 		}
 	}
 }
+export class IsDagsoortExprContext extends ComparisonExpressionContext {
+	public _left!: AdditiveExpressionContext;
+	public _v!: Token;
+	public _neg!: Token;
+	public _dagsoort!: IdentifierContext;
+	constructor(parser: RegelSpraakParser, ctx: ComparisonExpressionContext) {
+		super(parser, ctx.parentCtx, ctx.invokingState);
+		super.copyFrom(ctx);
+	}
+	public additiveExpression(): AdditiveExpressionContext {
+		return this.getTypedRuleContext(AdditiveExpressionContext, 0) as AdditiveExpressionContext;
+	}
+	public identifier(): IdentifierContext {
+		return this.getTypedRuleContext(IdentifierContext, 0) as IdentifierContext;
+	}
+	public IS(): TerminalNode {
+		return this.getToken(RegelSpraakParser.IS, 0);
+	}
+	public ZIJN(): TerminalNode {
+		return this.getToken(RegelSpraakParser.ZIJN, 0);
+	}
+	public EEN(): TerminalNode {
+		return this.getToken(RegelSpraakParser.EEN, 0);
+	}
+	public GEEN(): TerminalNode {
+		return this.getToken(RegelSpraakParser.GEEN, 0);
+	}
+	// @Override
+	public accept<Result>(visitor: RegelSpraakVisitor<Result>): Result {
+		if (visitor.visitIsDagsoortExpr) {
+			return visitor.visitIsDagsoortExpr(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
 export class HeeftKenmerkExprContext extends ComparisonExpressionContext {
 	public _left!: AdditiveExpressionContext;
 	constructor(parser: RegelSpraakParser, ctx: ComparisonExpressionContext) {
@@ -21383,41 +21417,6 @@ export class UnaryRolConditionContext extends UnaryConditionContext {
 	public accept<Result>(visitor: RegelSpraakVisitor<Result>): Result {
 		if (visitor.visitUnaryRolCondition) {
 			return visitor.visitUnaryRolCondition(this);
-		} else {
-			return visitor.visitChildren(this);
-		}
-	}
-}
-export class UnaryDagsoortConditionContext extends UnaryConditionContext {
-	public _expr!: PrimaryExpressionContext;
-	public _op!: Token;
-	public _dagsoort!: IdentifierContext;
-	constructor(parser: RegelSpraakParser, ctx: UnaryConditionContext) {
-		super(parser, ctx.parentCtx, ctx.invokingState);
-		super.copyFrom(ctx);
-	}
-	public primaryExpression(): PrimaryExpressionContext {
-		return this.getTypedRuleContext(PrimaryExpressionContext, 0) as PrimaryExpressionContext;
-	}
-	public identifier(): IdentifierContext {
-		return this.getTypedRuleContext(IdentifierContext, 0) as IdentifierContext;
-	}
-	public IS_EEN_DAGSOORT(): TerminalNode {
-		return this.getToken(RegelSpraakParser.IS_EEN_DAGSOORT, 0);
-	}
-	public ZIJN_EEN_DAGSOORT(): TerminalNode {
-		return this.getToken(RegelSpraakParser.ZIJN_EEN_DAGSOORT, 0);
-	}
-	public IS_GEEN_DAGSOORT(): TerminalNode {
-		return this.getToken(RegelSpraakParser.IS_GEEN_DAGSOORT, 0);
-	}
-	public ZIJN_GEEN_DAGSOORT(): TerminalNode {
-		return this.getToken(RegelSpraakParser.ZIJN_GEEN_DAGSOORT, 0);
-	}
-	// @Override
-	public accept<Result>(visitor: RegelSpraakVisitor<Result>): Result {
-		if (visitor.visitUnaryDagsoortCondition) {
-			return visitor.visitUnaryDagsoortCondition(this);
 		} else {
 			return visitor.visitChildren(this);
 		}

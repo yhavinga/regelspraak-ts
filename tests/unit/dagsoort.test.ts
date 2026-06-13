@@ -53,7 +53,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check werkdag
                 geldig altijd
                     Een Periode is werkdag
-                    indien de startdatum is een dagsoort werkdag.
+                    indien de startdatum is een werkdag.
             `;
             
             const result = engine.parse(source);
@@ -94,7 +94,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check weekend
                 geldig altijd
                     Een Vakantie is weekenddatum
-                    indien zijn datum is een dagsoort weekend.
+                    indien zijn datum is een weekend.
             `;
             
             const result = engine.parse(source);
@@ -123,7 +123,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check feestdag
                 geldig altijd
                     Een Afspraak is feestdag
-                    indien zijn datum is een dagsoort feestdag.
+                    indien zijn datum is een feestdag.
             `;
             
             const result = engine.parse(source);
@@ -152,7 +152,7 @@ describe('Dagsoort Predicate', () => {
                 Regel NietWerkdagCheck
                 geldig altijd
                     Een Werkschema is nietWerkdag
-                    indien zijn datum is geen dagsoort werkdag.
+                    indien zijn datum is geen werkdag.
             `;
             
             const result = engine.parse(source);
@@ -184,7 +184,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check werkdag
                 geldig altijd
                     Een Planning is werkdag
-                    indien zijn datum is een dagsoort werkdag.
+                    indien zijn datum is een werkdag.
             `;
             
             const context = new Context();
@@ -213,7 +213,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check werkdag
                 geldig altijd
                     Een Planning is werkdag
-                    indien zijn datum is een dagsoort werkdag.
+                    indien zijn datum is een werkdag.
             `;
 
             const context = new Context();
@@ -245,7 +245,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check testdag
                 geldig altijd
                     Een Planning is testdag
-                    indien zijn datum is een dagsoort testdag.
+                    indien zijn datum is een testdag.
             `;
 
             const context = new Context();
@@ -272,7 +272,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check weekend
                 geldig altijd
                     Een Afspraak is weekenddatum
-                    indien zijn datum is een dagsoort weekend.
+                    indien zijn datum is een weekend.
             `;
             
             const context = new Context();
@@ -300,7 +300,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check weekend
                 geldig altijd
                     Een Afspraak is weekenddatum
-                    indien zijn datum is een dagsoort weekend.
+                    indien zijn datum is een weekend.
             `;
 
             const context = new Context();
@@ -327,7 +327,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check weekend
                 geldig altijd
                     Een Activiteit is weekenddatum
-                    indien zijn datum is een dagsoort weekend.
+                    indien zijn datum is een weekend.
             `;
             
             const context = new Context();
@@ -356,7 +356,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check feestdag
                 geldig altijd
                     Een Evenement is feestdag
-                    indien zijn datum is een dagsoort feestdag.
+                    indien zijn datum is een feestdag.
             `;
             
             const context = new Context();
@@ -385,7 +385,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check feestdag
                 geldig altijd
                     Een Viering is feestdag
-                    indien zijn datum is een dagsoort feestdag.
+                    indien zijn datum is een feestdag.
             `;
             
             const context = new Context();
@@ -414,7 +414,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check vrije dag
                 geldig altijd
                     Een Rustdag is vrij
-                    indien zijn datum is geen dagsoort werkdag.
+                    indien zijn datum is geen werkdag.
             `;
             
             const context = new Context();
@@ -443,7 +443,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check werkdag
                 geldig altijd
                     Een Planning is werkdag
-                    indien zijn datum is een dagsoort werkdag.
+                    indien zijn datum is een werkdag.
             `;
             
             const context = new Context();
@@ -472,7 +472,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check feestdag
                 geldig altijd
                     Een Feest is feestdag
-                    indien zijn datum is een dagsoort feestdag.
+                    indien zijn datum is een feestdag.
             `;
             
             const context = new Context();
@@ -501,7 +501,7 @@ describe('Dagsoort Predicate', () => {
                 Regel check feestdag
                 geldig altijd
                     Een Werkdag is feestdag
-                    indien zijn datum is een dagsoort feestdag.
+                    indien zijn datum is een feestdag.
             `;
             
             const context = new Context();

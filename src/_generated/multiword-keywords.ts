@@ -10,9 +10,9 @@ export interface MultiWordData {
 }
 
 export const multiWordKeywords: MultiWordData = {
-  "generated": "2026-06-09T08:33:55.015Z",
+  "generated": "2026-06-13T20:05:40.023Z",
   "source": "grammar/RegelSpraakLexer.g4",
-  "totalMultiWords": 130,
+  "totalMultiWords": 126,
   "byFirstWord": {
     "(voor": [
       "(voor het attribuut zonder voorzetsel):"
@@ -91,10 +91,8 @@ export const multiWordKeywords: MultiWordData = {
       "wederkerig feittype"
     ],
     "is": [
-      "is een dagsoort",
       "is eerder dan",
       "is eerder of gelijk aan",
-      "is geen dagsoort",
       "is gelijk aan",
       "is gevuld",
       "is gevuurd",
@@ -147,10 +145,8 @@ export const multiWordKeywords: MultiWordData = {
       "gelijk is aan"
     ],
     "zijn": [
-      "zijn een dagsoort",
       "zijn eerder dan",
       "zijn eerder of gelijk aan",
-      "zijn geen dagsoort",
       "zijn gelijk aan",
       "zijn gevuld",
       "zijn groter dan",
@@ -279,10 +275,8 @@ export const multiWordKeywords: MultiWordData = {
     "het volgende criterium:",
     "in gelijke delen",
     "in hele",
-    "is een dagsoort",
     "is eerder dan",
     "is eerder of gelijk aan",
-    "is geen dagsoort",
     "is gelijk aan",
     "is gevuld",
     "is gevuurd",
@@ -346,10 +340,8 @@ export const multiWordKeywords: MultiWordData = {
     "weg van nul",
     "wordt verdeeld over",
     "wordt voldaan",
-    "zijn een dagsoort",
     "zijn eerder dan",
     "zijn eerder of gelijk aan",
-    "zijn geen dagsoort",
     "zijn gelijk aan",
     "zijn gevuld",
     "zijn groter dan",

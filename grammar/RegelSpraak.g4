@@ -903,7 +903,18 @@ logicalExpression
     ;
 
 comparisonExpression
-    : subordinateClauseExpression # SubordinateClauseExpr // Try subordinate clauses first (most specific)
+    // Dagsoortcontrole (§8.1.5): "<datum> is een <dagsoort>" / "is geen <dagsoort>" (and the meervoud
+    // zijn-forms). It is the MOST specific IS-shape — verb (is/zijn) + article (een/geen) + a single
+    // dagsoort name — so it is listed first. A bare "<subject> is een <noun>" otherwise ties with the
+    // subordinate kenmerk-check (which reads "een <noun>" as a kenmerk name) and the IS comparison;
+    // the "een"/"geen" article is the discriminator, since a spec kenmerk-check is "is <kenmerk>"
+    // (no article) and object/rol membership is verb-last ("een passagier zijn"). A kenmerk-check
+    // ("hij is minderjarig") has no article after the verb, so it still falls through to the
+    // subordinate clause. The name is validated against the model's declared dagsoorten at resolution
+    // (an undeclared name is an "Unknown dagsoort" error), so this alternative cannot silently
+    // swallow a genuine non-dagsoort construct of the same shape.
+    : left=additiveExpression v=(IS | ZIJN) neg=(EEN | GEEN) dagsoort=identifier # IsDagsoortExpr
+    | subordinateClauseExpression # SubordinateClauseExpr // Try subordinate clauses first (most specific)
     | periodevergelijkingElementair # PeriodeCheckExpr // Period condition check
     | left=additiveExpression IS naamwoordWithNumbers # IsKenmerkExpr // Try IS kenmerk check - supports complex names with numbers
     | left=additiveExpression HEEFT naamwoordWithNumbers # HeeftKenmerkExpr // Try HEEFT kenmerk check - supports complex names with numbers
@@ -1136,11 +1147,11 @@ aggregerenOverBereik // EBNF 13.4.16.49 - Using naamwoord for both dimension nam
 
 // --- New Unary Conditions and Status Checks ---
 
-// Represents unary conditions like 'is leeg', 'voldoet aan...', 'is een dagsoort'
+// Represents unary conditions like 'is leeg', 'voldoet aan...' (the dagsoortcontrole
+// "is een <dagsoort>" lives in comparisonExpression as IsDagsoortExpr, not here)
 unaryCondition // Now potentially part of comparisonExpression
     : expr=primaryExpression op=(IS_LEEG | IS_GEVULD | VOLDOET_AAN_DE_ELFPROEF | VOLDOET_NIET_AAN_DE_ELFPROEF | ZIJN_LEEG | ZIJN_GEVULD | VOLDOEN_AAN_DE_ELFPROEF | VOLDOEN_NIET_AAN_DE_ELFPROEF) # unaryCheckCondition
     | expr=primaryExpression op=(IS_NUMERIEK_MET_EXACT | IS_NIET_NUMERIEK_MET_EXACT | ZIJN_NUMERIEK_MET_EXACT | ZIJN_NIET_NUMERIEK_MET_EXACT) NUMBER CIJFERS # unaryNumeriekExactCondition
-    | expr=primaryExpression op=(IS_EEN_DAGSOORT | ZIJN_EEN_DAGSOORT | IS_GEEN_DAGSOORT | ZIJN_GEEN_DAGSOORT) dagsoort=identifier # unaryDagsoortCondition
     | expr=primaryExpression op=(IS_KENMERK | ZIJN_KENMERK | IS_NIET_KENMERK | ZIJN_NIET_KENMERK) kenmerk=identifier # unaryKenmerkCondition
     | expr=primaryExpression op=(IS_ROL | ZIJN_ROL | IS_NIET_ROL | ZIJN_NIET_ROL) rol=identifier # unaryRolCondition
     | ref=onderwerpReferentie MOETEN_UNIEK_ZIJN # unaryUniekCondition // Specific for 'moeten uniek zijn'

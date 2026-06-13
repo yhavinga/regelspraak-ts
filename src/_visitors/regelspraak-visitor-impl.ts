@@ -655,6 +655,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       return this.visitUnaryConditionExpr(ctx);
     } else if (contextName === 'RegelStatusConditionExprContext') {
       return this.visitRegelStatusConditionExpr(ctx);
+    } else if (contextName === 'IsDagsoortExprContext') {
+      return this.visitIsDagsoortExpr(ctx);
     } else if (contextName === 'IsKenmerkExprContext') {
       return this.visitIsKenmerkExpr(ctx);
     } else if (contextName === 'HeeftKenmerkExprContext') {
@@ -942,8 +944,6 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
     if (contextName === 'UnaryCheckConditionContext') {
       return this.visitUnaryCheckCondition(ctx);
-    } else if (contextName === 'UnaryDagsoortConditionContext') {
-      return this.visitUnaryDagsoortCondition(ctx);
     } else if (contextName === 'UnaryUniekConditionContext') {
       return this.visitUnaryUniekCondition(ctx);
     } else if (contextName === 'UnaryNumeriekExactConditionContext') {
@@ -953,39 +953,23 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     }
   }
 
-  visitUnaryDagsoortCondition(ctx: any): Expression {
-    // expr=primaryExpression op=(IS_EEN_DAGSOORT | ...) dagsoort=identifier
-    const expr = this.visit(ctx.primaryExpression());
+  visitIsDagsoortExpr(ctx: any): Expression {
+    // Grammar (comparisonExpression): left=additiveExpression v=(IS|ZIJN) neg=(EEN|GEEN) dagsoort=identifier
+    // The dagsoortcontrole (§8.1.5): the left operand is a datumexpressie, the verb (is/zijn) carries
+    // number and the article (een/geen) carries polarity. The operator string keeps the literal word
+    // "dagsoort" as the internal predicate tag — the AST contract the resolver and engine already
+    // consume — even though the surface form no longer spells it (spec "is een <dagsoort>").
+    const expr = this.visit(ctx.additiveExpression());
 
-    // Get the dagsoort identifier
     const dagsoortCtx = ctx.identifier();
     if (!dagsoortCtx) {
-      throw new Error('Expected dagsoort identifier');
+      throw new Error('Expected dagsoort name in dagsoortcontrole');
     }
     const dagsoortName = dagsoortCtx.getText();
 
-    // Get the operator - use the private _op property
-    const opToken = ctx._op;
-    if (!opToken) {
-      throw new Error('Expected operator token in dagsoort condition');
-    }
-
-    let binaryOp: string;
-
-    if (opToken.type === RegelSpraakLexer.IS_EEN_DAGSOORT) {
-      binaryOp = 'is een dagsoort';
-    } else if (opToken.type === RegelSpraakLexer.ZIJN_EEN_DAGSOORT) {
-      binaryOp = 'zijn een dagsoort';
-    } else if (opToken.type === RegelSpraakLexer.IS_GEEN_DAGSOORT) {
-      binaryOp = 'is geen dagsoort';
-    } else if (opToken.type === RegelSpraakLexer.ZIJN_GEEN_DAGSOORT) {
-      binaryOp = 'zijn geen dagsoort';
-    } else {
-      throw new Error(`Unknown dagsoort operator token type: ${opToken.type}`);
-    }
-
-    // Determine if negated
-    const negated = binaryOp.includes('geen');
+    const plural = ctx._v?.type === RegelSpraakLexer.ZIJN;
+    const negated = ctx._neg?.type === RegelSpraakLexer.GEEN;
+    const binaryOp = `${plural ? 'zijn' : 'is'} ${negated ? 'geen' : 'een'} dagsoort`;
 
     // Create a binary expression with unified predicate
     const node: any = {
