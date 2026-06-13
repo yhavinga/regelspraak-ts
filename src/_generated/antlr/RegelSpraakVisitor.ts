@@ -14,6 +14,7 @@ import { BeslistabelCellValueContext } from "./RegelSpraakParser";
 import { BeslistabelColumnTextContext } from "./RegelSpraakParser";
 import { BeslistabelGelijkstellingHeaderContext } from "./RegelSpraakParser";
 import { BeslistabelKenmerkHeaderContext } from "./RegelSpraakParser";
+import { BeslistabelDagsoortVoorwaardeHeaderContext } from "./RegelSpraakParser";
 import { BeslistabelAttribuutVoorwaardeHeaderContext } from "./RegelSpraakParser";
 import { BeslistabelKenmerkVoorwaardeHeaderContext } from "./RegelSpraakParser";
 import { BeslistabelAttribuutHeaderContext } from "./RegelSpraakParser";
@@ -351,6 +352,13 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitBeslistabelKenmerkHeader?: (ctx: BeslistabelKenmerkHeaderContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `BeslistabelDagsoortVoorwaardeHeader`
+	 * labeled alternative in `RegelSpraakParser.beslistabelVoorwaardeHeader`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBeslistabelDagsoortVoorwaardeHeader?: (ctx: BeslistabelDagsoortVoorwaardeHeaderContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `BeslistabelAttribuutVoorwaardeHeader`
 	 * labeled alternative in `RegelSpraakParser.beslistabelVoorwaardeHeader`.

@@ -59,7 +59,13 @@ beslistabelResultaatHeader
     ;
 
 beslistabelVoorwaardeHeader
-    : INDIEN beslistabelAttribuutHeader comparisonOperator EOF          # BeslistabelAttribuutVoorwaardeHeader
+    // Dagsoortcontrole (§8.1.5) as a condition column: "indien <datum> is een <dagsoort>". The
+    // left is a datum attribute, so it reuses beslistabelAttribuutHeader; the "is een/geen" verb
+    // phrase distinguishes it from the attribuut form (which ends in a comparisonOperator) and the
+    // kenmerk form (which ends in HEEFT). The day-type name is a kenmerkNaam, so a multi-word name
+    // (e.g. "tweede paasdag") parses here. Listed first as the most specific.
+    : INDIEN beslistabelAttribuutHeader v=(IS | ZIJN) neg=(EEN | GEEN) dagsoort=kenmerkNaam EOF # BeslistabelDagsoortVoorwaardeHeader
+    | INDIEN beslistabelAttribuutHeader comparisonOperator EOF          # BeslistabelAttribuutVoorwaardeHeader
     | INDIEN onderwerpReferentie (EEN | DE | HET)? kenmerkNaam HEEFT EOF # BeslistabelKenmerkVoorwaardeHeader
     ;
 

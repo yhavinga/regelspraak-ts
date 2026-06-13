@@ -459,6 +459,37 @@ geldig altijd
         expect(model.beslistabels[0].rows[0].conditionValues).toHaveLength(1);
       });
 
+      test('parses a dagsoortcontrole condition column, including a multi-word day-type', () => {
+        const parser = new AntlrParser();
+        const model = parser.parseModel(`Dagsoort de kerstdag (mv: kerstdagen)
+Dagsoort de tweede paasdag (mv: tweede paasdagen)
+
+Objecttype de Vlucht (mv: vluchten) (bezield)
+  de vertrekdatum Datum in dagen;
+  de toeslag Numeriek;
+
+Beslistabel Toeslag
+geldig altijd
+| | de toeslag van een Vlucht moet gesteld worden op | indien zijn vertrekdatum is een kerstdag | indien zijn vertrekdatum is geen tweede paasdag |
+|---|---|---|---|
+| 1 | 100 | waar | n.v.t. |
+| 2 | 0 | n.v.t. | waar |`);
+
+        const version = model.beslistabels[0].versions![0];
+        expect(version.conditionColumns[0].condition).toMatchObject({
+          isDagsoortCheck: true,
+          dagsoortName: 'kerstdag',
+          dagsoortNegated: false
+        });
+        // A multi-word day-type name parses here (the column header uses kenmerkNaam),
+        // and "is geen" sets the negation flag.
+        expect(version.conditionColumns[1].condition).toMatchObject({
+          isDagsoortCheck: true,
+          dagsoortName: 'tweede paasdag',
+          dagsoortNegated: true
+        });
+      });
+
       test('should execute every conclusion column for the first matching row', () => {
         const decisionTable = `Beslistabel Test
   geldig altijd

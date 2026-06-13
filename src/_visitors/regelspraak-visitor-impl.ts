@@ -7047,6 +7047,22 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     };
   }
 
+  visitBeslistabelDagsoortVoorwaardeHeader(ctx: any): DecisionTableCondition {
+    // Grammar: INDIEN beslistabelAttribuutHeader v=(IS|ZIJN) neg=(EEN|GEEN) dagsoort=kenmerkNaam
+    // A dagsoortcontrole condition column: the left is a datum attribute, the verb carries number
+    // (immaterial to the check), and the article carries polarity. The day-type name is kept raw so
+    // the transpiler derives the same membership method as the rule-condition form.
+    return {
+      type: 'DecisionTableCondition',
+      headerText: '',
+      subjectExpression: this.visitBeslistabelAttribuutHeader(ctx.beslistabelAttribuutHeader()),
+      operator: '==',
+      isDagsoortCheck: true,
+      dagsoortName: this.extractTextWithSpaces(ctx.kenmerkNaam()).trim(),
+      dagsoortNegated: ctx._neg?.type === RegelSpraakLexer.GEEN
+    };
+  }
+
   visitBeslistabelAttribuutHeader(ctx: any): AttributeReference | SubselectieExpression | DimensionedAttributeReference | BinaryExpression {
     const attributeNameCtx = ctx.beslistabelAttribuutNaam ? ctx.beslistabelAttribuutNaam() : null;
     if (!attributeNameCtx) {

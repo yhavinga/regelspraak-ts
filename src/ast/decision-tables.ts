@@ -13,6 +13,9 @@ export interface DecisionTableCondition {
   operator?: string; // Comparison operator
   isKenmerkCheck?: boolean; // Whether this is a kenmerk check
   kenmerkName?: string; // Name of kenmerk for kenmerk checks
+  isDagsoortCheck?: boolean; // Whether this is a dagsoortcontrole (§8.1.5)
+  dagsoortName?: string; // Day-type name for a dagsoortcontrole
+  dagsoortNegated?: boolean; // "is geen <dagsoort>" rather than "is een"
 }
 
 export interface DecisionTableResult {
