@@ -865,7 +865,15 @@ simpleExpressie
     | comparisonExpression                                     # SimpleExprBase
     ;
 
-// Logical operators (EN, OF) at expression level
+// Logical operators (EN, OF) at expression level.
+// EN and OF sit at ONE flat, right-associative level — EN is deliberately NOT
+// given precedence over OF. The spec defines operator precedence only for
+// arithmetic (§ "maal/gedeeld door before plus/min"); it gives en/of none,
+// because compound logic is written with the structured samengestelde voorwaarde
+// ("aan alle/ten minste van de volgende voorwaarden", §10.2) — each condition a
+// separate list item, no inline precedence to resolve — and inline expressions
+// use haakjes for explicit grouping. Imposing EN-over-OF here would invent
+// semantics the spec does not sanction, so the flat form stays.
 logicalExpression
     : left=comparisonExpression ( op=(EN | OF) right=logicalExpression )? # LogicalExpr
     ;
