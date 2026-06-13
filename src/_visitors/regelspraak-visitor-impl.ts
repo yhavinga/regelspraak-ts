@@ -3809,11 +3809,14 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       return node;
     }
 
-    // Pattern 2: onderwerpReferentie eenzijdigeObjectVergelijking (object/role check)
+    // Pattern 2: [onderwerpReferentie] eenzijdigeObjectVergelijking (kenmerk/rol check). The
+    // onderwerp is optional: written without one ("minderjarig zijn") the check is on the
+    // element the predicate filters; with one ("hij is een passagier") it names that element
+    // explicitly. Both resolve against the element scope.
     const onderwerpRefCtx = ctx.onderwerpReferentie ? ctx.onderwerpReferentie() : null;
     const eenzijdigeCtx = ctx.eenzijdigeObjectVergelijking ? ctx.eenzijdigeObjectVergelijking() : null;
-    if (onderwerpRefCtx && eenzijdigeCtx) {
-      const onderwerp = this.visitOnderwerpReferentie(onderwerpRefCtx);
+    if (eenzijdigeCtx) {
+      const onderwerp = onderwerpRefCtx ? this.visitOnderwerpReferentie(onderwerpRefCtx) : undefined;
 
       // Extract the kenmerk or rol name from eenzijdigeObjectVergelijking
       let kenmerkNaam = '';
