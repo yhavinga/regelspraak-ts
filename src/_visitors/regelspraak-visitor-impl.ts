@@ -2484,11 +2484,29 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
           path: collectionPath
         };
 
+        // A "die/dat <predicaat>" after "alle <collection>" is a subselectie (§5.6):
+        // it filters the aggregated collection per element. The grammar attaches the
+        // predicaat to aggregerenOverAlleDimensies, so wrap the collection in a
+        // SubselectieExpression here — otherwise the filter is silently dropped and the
+        // aggregation would reduce over the whole, unfiltered collection.
+        const aggPredicaatCtx = aggCtx.predicaat ? aggCtx.predicaat() : null;
+        let collectionArg: Expression = collectionRef;
+        if (aggPredicaatCtx && ((aggCtx.DIE && aggCtx.DIE()) || (aggCtx.DAT && aggCtx.DAT()))) {
+          const predicaat = this.visitPredicaat(aggPredicaatCtx);
+          const subselectie = {
+            type: 'SubselectieExpression',
+            collection: collectionRef,
+            predicaat
+          } as SubselectieExpression;
+          this.setLocation(subselectie, ctx);
+          collectionArg = subselectie;
+        }
+
         // Return FunctionCall with both arguments
         const node = {
           type: 'FunctionCall',
           functionName,
-          arguments: [attrRef, collectionRef]
+          arguments: [attrRef, collectionArg]
         } as FunctionCall;
         this.setLocation(node, ctx);
         return node;
