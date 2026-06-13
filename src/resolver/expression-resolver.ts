@@ -2291,6 +2291,9 @@ function resolveUnifiedPredicateExpressions(
     case 'SimplePredicate':
       if (predicate.left) resolveExpressionInternal(predicate.left, context, maps);
       if (predicate.right) resolveExpressionInternal(predicate.right, context, maps);
+      // "zijn reis is duurzaam": resolve the hop to the related object — and thereby
+      // validate the kenmerk on it — so the transpiler reads the resolved relation path.
+      if (predicate.navigation) resolveExpressionInternal(predicate.navigation, context, maps);
       return;
     case 'AttributePredicate':
       resolvePredicateAttribute(predicate, context, maps);

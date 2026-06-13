@@ -790,10 +790,15 @@ elementaireVoorwaardeInPredicaat
     ;
 
 vergelijkingInPredicaat
-    : (attribuutReferentie | bezieldeReferentie) comparisonOperator expressie    // "zijn leeftijd is groter dan 65" / "de leeftijd van hij is groter dan 65"
+    // The kenmerk-check alternative precedes the comparison: bare "is"/"zijn" is itself a
+    // comparisonOperator and a bare word is an expressie, so "<onderwerp> is <kenmerk>"
+    // matches both. Listing the kenmerk-check first makes that reading win the tie, while a
+    // real comparison ("is kleiner dan", a single IS_KLEINER_DAN token) cannot match the
+    // bare (IS | ZIJN) here and so falls through to the comparison alternative.
+    : (attribuutReferentie | bezieldeReferentie) (IS | ZIJN) kenmerkNaam         // "zijn reis is duurzaam" / "de reis van hem is duurzaam"
+    | (attribuutReferentie | bezieldeReferentie) comparisonOperator expressie    // "zijn leeftijd is groter dan 65" / "de leeftijd van hij is groter dan 65"
     | onderwerpReferentie eenzijdigeObjectVergelijking    // "hij is een passagier"
     | eenzijdigeObjectVergelijking                        // "minderjarig zijn" / "een passagier zijn" — kenmerk/rol check on the element
-    | attribuutReferentie (IS | ZIJN) kenmerkNaam        // "zijn reis is duurzaam"
     ;
 
 genesteSamengesteldeVoorwaardeInPredicaat

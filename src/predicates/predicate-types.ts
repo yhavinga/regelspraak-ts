@@ -22,7 +22,8 @@ export interface SimplePredicate extends Predicate {
   left?: Expression;  // For comparisons
   right?: Expression; // For comparisons
   kenmerk?: string;   // For kenmerk checks
-  dagsoort?: string;  // For dagsoort checks  
+  navigation?: Expression; // For a kenmerk checked on a navigated related object ("zijn reis is duurzaam"): the hop to that object, ending on the kenmerk, resolved to a relation path
+  dagsoort?: string;  // For dagsoort checks
   digits?: number;    // For numeriek exact checks
   negated?: boolean;  // For negated forms (e.g., "is niet", "voldoet niet aan")
 }

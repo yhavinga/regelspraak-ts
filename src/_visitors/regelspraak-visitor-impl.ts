@@ -3777,9 +3777,10 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
   visitVergelijkingInPredicaat(ctx: any): VergelijkingInPredicaat {
     // vergelijkingInPredicaat
-    //   : attribuutReferentie comparisonOperator expressie  // "zijn leeftijd is groter dan 65"
-    //   | onderwerpReferentie eenzijdigeObjectVergelijking  // "hij is een passagier"
-    //   | attribuutReferentie (IS | ZIJN) kenmerkNaam       // "zijn reis is duurzaam"
+    //   : (attribuutReferentie | bezieldeReferentie) (IS | ZIJN) kenmerkNaam     // "zijn reis is duurzaam"
+    //   | (attribuutReferentie | bezieldeReferentie) comparisonOperator expressie // "zijn leeftijd is groter dan 65"
+    //   | onderwerpReferentie eenzijdigeObjectVergelijking                       // "hij is een passagier"
+    //   | eenzijdigeObjectVergelijking                                           // "minderjarig zijn"
 
     const attrRefCtx = ctx.attribuutReferentie ? ctx.attribuutReferentie() : null;
     const bezieldeCtx = ctx.bezieldeReferentie ? ctx.bezieldeReferentie() : null;
@@ -3839,10 +3840,14 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       return node;
     }
 
-    // Pattern 3: attribuutReferentie IS/ZIJN kenmerkNaam (kenmerk check)
+    // Pattern 3: (attribuutReferentie | bezieldeReferentie) IS/ZIJN kenmerkNaam — a kenmerk
+    // checked on the element or on an object it navigates to ("zijn reis is duurzaam"). The
+    // possessive and the van-chain denote the same navigated subject and resolve identically.
     const kenmerkNaamCtx = ctx.kenmerkNaam ? ctx.kenmerkNaam() : null;
-    if (attrRefCtx && kenmerkNaamCtx) {
-      const attribuut = this.visitAttribuutReferentie(attrRefCtx);
+    if ((attrRefCtx || bezieldeCtx) && kenmerkNaamCtx) {
+      const attribuut = attrRefCtx
+        ? this.visitAttribuutReferentie(attrRefCtx)
+        : this.bezieldeReferentieToAttribute(bezieldeCtx);
       const kenmerkNaam = this.extractTextWithSpaces(kenmerkNaamCtx).trim();
 
       const node: VergelijkingInPredicaat = {
@@ -3953,11 +3958,25 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     }
 
     // kenmerk_check or object_check - use SimplePredicate
-    return {
+    const predicate: SimplePredicate = {
       type: 'SimplePredicate',
       operator: 'kenmerk',
       kenmerk: v.kenmerkNaam
-    } as SimplePredicate;
+    };
+    // "zijn reis is duurzaam": the kenmerk lives on an object the element navigates to, not
+    // on the element itself. Carry that hop (the navigated reference, extended with the
+    // kenmerk) so the resolver resolves element → related ObjectType → kenmerk and the
+    // transpiler can join across the relation rather than read a field off the element.
+    if (v.vergelijkingType === 'kenmerk_check' &&
+        v.attribuut?.type === 'AttributeReference' &&
+        Array.isArray((v.attribuut as AttributeReference).path) &&
+        v.kenmerkNaam) {
+      predicate.navigation = {
+        type: 'AttributeReference',
+        path: [...(v.attribuut as AttributeReference).path, v.kenmerkNaam]
+      } as AttributeReference;
+    }
+    return predicate;
   }
 
   private mapOperator(op: string): string {
