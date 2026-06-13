@@ -174,6 +174,61 @@ describe('Dagsoort Predicate', () => {
             });
         });
 
+        test('should parse the vragend (verb-last) form "een <dagsoort> is" (§13.4.11)', () => {
+            const source = `
+                Dagsoort de kerstdag (mv: kerstdagen)
+
+                Objecttype de Afspraak
+                    de datum Datum;
+                    is bijzonder kenmerk;
+
+                Regel check
+                geldig altijd
+                    Een Afspraak is bijzonder
+                    indien zijn datum een kerstdag is.
+            `;
+
+            const result = engine.parse(source);
+
+            expect(result.success).toBe(true);
+            // The vragend form parses to the same AST tag as the stellend "is een kerstdag".
+            expect(result.ast?.rules[0].condition).toMatchObject({
+                type: 'Voorwaarde',
+                expression: {
+                    type: 'BinaryExpression',
+                    operator: 'is een dagsoort',
+                    right: { type: 'StringLiteral', value: 'kerstdag' }
+                }
+            });
+        });
+
+        test('should parse the vragend negative form "geen <dagsoort> is"', () => {
+            const source = `
+                Dagsoort de kerstdag (mv: kerstdagen)
+
+                Objecttype de Afspraak
+                    de datum Datum;
+                    is bijzonder kenmerk;
+
+                Regel check
+                geldig altijd
+                    Een Afspraak is bijzonder
+                    indien zijn datum geen kerstdag is.
+            `;
+
+            const result = engine.parse(source);
+
+            expect(result.success).toBe(true);
+            expect(result.ast?.rules[0].condition).toMatchObject({
+                type: 'Voorwaarde',
+                expression: {
+                    type: 'BinaryExpression',
+                    operator: 'is geen dagsoort',
+                    right: { type: 'StringLiteral', value: 'kerstdag' }
+                }
+            });
+        });
+
         test('should parse negative dagsoort predicates', () => {
             const source = `
                 Objecttype de Werkschema

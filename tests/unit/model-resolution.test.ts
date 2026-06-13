@@ -704,4 +704,17 @@ De status van een Passagier moet berekend worden als 1 indien zijn correctie is 
     expect(check).toBeDefined();
     expect(check.resolved?.resolvedType).toMatchObject({ type: 'Boolean' });
   });
+
+  // §13.4.11 form 26 also gives the verb-last "leeg is"; it must carry the same operator
+  // tag as the verb-first "is leeg" so the resolver and any consumer treat them identically.
+  test('accepts the verb-last "leeg is" form (§13.4.11) with the same operator tag', () => {
+    const model = new AntlrParser().parseModel(
+      source.replace('zijn correctie is leeg', 'zijn correctie leeg is'),
+    );
+    const result = resolveModel(model, { strict: true });
+    expect(result.success).toBe(true);
+    const check = findNode(model, n => n.type === 'UnaryExpression' && n.operator === 'is leeg');
+    expect(check).toBeDefined();
+    expect(check.resolved?.resolvedType).toMatchObject({ type: 'Boolean' });
+  });
 });

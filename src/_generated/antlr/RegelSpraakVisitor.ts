@@ -160,6 +160,7 @@ import { SimpleExprAfrondingContext } from "./RegelSpraakParser";
 import { SimpleExprBaseContext } from "./RegelSpraakParser";
 import { LogicalExprContext } from "./RegelSpraakParser";
 import { IsDagsoortExprContext } from "./RegelSpraakParser";
+import { DagsoortVragendExprContext } from "./RegelSpraakParser";
 import { SubordinateClauseExprContext } from "./RegelSpraakParser";
 import { PeriodeCheckExprContext } from "./RegelSpraakParser";
 import { IsKenmerkExprContext } from "./RegelSpraakParser";
@@ -250,6 +251,7 @@ import { AggregerenOverAlleDimensiesContext } from "./RegelSpraakParser";
 import { AggregerenOverVerzamelingContext } from "./RegelSpraakParser";
 import { AggregerenOverBereikContext } from "./RegelSpraakParser";
 import { UnaryCheckConditionContext } from "./RegelSpraakParser";
+import { UnaryCheckVragendConditionContext } from "./RegelSpraakParser";
 import { UnaryNumeriekExactConditionContext } from "./RegelSpraakParser";
 import { UnaryKenmerkConditionContext } from "./RegelSpraakParser";
 import { UnaryRolConditionContext } from "./RegelSpraakParser";
@@ -1250,6 +1252,13 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitIsDagsoortExpr?: (ctx: IsDagsoortExprContext) => Result;
 	/**
+	 * Visit a parse tree produced by the `DagsoortVragendExpr`
+	 * labeled alternative in `RegelSpraakParser.comparisonExpression`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDagsoortVragendExpr?: (ctx: DagsoortVragendExprContext) => Result;
+	/**
 	 * Visit a parse tree produced by the `SubordinateClauseExpr`
 	 * labeled alternative in `RegelSpraakParser.comparisonExpression`.
 	 * @param ctx the parse tree
@@ -1856,6 +1865,13 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitUnaryCheckCondition?: (ctx: UnaryCheckConditionContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `unaryCheckVragendCondition`
+	 * labeled alternative in `RegelSpraakParser.unaryCondition`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUnaryCheckVragendCondition?: (ctx: UnaryCheckVragendConditionContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `unaryNumeriekExactCondition`
 	 * labeled alternative in `RegelSpraakParser.unaryCondition`.

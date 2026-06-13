@@ -655,7 +655,9 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       return this.visitUnaryConditionExpr(ctx);
     } else if (contextName === 'RegelStatusConditionExprContext') {
       return this.visitRegelStatusConditionExpr(ctx);
-    } else if (contextName === 'IsDagsoortExprContext') {
+    } else if (contextName === 'IsDagsoortExprContext' || contextName === 'DagsoortVragendExprContext') {
+      // The stellend ("is een <dagsoort>") and vragend ("een <dagsoort> is") forms label their
+      // operands identically (left/v/neg/dagsoort), so one visitor reads both.
       return this.visitIsDagsoortExpr(ctx);
     } else if (contextName === 'IsKenmerkExprContext') {
       return this.visitIsKenmerkExpr(ctx);
@@ -944,6 +946,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
     if (contextName === 'UnaryCheckConditionContext') {
       return this.visitUnaryCheckCondition(ctx);
+    } else if (contextName === 'UnaryCheckVragendConditionContext') {
+      return this.visitUnaryCheckVragendCondition(ctx);
     } else if (contextName === 'UnaryUniekConditionContext') {
       return this.visitUnaryUniekCondition(ctx);
     } else if (contextName === 'UnaryNumeriekExactConditionContext') {
@@ -5864,6 +5868,24 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       type: 'UnaryExpression',
       operator: operator,
       operand: operand
+    };
+    this.setLocation(node, ctx);
+    return node;
+  }
+
+  visitUnaryCheckVragendCondition(ctx: any): any {
+    // Grammar: expr=primaryExpression check=(LEEG|GEVULD) v=(IS|ZIJN) — the verb-last emptiness
+    // check ("<datum> leeg is" / "gevuld zijn"). The verb carries number, the check word the
+    // polarity; the operator tag keeps the verb-first canonical form its sibling produces, so the
+    // resolver and transpiler treat the two surface forms identically.
+    const operand = this.visit(ctx.primaryExpression());
+    const filled = ctx._check?.type === RegelSpraakLexer.GEVULD;
+    const plural = ctx._v?.type === RegelSpraakLexer.ZIJN;
+    const operator = `${plural ? 'zijn' : 'is'} ${filled ? 'gevuld' : 'leeg'}`;
+    const node = {
+      type: 'UnaryExpression',
+      operator,
+      operand
     };
     this.setLocation(node, ctx);
     return node;
