@@ -205,10 +205,19 @@ naamwoordNoIs // Used for object type names
     : naamPhraseNoIs ( voorzetsel naamPhraseNoIs )*
     ;
 
+// voorzetsel — used by naamwoord (naamPhrase (voorzetsel naamPhrase)*) to glue a
+// multi-word name together, and by onderwerpReferentie.
+// EN and OF are NOT prepositions — they are conjunctions — but they stay here ON
+// PURPOSE: RegelSpraak names embed them, e.g. the kenmerk "passagier van 65 jaar
+// of ouder" or a "kosten en baten" attribute. Dropping them to "tighten" the rule
+// would make those legitimate spec names fail to parse. The cost is that en/of are
+// over-accepted as name glue where they could be meant as logical operators, but
+// ANTLR's adaptive parse resolves that per context and it produces no wrong
+// output — so this stays as documented, deliberate over-acceptance.
 voorzetsel // Used by naamwoord and onderwerpReferentie
     : VAN | IN | VOOR | OVER | OP | BIJ | UIT | TOT | EN | MET
-    | OF         // Add OF for "of ouder" patterns
-    | TOT_EN_MET // Add for "18 tot en met 24" patterns  
+    | OF         // conjunction, kept for names like "65 jaar of ouder" (see note above)
+    | TOT_EN_MET // for "18 tot en met 24" patterns
     ;
 
 datumLiteral : DATE_TIME_LITERAL ;
