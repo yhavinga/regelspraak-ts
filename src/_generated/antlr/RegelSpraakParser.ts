@@ -9250,7 +9250,7 @@ export default class RegelSpraakParser extends Parser {
 				    this.consume();
 				}
 				this.state = 1654;
-				(localctx as IsDagsoortExprContext)._dagsoort = this.identifier();
+				(localctx as IsDagsoortExprContext)._dagsoort = this.naamwoord();
 				}
 				break;
 			case 2:
@@ -13034,7 +13034,7 @@ export default class RegelSpraakParser extends Parser {
 	1643,1,0,0,0,1645,277,1,0,0,0,1646,1649,3,280,140,0,1647,1648,7,36,0,0,
 	1648,1650,3,278,139,0,1649,1647,1,0,0,0,1649,1650,1,0,0,0,1650,279,1,0,
 	0,0,1651,1652,3,288,144,0,1652,1653,7,2,0,0,1653,1654,7,3,0,0,1654,1655,
-	3,32,16,0,1655,1688,1,0,0,0,1656,1688,3,336,168,0,1657,1688,3,312,156,0,
+	3,46,23,0,1655,1688,1,0,0,0,1656,1688,3,336,168,0,1657,1688,3,312,156,0,
 	1658,1659,3,288,144,0,1659,1660,5,105,0,0,1660,1661,3,48,24,0,1661,1688,
 	1,0,0,0,1662,1663,3,288,144,0,1663,1664,5,102,0,0,1664,1665,3,48,24,0,1665,
 	1688,1,0,0,0,1666,1667,3,288,144,0,1667,1668,3,284,142,0,1668,1673,3,282,
@@ -18937,7 +18937,7 @@ export class IsDagsoortExprContext extends ComparisonExpressionContext {
 	public _left!: AdditiveExpressionContext;
 	public _v!: Token;
 	public _neg!: Token;
-	public _dagsoort!: IdentifierContext;
+	public _dagsoort!: NaamwoordContext;
 	constructor(parser: RegelSpraakParser, ctx: ComparisonExpressionContext) {
 		super(parser, ctx.parentCtx, ctx.invokingState);
 		super.copyFrom(ctx);
@@ -18945,8 +18945,8 @@ export class IsDagsoortExprContext extends ComparisonExpressionContext {
 	public additiveExpression(): AdditiveExpressionContext {
 		return this.getTypedRuleContext(AdditiveExpressionContext, 0) as AdditiveExpressionContext;
 	}
-	public identifier(): IdentifierContext {
-		return this.getTypedRuleContext(IdentifierContext, 0) as IdentifierContext;
+	public naamwoord(): NaamwoordContext {
+		return this.getTypedRuleContext(NaamwoordContext, 0) as NaamwoordContext;
 	}
 	public IS(): TerminalNode {
 		return this.getToken(RegelSpraakParser.IS, 0);

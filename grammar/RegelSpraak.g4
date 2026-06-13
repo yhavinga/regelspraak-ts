@@ -910,16 +910,17 @@ logicalExpression
 
 comparisonExpression
     // Dagsoortcontrole (§8.1.5): "<datum> is een <dagsoort>" / "is geen <dagsoort>" (and the meervoud
-    // zijn-forms). It is the MOST specific IS-shape — verb (is/zijn) + article (een/geen) + a single
-    // dagsoort name — so it is listed first. A bare "<subject> is een <noun>" otherwise ties with the
-    // subordinate kenmerk-check (which reads "een <noun>" as a kenmerk name) and the IS comparison;
-    // the "een"/"geen" article is the discriminator, since a spec kenmerk-check is "is <kenmerk>"
-    // (no article) and object/rol membership is verb-last ("een passagier zijn"). A kenmerk-check
-    // ("hij is minderjarig") has no article after the verb, so it still falls through to the
-    // subordinate clause. The name is validated against the model's declared dagsoorten at resolution
-    // (an undeclared name is an "Unknown dagsoort" error), so this alternative cannot silently
-    // swallow a genuine non-dagsoort construct of the same shape.
-    : left=additiveExpression v=(IS | ZIJN) neg=(EEN | GEEN) dagsoort=identifier # IsDagsoortExpr
+    // zijn-forms). It is the MOST specific IS-shape — verb (is/zijn) + article (een/geen) + a dagsoort
+    // name — so it is listed first. A bare "<subject> is een <noun>" otherwise ties with the IS
+    // comparison; the "een"/"geen" article is the discriminator, since a spec kenmerk-check is
+    // "is <kenmerk>" (no article) and object/rol membership is verb-last ("een passagier zijn"), so a
+    // kenmerk-check ("hij is minderjarig") still falls through. The name is a naamwoord, so a
+    // multi-word day-type ("tweede paasdag") parses; it is validated against the model's declared
+    // dagsoorten at resolution (an undeclared name is an "Unknown dagsoort" error). This is safe even
+    // though it now consumes a multi-word "<subject> is een <noun-phrase>": the verb-second kenmerk
+    // reading of that shape does not resolve at this top-level position anyway (the working kenmerk
+    // condition is verb-last), so no genuine non-dagsoort construct is swallowed.
+    : left=additiveExpression v=(IS | ZIJN) neg=(EEN | GEEN) dagsoort=naamwoord # IsDagsoortExpr
     | subordinateClauseExpression # SubordinateClauseExpr // Try subordinate clauses first (most specific)
     | periodevergelijkingElementair # PeriodeCheckExpr // Period condition check
     | left=additiveExpression IS naamwoordWithNumbers # IsKenmerkExpr // Try IS kenmerk check - supports complex names with numbers

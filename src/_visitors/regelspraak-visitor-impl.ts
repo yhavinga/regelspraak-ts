@@ -961,11 +961,12 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     // consume — even though the surface form no longer spells it (spec "is een <dagsoort>").
     const expr = this.visit(ctx.additiveExpression());
 
-    const dagsoortCtx = ctx.identifier();
+    const dagsoortCtx = ctx.naamwoord();
     if (!dagsoortCtx) {
       throw new Error('Expected dagsoort name in dagsoortcontrole');
     }
-    const dagsoortName = dagsoortCtx.getText();
+    // A naamwoord, so a multi-word day-type name ("tweede paasdag") is preserved with its spacing.
+    const dagsoortName = this.extractTextWithSpaces(dagsoortCtx).trim();
 
     const plural = ctx._v?.type === RegelSpraakLexer.ZIJN;
     const negated = ctx._neg?.type === RegelSpraakLexer.GEEN;

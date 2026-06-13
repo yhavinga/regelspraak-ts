@@ -143,6 +143,37 @@ describe('Dagsoort Predicate', () => {
             });
         });
 
+        test('should parse a multi-word day-type name (§3.12 naamwoord)', () => {
+            const source = `
+                Dagsoort de tweede paasdag (mv: tweede paasdagen)
+
+                Objecttype de Afspraak
+                    de datum Datum;
+                    is bijzonder kenmerk;
+
+                Regel check
+                geldig altijd
+                    Een Afspraak is bijzonder
+                    indien zijn datum is een tweede paasdag.
+            `;
+
+            const result = engine.parse(source);
+
+            expect(result.success).toBe(true);
+            expect(result.ast?.rules[0].condition).toMatchObject({
+                type: 'Voorwaarde',
+                expression: {
+                    type: 'BinaryExpression',
+                    operator: 'is een dagsoort',
+                    left: expect.any(Object),
+                    right: {
+                        type: 'StringLiteral',
+                        value: 'tweede paasdag'
+                    }
+                }
+            });
+        });
+
         test('should parse negative dagsoort predicates', () => {
             const source = `
                 Objecttype de Werkschema
