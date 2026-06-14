@@ -63,6 +63,27 @@ describe('Engine - "alle X" pattern handling', () => {
     });
   });
 
+  test('should flag the "of 0 als die er niet zijn" sommatie opt-out (§5.8.2)', () => {
+    const parseResult = engine.parse('de som van het salaris van alle Persoon of 0 als die er niet zijn');
+    expect(parseResult.success).toBe(true);
+    expect(parseResult.ast).toMatchObject({
+      type: 'FunctionCall',
+      functionName: 'som_van',
+      defaultZeroWhenEmpty: true
+    });
+  });
+
+  test('should leave defaultZeroWhenEmpty unset without the opt-out', () => {
+    const parseResult = engine.parse('de som van het salaris van alle Persoon');
+    expect(parseResult.success).toBe(true);
+    expect((parseResult.ast as any).defaultZeroWhenEmpty).toBeUndefined();
+  });
+
+  test('should reject the opt-out on a non-sommatie aggregation (§5.8.2)', () => {
+    const parseResult = engine.parse('de maximale waarde van het salaris van alle Persoon of 0 als die er niet zijn');
+    expect(parseResult.success).toBe(false);
+  });
+
   test('should parse "alle X" in conditional expressions', () => {
     const model = `
 Objecttype de Counter (mv: counters)

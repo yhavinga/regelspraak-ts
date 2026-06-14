@@ -49,6 +49,9 @@ OP_VOLGORDE_VAN: 'op volgorde van';
 NAAR_RATO_VAN: 'naar rato van';
 NUMERIEK_MET_EXACT: 'numeriek met exact';
 AAN_DE_ELFPROEF: 'aan de elfproef';
+// §5.8.2: the sommatie opt-out "of 0 als die er niet zijn" — one fixed phrase, lexed as a single
+// token so it cannot be mistaken for the boolean "of" followed by a literal (maximal munch wins).
+OF_NUL_ALS_DIE_ER_NIET_ZIJN: 'of 0 als die er niet zijn';
 GROTER_IS_DAN: 'groter is dan';
 KLEINER_IS_DAN: 'kleiner is dan';
 WORDT_VOLDAAN: 'wordt voldaan';

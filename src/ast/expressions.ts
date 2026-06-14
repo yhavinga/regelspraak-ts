@@ -97,6 +97,7 @@ export interface FunctionCall extends Expression {
   functionName: string;
   arguments: Expression[];
   unitConversion?: string; // e.g., "jaren", "maanden", "dagen"
+  defaultZeroWhenEmpty?: boolean; // §5.8.2 "of 0 als die er niet zijn": an empty sommatie yields 0, not leeg
 }
 
 export interface UnaryExpression extends Expression {

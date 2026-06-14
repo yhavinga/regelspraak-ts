@@ -2457,6 +2457,16 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       throw new Error('Unknown aggregation function in DimensieAggExpr');
     }
 
+    // §5.8.2: the "of 0 als die er niet zijn" opt-out makes an empty sommatie yield 0 instead of
+    // leeg. The spec scopes it to the sommatie alone (not min/max/eerste/laatste), so reject it on
+    // any other aggregation rather than silently honour a non-spec combination.
+    const hasOfNul = !!(ctx.OF_NUL_ALS_DIE_ER_NIET_ZIJN && ctx.OF_NUL_ALS_DIE_ER_NIET_ZIJN());
+    if (hasOfNul && functionName !== 'som_van') {
+      throw new Error(
+        `"of 0 als die er niet zijn" (§5.8.2) applies only to a sommatie, not '${functionName.replace('_van', '')}'`,
+      );
+    }
+
     // Get the attribute reference using attribuutMetLidwoord
     const attrMetLidwoordCtx = ctx.attribuutMetLidwoord ? ctx.attribuutMetLidwoord() : null;
 
@@ -2517,7 +2527,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         const node = {
           type: 'FunctionCall',
           functionName,
-          arguments: [attrRef, collectionArg]
+          arguments: [attrRef, collectionArg],
+          ...(hasOfNul ? { defaultZeroWhenEmpty: true } : {})
         } as FunctionCall;
         this.setLocation(node, ctx);
         return node;

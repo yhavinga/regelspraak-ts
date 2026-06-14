@@ -1049,7 +1049,7 @@ primaryExpression : // Corresponds roughly to terminals/functions/references in 
     | identifier+ HET_TIJDSEVENREDIG_DEEL_PER (MAAND | JAAR) VAN expressie conditieBijExpressie? # CapitalizedTijdsevenredigDeelExpr
     // For aggregations like "de som van de te betalen belasting van alle passagiers"
     // We need a special pattern that doesn't use attribuutReferentie since that consumes "van"
-    | (getalAggregatieFunctie | datumAggregatieFunctie) attribuutMetLidwoord dimensieSelectie         # DimensieAggExpr // EBNF 13.4.16.45
+    | (getalAggregatieFunctie | datumAggregatieFunctie) attribuutMetLidwoord dimensieSelectie OF_NUL_ALS_DIE_ER_NIET_ZIJN?         # DimensieAggExpr // EBNF 13.4.16.45 (+ §5.8.2 of-0 opt-out)
     // For dimension range aggregations like "de som van zijn betaalde belasting in jaar vanaf vier jaar geleden t/m een jaar geleden"
     | (getalAggregatieFunctie | datumAggregatieFunctie) (bezieldeReferentie | attribuutReferentie) VANAF naamwoord TM naamwoord DOT? # DimensieRangeAggExpr
     
