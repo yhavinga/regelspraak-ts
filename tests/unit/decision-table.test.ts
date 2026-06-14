@@ -515,6 +515,32 @@ geldig altijd
         });
       });
 
+      test('parses a getalcontrole condition column (§8.1.3), keeping the digit count and polarity', () => {
+        const parser = new AntlrParser();
+        const model = parser.parseModel(`Objecttype de Persoon (mv: personen) (bezield)
+  het burgerservicenummer Tekst;
+  de status Numeriek;
+
+Beslistabel Status
+geldig altijd
+| | de status van een Persoon moet gesteld worden op | indien zijn burgerservicenummer is numeriek met exact 9 cijfers | indien zijn burgerservicenummer is niet numeriek met exact 8 cijfers |
+|---|---|---|---|
+| 1 | 1 | waar | n.v.t. |
+| 2 | 2 | n.v.t. | waar |`);
+
+        const version = model.beslistabels[0].versions![0];
+        expect(version.conditionColumns[0].condition).toMatchObject({
+          isGetalcontroleCheck: true,
+          getalcontroleDigits: 9,
+          getalcontroleNegated: false
+        });
+        expect(version.conditionColumns[1].condition).toMatchObject({
+          isGetalcontroleCheck: true,
+          getalcontroleDigits: 8,
+          getalcontroleNegated: true
+        });
+      });
+
       test('should execute every conclusion column for the first matching row', () => {
         const decisionTable = `Beslistabel Test
   geldig altijd

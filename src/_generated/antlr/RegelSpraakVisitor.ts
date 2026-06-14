@@ -16,6 +16,7 @@ import { BeslistabelGelijkstellingHeaderContext } from "./RegelSpraakParser";
 import { BeslistabelKenmerkHeaderContext } from "./RegelSpraakParser";
 import { BeslistabelDagsoortVoorwaardeHeaderContext } from "./RegelSpraakParser";
 import { BeslistabelUnaryVoorwaardeHeaderContext } from "./RegelSpraakParser";
+import { BeslistabelGetalcontroleVoorwaardeHeaderContext } from "./RegelSpraakParser";
 import { BeslistabelAttribuutVoorwaardeHeaderContext } from "./RegelSpraakParser";
 import { BeslistabelKenmerkVoorwaardeHeaderContext } from "./RegelSpraakParser";
 import { BeslistabelAttribuutHeaderContext } from "./RegelSpraakParser";
@@ -369,6 +370,13 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitBeslistabelUnaryVoorwaardeHeader?: (ctx: BeslistabelUnaryVoorwaardeHeaderContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `BeslistabelGetalcontroleVoorwaardeHeader`
+	 * labeled alternative in `RegelSpraakParser.beslistabelVoorwaardeHeader`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBeslistabelGetalcontroleVoorwaardeHeader?: (ctx: BeslistabelGetalcontroleVoorwaardeHeaderContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `BeslistabelAttribuutVoorwaardeHeader`
 	 * labeled alternative in `RegelSpraakParser.beslistabelVoorwaardeHeader`.

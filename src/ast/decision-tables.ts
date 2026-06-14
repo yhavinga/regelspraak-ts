@@ -18,6 +18,9 @@ export interface DecisionTableCondition {
   dagsoortNegated?: boolean; // "is geen <dagsoort>" rather than "is een"
   isUnaryCheck?: boolean; // An eenzijdig predicaat column (§8.1.2 leeg/gevuld, §8.1.3 elfproef)
   unaryOperator?: string; // The unary operator tag: 'is leeg'/'is gevuld'/'voldoet (niet) aan de elfproef'
+  isGetalcontroleCheck?: boolean; // A getalcontrole column (§8.1.3): "is (niet) numeriek met exact N cijfers"
+  getalcontroleDigits?: number; // The required digit count N
+  getalcontroleNegated?: boolean; // "is niet numeriek met exact" rather than "is numeriek met exact"
 }
 
 export interface DecisionTableResult {

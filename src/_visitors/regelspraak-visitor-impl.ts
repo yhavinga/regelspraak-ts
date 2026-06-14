@@ -7142,6 +7142,26 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     };
   }
 
+  visitBeslistabelGetalcontroleVoorwaardeHeader(ctx: any): DecisionTableCondition {
+    // Grammar: INDIEN beslistabelAttribuutHeader op=(IS_NUMERIEK_MET_EXACT|...) NUMBER CIJFERS.
+    // A getalcontrole (§8.1.3) as a condition column: the digit count is the NUMBER token and the
+    // op token carries polarity. The transpiler rebuilds the rule-condition BinaryExpression from
+    // these fields, so the NumericOps.getalcontrole lowering and its §8 discipline are shared.
+    const opType = ctx._op?.type;
+    const negated =
+      opType === RegelSpraakLexer.IS_NIET_NUMERIEK_MET_EXACT ||
+      opType === RegelSpraakLexer.ZIJN_NIET_NUMERIEK_MET_EXACT;
+    return {
+      type: 'DecisionTableCondition',
+      headerText: '',
+      subjectExpression: this.visitBeslistabelAttribuutHeader(ctx.beslistabelAttribuutHeader()),
+      operator: '==',
+      isGetalcontroleCheck: true,
+      getalcontroleDigits: parseInt(ctx.NUMBER().getText(), 10),
+      getalcontroleNegated: negated
+    };
+  }
+
   visitBeslistabelAttribuutHeader(ctx: any): AttributeReference | SubselectieExpression | DimensionedAttributeReference | BinaryExpression {
     const attributeNameCtx = ctx.beslistabelAttribuutNaam ? ctx.beslistabelAttribuutNaam() : null;
     if (!attributeNameCtx) {

@@ -69,6 +69,10 @@ beslistabelVoorwaardeHeader
     // and "indien <attr> voldoet (niet) aan de elfproef". The trailing token is a distinct
     // multiword operator (not a comparisonOperator and not HEEFT), so this is unambiguous.
     | INDIEN beslistabelAttribuutHeader op=(IS_LEEG | IS_GEVULD | VOLDOET_AAN_DE_ELFPROEF | VOLDOET_NIET_AAN_DE_ELFPROEF) EOF # BeslistabelUnaryVoorwaardeHeader
+    // Getalcontrole (§8.1.3) as a condition column: "indien <attr> is (niet) numeriek met exact N
+    // cijfers". The op tokens are distinct multiword operators carrying a digit count, so this is
+    // unambiguous against the comparisonOperator form; listed before it so the op tokens win.
+    | INDIEN beslistabelAttribuutHeader op=(IS_NUMERIEK_MET_EXACT | IS_NIET_NUMERIEK_MET_EXACT | ZIJN_NUMERIEK_MET_EXACT | ZIJN_NIET_NUMERIEK_MET_EXACT) NUMBER CIJFERS EOF # BeslistabelGetalcontroleVoorwaardeHeader
     | INDIEN beslistabelAttribuutHeader comparisonOperator EOF          # BeslistabelAttribuutVoorwaardeHeader
     | INDIEN onderwerpReferentie (EEN | DE | HET)? kenmerkNaam HEEFT EOF # BeslistabelKenmerkVoorwaardeHeader
     ;
