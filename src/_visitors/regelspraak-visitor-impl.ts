@@ -4576,6 +4576,14 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     // single word like "eenzaam" is name content.
     name = name.replace(/^(de|het|een)\s+/i, '');
 
+    // The single-word declaration form drops the copula through the grammar's
+    // `IS? identifier` ("is overbelast" → "overbelast"). A multi-word name reaches
+    // us through the naamwoord alternative, which the leading "is" is part of ("is
+    // te hoog" → "is te hoog"), so the declared name disagrees with every reference
+    // ("... is te hoog" yields kenmerk "te hoog"). Strip it so the canonical name
+    // matches the reference form for multi-word adjectival kenmerken too.
+    name = name.replace(/^is\s+/i, '');
+
     // Check for type (bijvoeglijk or bezittelijk)
     let kenmerkType: 'bijvoeglijk' | 'bezittelijk' | undefined;
     if (ctx.BIJVOEGLIJK && ctx.BIJVOEGLIJK()) {

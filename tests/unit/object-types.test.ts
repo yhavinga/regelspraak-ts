@@ -89,6 +89,24 @@ describe('Engine - Object Type Definitions', () => {
       });
     });
 
+    test('should drop the copula from a multi-word bijvoeglijk kenmerk name', () => {
+      // A single-word name loses the copula through the grammar's `IS? identifier`
+      // ("is gelukkig" → "gelukkig"); a multi-word name arrives through the naamwoord
+      // alternative, which the leading "is" is part of. The canonical name must still
+      // be copula-free so it matches every reference ("... is te hoog" → "te hoog").
+      const source = `Objecttype persoon
+  is te hoog kenmerk (bijvoeglijk);`;
+
+      const result = engine.parse(source);
+
+      expect(result.success).toBe(true);
+      expect(stripLocations(result.ast?.members[0])).toEqual({
+        type: 'KenmerkSpecification',
+        name: 'te hoog',
+        kenmerkType: 'bijvoeglijk'
+      });
+    });
+
     test('should parse bezittelijk kenmerk', () => {
       const source = `Objecttype persoon
   gehuwd kenmerk (bezittelijk);`;
