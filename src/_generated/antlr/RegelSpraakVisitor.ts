@@ -254,6 +254,7 @@ import { AggregerenOverAlleDimensiesContext } from "./RegelSpraakParser";
 import { AggregerenOverVerzamelingContext } from "./RegelSpraakParser";
 import { AggregerenOverBereikContext } from "./RegelSpraakParser";
 import { UnaryCheckConditionContext } from "./RegelSpraakParser";
+import { UnaryCheckStellendeGehelePeriodeConditionContext } from "./RegelSpraakParser";
 import { UnaryCheckVragendConditionContext } from "./RegelSpraakParser";
 import { UnaryNumeriekExactConditionContext } from "./RegelSpraakParser";
 import { UnaryKenmerkConditionContext } from "./RegelSpraakParser";
@@ -1889,6 +1890,13 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitUnaryCheckCondition?: (ctx: UnaryCheckConditionContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `unaryCheckStellendeGehelePeriodeCondition`
+	 * labeled alternative in `RegelSpraakParser.unaryCondition`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUnaryCheckStellendeGehelePeriodeCondition?: (ctx: UnaryCheckStellendeGehelePeriodeConditionContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `unaryCheckVragendCondition`
 	 * labeled alternative in `RegelSpraakParser.unaryCondition`.

@@ -808,6 +808,21 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     return this.visitChildren(ctx);
   }
 
+  // §8.2 check op volledige periode: read the "[niet] gedurende het gehele jaar / de gehele maand"
+  // prefix off a geheleVergelijkingPrefix context and annotate the predicate node with the calendar
+  // period and the optional negation. Shared by every predicate that admits the prefix (a tweezijdige
+  // comparison, an eenzijdige emptiness check, …) so they carry one uniform whole-period annotation.
+  private attachGehelePeriode(node: any, gp: any): void {
+    if (!gp) return;
+    node.gehelePeriode = (gp.JAAR && gp.JAAR()) ? 'jaar' : 'maand';
+    node.gehelePeriodeNegated = !!(gp.NIET && gp.NIET());
+  }
+
+  private gehelePeriodePrefixOf(ctx: any): any {
+    return ctx._gp ??
+      (typeof ctx.geheleVergelijkingPrefix === 'function' ? ctx.geheleVergelijkingPrefix() : null);
+  }
+
   visitBinaryComparisonExpr(ctx: BinaryComparisonExprContext): Expression {
     // Get the additive expressions
     const additiveExprs = ctx.additiveExpression_list();
@@ -899,12 +914,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
     // §8.2 check op volledige periode: an optional "gedurende het gehele jaar/maand" prefix makes the
     // comparison a whole-period check — true only if it holds at every moment in the calendar period.
-    const gp = (ctx as any)._gp ??
-      (typeof (ctx as any).geheleVergelijkingPrefix === 'function' ? (ctx as any).geheleVergelijkingPrefix() : null);
-    if (gp) {
-      (node as any).gehelePeriode = (gp.JAAR && gp.JAAR()) ? 'jaar' : 'maand';
-      (node as any).gehelePeriodeNegated = !!(gp.NIET && gp.NIET());
-    }
+    this.attachGehelePeriode(node, this.gehelePeriodePrefixOf(ctx));
 
     this.setLocation(node, ctx);
     return node;
@@ -980,6 +990,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       return this.visitUnaryCheckCondition(ctx);
     } else if (contextName === 'UnaryCheckVragendConditionContext') {
       return this.visitUnaryCheckVragendCondition(ctx);
+    } else if (contextName === 'UnaryCheckStellendeGehelePeriodeConditionContext') {
+      return this.visitUnaryCheckStellendeGehelePeriodeCondition(ctx);
     } else if (contextName === 'UnaryUniekConditionContext') {
       return this.visitUnaryUniekCondition(ctx);
     } else if (contextName === 'UnaryNumeriekExactConditionContext') {
@@ -5951,6 +5963,26 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       operator,
       operand
     };
+    // §8.2: the optional prefix ("<x> gedurende de gehele maand leeg is") makes it a whole-period check.
+    this.attachGehelePeriode(node, this.gehelePeriodePrefixOf(ctx));
+    this.setLocation(node, ctx);
+    return node;
+  }
+
+  visitUnaryCheckStellendeGehelePeriodeCondition(ctx: any): any {
+    // Grammar: expr=primaryExpression v=(IS|ZIJN) gp=geheleVergelijkingPrefix check=(LEEG|GEVULD) —
+    // the §8.2 stellende emptiness check ("<x> is gedurende de gehele maand leeg"). Builds the same
+    // UnaryExpression as the verb-first "is leeg", plus the whole-period annotation off gp.
+    const operand = this.visit(ctx.primaryExpression());
+    const filled = ctx._check?.type === RegelSpraakLexer.GEVULD;
+    const plural = ctx._v?.type === RegelSpraakLexer.ZIJN;
+    const operator = `${plural ? 'zijn' : 'is'} ${filled ? 'gevuld' : 'leeg'}`;
+    const node = {
+      type: 'UnaryExpression',
+      operator,
+      operand
+    };
+    this.attachGehelePeriode(node, this.gehelePeriodePrefixOf(ctx));
     this.setLocation(node, ctx);
     return node;
   }

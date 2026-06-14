@@ -1181,10 +1181,16 @@ aggregerenOverBereik // EBNF 13.4.16.49 - Using naamwoord for both dimension nam
 // "is een <dagsoort>" lives in comparisonExpression as IsDagsoortExpr, not here)
 unaryCondition // Now potentially part of comparisonExpression
     : expr=primaryExpression op=(IS_LEEG | IS_GEVULD | VOLDOET_AAN_DE_ELFPROEF | VOLDOET_NIET_AAN_DE_ELFPROEF | ZIJN_LEEG | ZIJN_GEVULD | VOLDOEN_AAN_DE_ELFPROEF | VOLDOEN_NIET_AAN_DE_ELFPROEF) # unaryCheckCondition
+    // The §8.2 stellende emptiness check ("<x> is gedurende de gehele maand leeg"): the fused IS_LEEG
+    // token de-fuses to IS + LEEG once the geheleperiodevergelijking prefix intervenes, so the prefix
+    // is required here (its absence is the plain "is leeg" above). Same operator tag, plus the
+    // whole-period annotation the visitor reads off gp.
+    | expr=primaryExpression v=(IS | ZIJN) gp=geheleVergelijkingPrefix check=(LEEG | GEVULD) # unaryCheckStellendeGehelePeriodeCondition
     // The vragend (verb-last) emptiness check of §13.4.11 forms 26/27: "<datum> leeg/gevuld is/zijn"
-    // (the toplevel form, alongside the verb-first "is leeg" of forms 78/79). Maps to the same
-    // operator tag as its verb-first sibling, so the resolver and transpiler are untouched.
-    | expr=primaryExpression check=(LEEG | GEVULD) v=(IS | ZIJN) # unaryCheckVragendCondition
+    // (the toplevel form, alongside the verb-first "is leeg" of forms 78/79). The optional §8.2 prefix
+    // makes it a whole-period check ("<x> gedurende de gehele maand leeg is"). Maps to the same
+    // operator tag as its verb-first sibling, so the resolver and transpiler are untouched bar gp.
+    | expr=primaryExpression gp=geheleVergelijkingPrefix? check=(LEEG | GEVULD) v=(IS | ZIJN) # unaryCheckVragendCondition
     | expr=primaryExpression op=(IS_NUMERIEK_MET_EXACT | IS_NIET_NUMERIEK_MET_EXACT | ZIJN_NUMERIEK_MET_EXACT | ZIJN_NIET_NUMERIEK_MET_EXACT) NUMBER CIJFERS # unaryNumeriekExactCondition
     | expr=primaryExpression op=(IS_KENMERK | ZIJN_KENMERK | IS_NIET_KENMERK | ZIJN_NIET_KENMERK) kenmerk=identifier # unaryKenmerkCondition
     | expr=primaryExpression op=(IS_ROL | ZIJN_ROL | IS_NIET_ROL | ZIJN_NIET_ROL) rol=identifier # unaryRolCondition

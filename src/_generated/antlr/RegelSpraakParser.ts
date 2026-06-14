@@ -11847,9 +11847,9 @@ export default class RegelSpraakParser extends Parser {
 		this.enterRule(localctx, 334, RegelSpraakParser.RULE_unaryCondition);
 		let _la: number;
 		try {
-			this.state = 2208;
+			this.state = 2216;
 			this._errHandler.sync(this);
-			switch ( this._interp.adaptivePredict(this._input, 245, this._ctx) ) {
+			switch ( this._interp.adaptivePredict(this._input, 246, this._ctx) ) {
 			case 1:
 				localctx = new UnaryCheckConditionContext(this, localctx);
 				this.enterOuterAlt(localctx, 1);
@@ -11869,12 +11869,52 @@ export default class RegelSpraakParser extends Parser {
 				}
 				break;
 			case 2:
-				localctx = new UnaryCheckVragendConditionContext(this, localctx);
+				localctx = new UnaryCheckStellendeGehelePeriodeConditionContext(this, localctx);
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 2185;
-				(localctx as UnaryCheckVragendConditionContext)._expr = this.primaryExpression(0);
+				(localctx as UnaryCheckStellendeGehelePeriodeConditionContext)._expr = this.primaryExpression(0);
 				this.state = 2186;
+				(localctx as UnaryCheckStellendeGehelePeriodeConditionContext)._v = this._input.LT(1);
+				_la = this._input.LA(1);
+				if(!(_la===106 || _la===112)) {
+				    (localctx as UnaryCheckStellendeGehelePeriodeConditionContext)._v = this._errHandler.recoverInline(this);
+				}
+				else {
+					this._errHandler.reportMatch(this);
+				    this.consume();
+				}
+				this.state = 2187;
+				(localctx as UnaryCheckStellendeGehelePeriodeConditionContext)._gp = this.geheleVergelijkingPrefix();
+				this.state = 2188;
+				(localctx as UnaryCheckStellendeGehelePeriodeConditionContext)._check = this._input.LT(1);
+				_la = this._input.LA(1);
+				if(!(_la===122 || _la===128)) {
+				    (localctx as UnaryCheckStellendeGehelePeriodeConditionContext)._check = this._errHandler.recoverInline(this);
+				}
+				else {
+					this._errHandler.reportMatch(this);
+				    this.consume();
+				}
+				}
+				break;
+			case 3:
+				localctx = new UnaryCheckVragendConditionContext(this, localctx);
+				this.enterOuterAlt(localctx, 3);
+				{
+				this.state = 2190;
+				(localctx as UnaryCheckVragendConditionContext)._expr = this.primaryExpression(0);
+				this.state = 2192;
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if (_la===5 || _la===6 || _la===133) {
+					{
+					this.state = 2191;
+					(localctx as UnaryCheckVragendConditionContext)._gp = this.geheleVergelijkingPrefix();
+					}
+				}
+
+				this.state = 2194;
 				(localctx as UnaryCheckVragendConditionContext)._check = this._input.LT(1);
 				_la = this._input.LA(1);
 				if(!(_la===122 || _la===128)) {
@@ -11884,7 +11924,7 @@ export default class RegelSpraakParser extends Parser {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 2187;
+				this.state = 2195;
 				(localctx as UnaryCheckVragendConditionContext)._v = this._input.LT(1);
 				_la = this._input.LA(1);
 				if(!(_la===106 || _la===112)) {
@@ -11896,13 +11936,13 @@ export default class RegelSpraakParser extends Parser {
 				}
 				}
 				break;
-			case 3:
+			case 4:
 				localctx = new UnaryNumeriekExactConditionContext(this, localctx);
-				this.enterOuterAlt(localctx, 3);
+				this.enterOuterAlt(localctx, 4);
 				{
-				this.state = 2189;
+				this.state = 2197;
 				(localctx as UnaryNumeriekExactConditionContext)._expr = this.primaryExpression(0);
-				this.state = 2190;
+				this.state = 2198;
 				(localctx as UnaryNumeriekExactConditionContext)._op = this._input.LT(1);
 				_la = this._input.LA(1);
 				if(!(((((_la - 81)) & ~0x1F) === 0 && ((1 << (_la - 81)) & 15) !== 0))) {
@@ -11912,19 +11952,19 @@ export default class RegelSpraakParser extends Parser {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 2191;
+				this.state = 2199;
 				this.match(RegelSpraakParser.NUMBER);
-				this.state = 2192;
+				this.state = 2200;
 				this.match(RegelSpraakParser.CIJFERS);
 				}
 				break;
-			case 4:
+			case 5:
 				localctx = new UnaryKenmerkConditionContext(this, localctx);
-				this.enterOuterAlt(localctx, 4);
+				this.enterOuterAlt(localctx, 5);
 				{
-				this.state = 2194;
+				this.state = 2202;
 				(localctx as UnaryKenmerkConditionContext)._expr = this.primaryExpression(0);
-				this.state = 2195;
+				this.state = 2203;
 				(localctx as UnaryKenmerkConditionContext)._op = this._input.LT(1);
 				_la = this._input.LA(1);
 				if(!(((((_la - 69)) & ~0x1F) === 0 && ((1 << (_la - 69)) & 85) !== 0))) {
@@ -11934,17 +11974,17 @@ export default class RegelSpraakParser extends Parser {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 2196;
+				this.state = 2204;
 				(localctx as UnaryKenmerkConditionContext)._kenmerk = this.identifier();
 				}
 				break;
-			case 5:
+			case 6:
 				localctx = new UnaryRolConditionContext(this, localctx);
-				this.enterOuterAlt(localctx, 5);
+				this.enterOuterAlt(localctx, 6);
 				{
-				this.state = 2198;
+				this.state = 2206;
 				(localctx as UnaryRolConditionContext)._expr = this.primaryExpression(0);
-				this.state = 2199;
+				this.state = 2207;
 				(localctx as UnaryRolConditionContext)._op = this._input.LT(1);
 				_la = this._input.LA(1);
 				if(!(((((_la - 70)) & ~0x1F) === 0 && ((1 << (_la - 70)) & 85) !== 0))) {
@@ -11954,27 +11994,27 @@ export default class RegelSpraakParser extends Parser {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 2200;
+				this.state = 2208;
 				(localctx as UnaryRolConditionContext)._rol = this.identifier();
 				}
 				break;
-			case 6:
+			case 7:
 				localctx = new UnaryUniekConditionContext(this, localctx);
-				this.enterOuterAlt(localctx, 6);
+				this.enterOuterAlt(localctx, 7);
 				{
-				this.state = 2202;
+				this.state = 2210;
 				(localctx as UnaryUniekConditionContext)._ref = this.onderwerpReferentie();
-				this.state = 2203;
+				this.state = 2211;
 				this.match(RegelSpraakParser.MOETEN_UNIEK_ZIJN);
 				}
 				break;
-			case 7:
+			case 8:
 				localctx = new UnaryInconsistentDataConditionContext(this, localctx);
-				this.enterOuterAlt(localctx, 7);
+				this.enterOuterAlt(localctx, 8);
 				{
-				this.state = 2205;
+				this.state = 2213;
 				(localctx as UnaryInconsistentDataConditionContext)._expr = this.primaryExpression(0);
-				this.state = 2206;
+				this.state = 2214;
 				this.match(RegelSpraakParser.IS_INCONSISTENT);
 				}
 				break;
@@ -11999,18 +12039,18 @@ export default class RegelSpraakParser extends Parser {
 		let localctx: RegelStatusConditionContext = new RegelStatusConditionContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 336, RegelSpraakParser.RULE_regelStatusCondition);
 		try {
-			this.state = 2218;
+			this.state = 2226;
 			this._errHandler.sync(this);
-			switch ( this._interp.adaptivePredict(this._input, 246, this._ctx) ) {
+			switch ( this._interp.adaptivePredict(this._input, 247, this._ctx) ) {
 			case 1:
 				localctx = new RegelStatusGevuurdCheckContext(this, localctx);
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 2210;
+				this.state = 2218;
 				this.match(RegelSpraakParser.REGELVERSIE);
-				this.state = 2211;
+				this.state = 2219;
 				(localctx as RegelStatusGevuurdCheckContext)._name = this.regelversieNaam();
-				this.state = 2212;
+				this.state = 2220;
 				this.match(RegelSpraakParser.IS_GEVUURD);
 				}
 				break;
@@ -12018,11 +12058,11 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new RegelStatusInconsistentCheckContext(this, localctx);
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 2214;
+				this.state = 2222;
 				this.match(RegelSpraakParser.REGELVERSIE);
-				this.state = 2215;
+				this.state = 2223;
 				(localctx as RegelStatusInconsistentCheckContext)._name = this.regelversieNaam();
-				this.state = 2216;
+				this.state = 2224;
 				this.match(RegelSpraakParser.IS_INCONSISTENT);
 				}
 				break;
@@ -12050,12 +12090,12 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2222;
+			this.state = 2230;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			do {
 				{
-				this.state = 2222;
+				this.state = 2230;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
 				case 42:
@@ -12096,13 +12136,13 @@ export default class RegelSpraakParser extends Parser {
 				case 246:
 				case 262:
 					{
-					this.state = 2220;
+					this.state = 2228;
 					this.naamwoord();
 					}
 					break;
 				case 197:
 					{
-					this.state = 2221;
+					this.state = 2229;
 					this.match(RegelSpraakParser.GEEN);
 					}
 					break;
@@ -12110,7 +12150,7 @@ export default class RegelSpraakParser extends Parser {
 					throw new NoViableAltException(this);
 				}
 				}
-				this.state = 2224;
+				this.state = 2232;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			} while (_la===42 || ((((_la - 89)) & ~0x1F) === 0 && ((1 << (_la - 89)) & 276971521) !== 0) || ((((_la - 125)) & ~0x1F) === 0 && ((1 << (_la - 125)) & 536871169) !== 0) || ((((_la - 183)) & ~0x1F) === 0 && ((1 << (_la - 183)) & 2321143809) !== 0) || ((((_la - 215)) & ~0x1F) === 0 && ((1 << (_la - 215)) & 2956137599) !== 0) || _la===262);
@@ -12135,18 +12175,18 @@ export default class RegelSpraakParser extends Parser {
 		let localctx: SubordinateClauseExpressionContext = new SubordinateClauseExpressionContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 340, RegelSpraakParser.RULE_subordinateClauseExpression);
 		try {
-			this.state = 2238;
+			this.state = 2246;
 			this._errHandler.sync(this);
-			switch ( this._interp.adaptivePredict(this._input, 249, this._ctx) ) {
+			switch ( this._interp.adaptivePredict(this._input, 250, this._ctx) ) {
 			case 1:
 				localctx = new SubordinateHasExprContext(this, localctx);
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 2226;
+				this.state = 2234;
 				(localctx as SubordinateHasExprContext)._subject = this.onderwerpReferentie();
-				this.state = 2227;
+				this.state = 2235;
 				(localctx as SubordinateHasExprContext)._object = this.naamwoordWithNumbers();
-				this.state = 2228;
+				this.state = 2236;
 				(localctx as SubordinateHasExprContext)._verb = this.match(RegelSpraakParser.HEEFT);
 				}
 				break;
@@ -12154,11 +12194,11 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new SubordinateIsWithExprContext(this, localctx);
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 2230;
+				this.state = 2238;
 				(localctx as SubordinateIsWithExprContext)._subject = this.onderwerpReferentie();
-				this.state = 2231;
+				this.state = 2239;
 				(localctx as SubordinateIsWithExprContext)._prepPhrase = this.naamwoordWithNumbers();
-				this.state = 2232;
+				this.state = 2240;
 				(localctx as SubordinateIsWithExprContext)._verb = this.match(RegelSpraakParser.IS);
 				}
 				break;
@@ -12166,11 +12206,11 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new SubordinateIsKenmerkExprContext(this, localctx);
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 2234;
+				this.state = 2242;
 				(localctx as SubordinateIsKenmerkExprContext)._subject = this.onderwerpReferentie();
-				this.state = 2235;
+				this.state = 2243;
 				(localctx as SubordinateIsKenmerkExprContext)._verb = this.match(RegelSpraakParser.IS);
-				this.state = 2236;
+				this.state = 2244;
 				(localctx as SubordinateIsKenmerkExprContext)._kenmerk = this.naamwoordWithNumbers();
 				}
 				break;
@@ -12198,43 +12238,43 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2240;
+			this.state = 2248;
 			this.match(RegelSpraakParser.DAGSOORT);
-			this.state = 2241;
-			this.naamwoord();
 			this.state = 2249;
+			this.naamwoord();
+			this.state = 2257;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la===171) {
 				{
-				this.state = 2242;
+				this.state = 2250;
 				this.match(RegelSpraakParser.MV_START);
-				this.state = 2244;
+				this.state = 2252;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				do {
 					{
 					{
-					this.state = 2243;
+					this.state = 2251;
 					localctx._IDENTIFIER = this.match(RegelSpraakParser.IDENTIFIER);
 					localctx._plural.push(localctx._IDENTIFIER);
 					}
 					}
-					this.state = 2246;
+					this.state = 2254;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 				} while (_la===262);
-				this.state = 2248;
+				this.state = 2256;
 				this.match(RegelSpraakParser.RPAREN);
 				}
 			}
 
-			this.state = 2252;
+			this.state = 2260;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la===276) {
 				{
-				this.state = 2251;
+				this.state = 2259;
 				this.match(RegelSpraakParser.SEMICOLON);
 				}
 			}
@@ -12262,7 +12302,7 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2254;
+			this.state = 2262;
 			this.match(RegelSpraakParser.STRING_LITERAL);
 			}
 		}
@@ -12288,17 +12328,17 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2256;
+			this.state = 2264;
 			localctx._sourceAmount = this.expressie();
-			this.state = 2257;
+			this.state = 2265;
 			this.match(RegelSpraakParser.WORDT_VERDEELD_OVER);
-			this.state = 2258;
+			this.state = 2266;
 			localctx._targetCollection = this.expressie();
-			this.state = 2259;
+			this.state = 2267;
 			this.match(RegelSpraakParser.COMMA);
-			this.state = 2260;
+			this.state = 2268;
 			this.match(RegelSpraakParser.WAARBIJ_WORDT_VERDEELD);
-			this.state = 2263;
+			this.state = 2271;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 21:
@@ -12308,25 +12348,25 @@ export default class RegelSpraakParser extends Parser {
 			case 116:
 			case 191:
 				{
-				this.state = 2261;
+				this.state = 2269;
 				this.verdelingMethodeSimple();
 				}
 				break;
 			case 275:
 				{
-				this.state = 2262;
+				this.state = 2270;
 				this.verdelingMethodeMultiLine();
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
-			this.state = 2266;
+			this.state = 2274;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la===19) {
 				{
-				this.state = 2265;
+				this.state = 2273;
 				this.verdelingRest();
 				}
 			}
@@ -12354,7 +12394,7 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2268;
+			this.state = 2276;
 			this.verdelingMethode();
 			}
 		}
@@ -12379,16 +12419,16 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2270;
+			this.state = 2278;
 			this.match(RegelSpraakParser.COLON);
-			this.state = 2271;
+			this.state = 2279;
 			this.verdelingMethodeBulletList();
-			this.state = 2273;
+			this.state = 2281;
 			this._errHandler.sync(this);
-			switch ( this._interp.adaptivePredict(this._input, 255, this._ctx) ) {
+			switch ( this._interp.adaptivePredict(this._input, 256, this._ctx) ) {
 			case 1:
 				{
-				this.state = 2272;
+				this.state = 2280;
 				this.match(RegelSpraakParser.DOT);
 				}
 				break;
@@ -12417,19 +12457,19 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2275;
+			this.state = 2283;
 			this.verdelingMethodeBullet();
-			this.state = 2279;
+			this.state = 2287;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			while (_la===289) {
 				{
 				{
-				this.state = 2276;
+				this.state = 2284;
 				this.verdelingMethodeBullet();
 				}
 				}
-				this.state = 2281;
+				this.state = 2289;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
@@ -12457,16 +12497,16 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2282;
+			this.state = 2290;
 			this.match(RegelSpraakParser.MINUS);
-			this.state = 2283;
+			this.state = 2291;
 			this.verdelingMethode();
-			this.state = 2285;
+			this.state = 2293;
 			this._errHandler.sync(this);
-			switch ( this._interp.adaptivePredict(this._input, 257, this._ctx) ) {
+			switch ( this._interp.adaptivePredict(this._input, 258, this._ctx) ) {
 			case 1:
 				{
-				this.state = 2284;
+				this.state = 2292;
 				_la = this._input.LA(1);
 				if(!(_la===273 || _la===274)) {
 				this._errHandler.recoverInline(this);
@@ -12500,14 +12540,14 @@ export default class RegelSpraakParser extends Parser {
 		this.enterRule(localctx, 356, RegelSpraakParser.RULE_verdelingMethode);
 		let _la: number;
 		try {
-			this.state = 2301;
+			this.state = 2309;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 191:
 				localctx = new VerdelingGelijkeDelenContext(this, localctx);
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 2287;
+				this.state = 2295;
 				this.match(RegelSpraakParser.IN_GELIJKE_DELEN);
 				}
 				break;
@@ -12515,9 +12555,9 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new VerdelingNaarRatoContext(this, localctx);
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 2288;
+				this.state = 2296;
 				this.match(RegelSpraakParser.NAAR_RATO_VAN);
-				this.state = 2289;
+				this.state = 2297;
 				(localctx as VerdelingNaarRatoContext)._ratioExpression = this.expressie();
 				}
 				break;
@@ -12525,9 +12565,9 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new VerdelingOpVolgordeContext(this, localctx);
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 2290;
+				this.state = 2298;
 				this.match(RegelSpraakParser.OP_VOLGORDE_VAN);
-				this.state = 2291;
+				this.state = 2299;
 				(localctx as VerdelingOpVolgordeContext)._orderDirection = this._input.LT(1);
 				_la = this._input.LA(1);
 				if(!(_la===190 || _la===193)) {
@@ -12537,7 +12577,7 @@ export default class RegelSpraakParser extends Parser {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 2292;
+				this.state = 2300;
 				(localctx as VerdelingOpVolgordeContext)._orderExpression = this.expressie();
 				}
 				break;
@@ -12545,9 +12585,9 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new VerdelingTieBreakContext(this, localctx);
 				this.enterOuterAlt(localctx, 4);
 				{
-				this.state = 2293;
+				this.state = 2301;
 				this.match(RegelSpraakParser.BIJ_EVEN_GROOT_CRITERIUM);
-				this.state = 2294;
+				this.state = 2302;
 				(localctx as VerdelingTieBreakContext)._tieBreakMethod = this.verdelingMethode();
 				}
 				break;
@@ -12555,9 +12595,9 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new VerdelingMaximumContext(this, localctx);
 				this.enterOuterAlt(localctx, 5);
 				{
-				this.state = 2295;
+				this.state = 2303;
 				this.match(RegelSpraakParser.MET_EEN_MAXIMUM_VAN);
-				this.state = 2296;
+				this.state = 2304;
 				(localctx as VerdelingMaximumContext)._maxExpression = this.attribuutMetLidwoord();
 				}
 				break;
@@ -12565,13 +12605,13 @@ export default class RegelSpraakParser extends Parser {
 				localctx = new VerdelingAfrondingContext(this, localctx);
 				this.enterOuterAlt(localctx, 6);
 				{
-				this.state = 2297;
+				this.state = 2305;
 				this.match(RegelSpraakParser.AFGEROND_OP);
-				this.state = 2298;
+				this.state = 2306;
 				(localctx as VerdelingAfrondingContext)._decimals = this.match(RegelSpraakParser.NUMBER);
-				this.state = 2299;
+				this.state = 2307;
 				this.match(RegelSpraakParser.DECIMALEN);
-				this.state = 2300;
+				this.state = 2308;
 				this.match(RegelSpraakParser.NAAR_BENEDEN);
 				}
 				break;
@@ -12601,16 +12641,16 @@ export default class RegelSpraakParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 2303;
+			this.state = 2311;
 			this.match(RegelSpraakParser.ALS_ONVERDEELDE_REST_BLIJFT);
-			this.state = 2304;
+			this.state = 2312;
 			localctx._remainderTarget = this.expressie();
-			this.state = 2306;
+			this.state = 2314;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la===192) {
 				{
-				this.state = 2305;
+				this.state = 2313;
 				this.match(RegelSpraakParser.OVER_VERDELING);
 				}
 			}
@@ -12653,7 +12693,7 @@ export default class RegelSpraakParser extends Parser {
 		return true;
 	}
 
-	public static readonly _serializedATN: number[] = [4,1,291,2309,2,0,7,0,
+	public static readonly _serializedATN: number[] = [4,1,291,2317,2,0,7,0,
 	2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,7,7,2,8,7,8,2,9,7,9,
 	2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,2,15,7,15,2,16,7,16,2,
 	17,7,17,2,18,7,18,2,19,7,19,2,20,7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,
@@ -12841,524 +12881,525 @@ export default class RegelSpraakParser extends Parser {
 	164,2158,8,164,1,165,1,165,1,165,1,165,1,165,1,165,1,165,1,166,1,166,1,
 	166,1,166,1,166,1,166,1,166,5,166,2174,8,166,10,166,12,166,2177,9,166,1,
 	166,1,166,1,166,1,166,1,167,1,167,1,167,1,167,1,167,1,167,1,167,1,167,1,
+	167,1,167,3,167,2193,8,167,1,167,1,167,1,167,1,167,1,167,1,167,1,167,1,
 	167,1,167,1,167,1,167,1,167,1,167,1,167,1,167,1,167,1,167,1,167,1,167,1,
-	167,1,167,1,167,1,167,1,167,1,167,3,167,2209,8,167,1,168,1,168,1,168,1,
-	168,1,168,1,168,1,168,1,168,3,168,2219,8,168,1,169,1,169,4,169,2223,8,169,
-	11,169,12,169,2224,1,170,1,170,1,170,1,170,1,170,1,170,1,170,1,170,1,170,
-	1,170,1,170,1,170,3,170,2239,8,170,1,171,1,171,1,171,1,171,4,171,2245,8,
-	171,11,171,12,171,2246,1,171,3,171,2250,8,171,1,171,3,171,2253,8,171,1,
-	172,1,172,1,173,1,173,1,173,1,173,1,173,1,173,1,173,3,173,2264,8,173,1,
-	173,3,173,2267,8,173,1,174,1,174,1,175,1,175,1,175,3,175,2274,8,175,1,176,
-	1,176,5,176,2278,8,176,10,176,12,176,2281,9,176,1,177,1,177,1,177,3,177,
-	2286,8,177,1,178,1,178,1,178,1,178,1,178,1,178,1,178,1,178,1,178,1,178,
-	1,178,1,178,1,178,1,178,3,178,2302,8,178,1,179,1,179,1,179,3,179,2307,8,
-	179,1,179,0,1,302,180,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,
-	36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82,
-	84,86,88,90,92,94,96,98,100,102,104,106,108,110,112,114,116,118,120,122,
-	124,126,128,130,132,134,136,138,140,142,144,146,148,150,152,154,156,158,
-	160,162,164,166,168,170,172,174,176,178,180,182,184,186,188,190,192,194,
-	196,198,200,202,204,206,208,210,212,214,216,218,220,222,224,226,228,230,
-	232,234,236,238,240,242,244,246,248,250,252,254,256,258,260,262,264,266,
-	268,270,272,274,276,278,280,282,284,286,288,290,292,294,296,298,300,302,
-	304,306,308,310,312,314,316,318,320,322,324,326,328,330,332,334,336,338,
-	340,342,344,346,348,350,352,354,356,358,0,54,1,0,290,290,2,0,103,103,106,
-	106,2,0,106,106,112,112,2,0,197,197,208,208,3,0,65,66,77,77,79,79,1,0,81,
-	84,3,0,205,205,208,208,210,210,4,0,112,112,205,205,208,208,210,210,12,0,
-	139,139,141,141,169,169,201,201,209,209,213,213,222,222,224,224,226,226,
-	234,234,237,237,241,241,18,0,89,89,103,103,106,106,117,117,125,125,154,
-	154,183,183,194,195,198,199,202,203,214,221,225,225,227,227,231,232,235,
-	236,243,244,246,246,262,262,17,0,89,89,103,103,117,117,125,125,154,154,
-	183,183,194,195,198,199,202,203,214,221,225,225,227,227,231,232,235,236,
-	243,244,246,246,262,262,7,0,202,203,214,215,217,218,220,221,231,232,235,
-	236,243,244,1,0,156,157,2,0,3,3,161,161,2,0,172,173,176,176,2,0,205,205,
-	210,210,6,0,130,130,219,221,231,232,235,236,246,250,253,262,1,0,180,182,
-	2,0,183,183,262,262,2,0,183,183,262,263,4,0,28,28,88,93,95,99,276,276,2,
-	0,141,141,233,233,2,0,44,45,121,121,6,0,45,47,49,49,121,121,124,124,126,
-	126,134,135,9,0,139,139,169,169,201,201,209,209,213,213,224,224,226,226,
-	234,234,241,241,3,0,205,205,210,210,245,245,1,0,238,239,1,0,150,151,4,0,
-	194,195,198,199,208,208,263,263,2,0,279,279,289,289,3,0,279,280,284,284,
-	289,289,2,0,204,204,207,207,1,0,112,114,2,0,102,102,112,112,1,0,146,147,
-	1,0,51,56,1,0,51,52,2,0,51,52,61,64,2,0,209,209,222,222,3,0,44,45,51,51,
-	121,121,12,0,22,25,39,40,44,64,106,106,118,118,121,121,124,124,126,127,
-	133,133,135,135,213,213,251,252,3,0,130,130,136,136,145,145,2,0,119,120,
-	129,129,2,0,140,140,283,283,2,0,130,130,136,136,2,0,214,214,217,217,3,0,
-	131,132,137,138,148,148,2,0,184,184,186,186,2,0,65,68,77,80,2,0,122,122,
-	128,128,4,0,69,69,71,71,73,73,75,75,4,0,70,70,72,72,74,74,76,76,1,0,273,
-	274,2,0,190,190,193,193,2564,0,368,1,0,0,0,2,379,1,0,0,0,4,381,1,0,0,0,
-	6,388,1,0,0,0,8,395,1,0,0,0,10,411,1,0,0,0,12,431,1,0,0,0,14,447,1,0,0,
-	0,16,450,1,0,0,0,18,463,1,0,0,0,20,498,1,0,0,0,22,500,1,0,0,0,24,505,1,
-	0,0,0,26,515,1,0,0,0,28,523,1,0,0,0,30,527,1,0,0,0,32,529,1,0,0,0,34,531,
-	1,0,0,0,36,533,1,0,0,0,38,592,1,0,0,0,40,651,1,0,0,0,42,655,1,0,0,0,44,
-	705,1,0,0,0,46,707,1,0,0,0,48,716,1,0,0,0,50,725,1,0,0,0,52,734,1,0,0,0,
-	54,736,1,0,0,0,56,738,1,0,0,0,58,740,1,0,0,0,60,742,1,0,0,0,62,764,1,0,
-	0,0,64,773,1,0,0,0,66,782,1,0,0,0,68,812,1,0,0,0,70,814,1,0,0,0,72,821,
-	1,0,0,0,74,828,1,0,0,0,76,830,1,0,0,0,78,837,1,0,0,0,80,839,1,0,0,0,82,
-	842,1,0,0,0,84,852,1,0,0,0,86,868,1,0,0,0,88,870,1,0,0,0,90,876,1,0,0,0,
-	92,878,1,0,0,0,94,880,1,0,0,0,96,888,1,0,0,0,98,908,1,0,0,0,100,920,1,0,
-	0,0,102,934,1,0,0,0,104,936,1,0,0,0,106,944,1,0,0,0,108,949,1,0,0,0,110,
-	969,1,0,0,0,112,971,1,0,0,0,114,975,1,0,0,0,116,977,1,0,0,0,118,979,1,0,
-	0,0,120,998,1,0,0,0,122,1009,1,0,0,0,124,1029,1,0,0,0,126,1046,1,0,0,0,
-	128,1048,1,0,0,0,130,1064,1,0,0,0,132,1069,1,0,0,0,134,1073,1,0,0,0,136,
-	1075,1,0,0,0,138,1085,1,0,0,0,140,1097,1,0,0,0,142,1108,1,0,0,0,144,1129,
-	1,0,0,0,146,1131,1,0,0,0,148,1143,1,0,0,0,150,1147,1,0,0,0,152,1189,1,0,
-	0,0,154,1191,1,0,0,0,156,1193,1,0,0,0,158,1206,1,0,0,0,160,1211,1,0,0,0,
-	162,1220,1,0,0,0,164,1224,1,0,0,0,166,1226,1,0,0,0,168,1228,1,0,0,0,170,
-	1238,1,0,0,0,172,1251,1,0,0,0,174,1255,1,0,0,0,176,1257,1,0,0,0,178,1270,
-	1,0,0,0,180,1275,1,0,0,0,182,1282,1,0,0,0,184,1287,1,0,0,0,186,1334,1,0,
-	0,0,188,1351,1,0,0,0,190,1353,1,0,0,0,192,1358,1,0,0,0,194,1363,1,0,0,0,
-	196,1366,1,0,0,0,198,1370,1,0,0,0,200,1375,1,0,0,0,202,1387,1,0,0,0,204,
-	1392,1,0,0,0,206,1397,1,0,0,0,208,1402,1,0,0,0,210,1411,1,0,0,0,212,1427,
-	1,0,0,0,214,1436,1,0,0,0,216,1438,1,0,0,0,218,1442,1,0,0,0,220,1445,1,0,
-	0,0,222,1450,1,0,0,0,224,1460,1,0,0,0,226,1470,1,0,0,0,228,1474,1,0,0,0,
-	230,1481,1,0,0,0,232,1483,1,0,0,0,234,1486,1,0,0,0,236,1494,1,0,0,0,238,
-	1497,1,0,0,0,240,1504,1,0,0,0,242,1507,1,0,0,0,244,1510,1,0,0,0,246,1513,
-	1,0,0,0,248,1529,1,0,0,0,250,1531,1,0,0,0,252,1551,1,0,0,0,254,1557,1,0,
-	0,0,256,1568,1,0,0,0,258,1570,1,0,0,0,260,1572,1,0,0,0,262,1574,1,0,0,0,
-	264,1576,1,0,0,0,266,1602,1,0,0,0,268,1604,1,0,0,0,270,1614,1,0,0,0,272,
-	1620,1,0,0,0,274,1645,1,0,0,0,276,1660,1,0,0,0,278,1662,1,0,0,0,280,1711,
-	1,0,0,0,282,1722,1,0,0,0,284,1724,1,0,0,0,286,1727,1,0,0,0,288,1735,1,0,
-	0,0,290,1737,1,0,0,0,292,1746,1,0,0,0,294,1748,1,0,0,0,296,1757,1,0,0,0,
-	298,1759,1,0,0,0,300,1768,1,0,0,0,302,2035,1,0,0,0,304,2062,1,0,0,0,306,
-	2073,1,0,0,0,308,2075,1,0,0,0,310,2078,1,0,0,0,312,2084,1,0,0,0,314,2086,
-	1,0,0,0,316,2105,1,0,0,0,318,2123,1,0,0,0,320,2129,1,0,0,0,322,2137,1,0,
-	0,0,324,2139,1,0,0,0,326,2151,1,0,0,0,328,2153,1,0,0,0,330,2159,1,0,0,0,
-	332,2166,1,0,0,0,334,2208,1,0,0,0,336,2218,1,0,0,0,338,2222,1,0,0,0,340,
-	2238,1,0,0,0,342,2240,1,0,0,0,344,2254,1,0,0,0,346,2256,1,0,0,0,348,2268,
-	1,0,0,0,350,2270,1,0,0,0,352,2275,1,0,0,0,354,2282,1,0,0,0,356,2301,1,0,
-	0,0,358,2303,1,0,0,0,360,367,3,2,1,0,361,367,3,136,68,0,362,367,3,140,70,
-	0,363,367,3,4,2,0,364,367,3,176,88,0,365,367,3,94,47,0,366,360,1,0,0,0,
-	366,361,1,0,0,0,366,362,1,0,0,0,366,363,1,0,0,0,366,364,1,0,0,0,366,365,
-	1,0,0,0,367,370,1,0,0,0,368,366,1,0,0,0,368,369,1,0,0,0,369,371,1,0,0,0,
-	370,368,1,0,0,0,371,372,5,0,0,1,372,1,1,0,0,0,373,380,3,60,30,0,374,380,
-	3,84,42,0,375,380,3,118,59,0,376,380,3,108,54,0,377,380,3,126,63,0,378,
-	380,3,342,171,0,379,373,1,0,0,0,379,374,1,0,0,0,379,375,1,0,0,0,379,376,
-	1,0,0,0,379,377,1,0,0,0,379,378,1,0,0,0,380,3,1,0,0,0,381,382,5,91,0,0,
-	382,384,3,46,23,0,383,385,3,146,73,0,384,383,1,0,0,0,384,385,1,0,0,0,385,
-	386,1,0,0,0,386,387,3,6,3,0,387,5,1,0,0,0,388,389,3,8,4,0,389,391,3,10,
-	5,0,390,392,3,12,6,0,391,390,1,0,0,0,392,393,1,0,0,0,393,391,1,0,0,0,393,
-	394,1,0,0,0,394,7,1,0,0,0,395,397,5,290,0,0,396,398,5,290,0,0,397,396,1,
-	0,0,0,397,398,1,0,0,0,398,399,1,0,0,0,399,404,3,16,8,0,400,401,5,290,0,
-	0,401,403,3,16,8,0,402,400,1,0,0,0,403,406,1,0,0,0,404,402,1,0,0,0,404,
-	405,1,0,0,0,405,408,1,0,0,0,406,404,1,0,0,0,407,409,5,290,0,0,408,407,1,
-	0,0,0,408,409,1,0,0,0,409,9,1,0,0,0,410,412,5,290,0,0,411,410,1,0,0,0,411,
-	412,1,0,0,0,412,421,1,0,0,0,413,415,5,289,0,0,414,413,1,0,0,0,415,416,1,
-	0,0,0,416,414,1,0,0,0,416,417,1,0,0,0,417,419,1,0,0,0,418,420,5,290,0,0,
-	419,418,1,0,0,0,419,420,1,0,0,0,420,422,1,0,0,0,421,414,1,0,0,0,422,423,
-	1,0,0,0,423,421,1,0,0,0,423,424,1,0,0,0,424,428,1,0,0,0,425,427,5,289,0,
-	0,426,425,1,0,0,0,427,430,1,0,0,0,428,426,1,0,0,0,428,429,1,0,0,0,429,11,
-	1,0,0,0,430,428,1,0,0,0,431,432,5,290,0,0,432,433,5,263,0,0,433,434,5,290,
-	0,0,434,439,3,14,7,0,435,436,5,290,0,0,436,438,3,14,7,0,437,435,1,0,0,0,
-	438,441,1,0,0,0,439,437,1,0,0,0,439,440,1,0,0,0,440,443,1,0,0,0,441,439,
-	1,0,0,0,442,444,5,290,0,0,443,442,1,0,0,0,443,444,1,0,0,0,444,13,1,0,0,
-	0,445,448,3,274,137,0,446,448,5,291,0,0,447,445,1,0,0,0,447,446,1,0,0,0,
-	448,15,1,0,0,0,449,451,8,0,0,0,450,449,1,0,0,0,451,452,1,0,0,0,452,450,
-	1,0,0,0,452,453,1,0,0,0,453,17,1,0,0,0,454,455,3,22,11,0,455,456,5,9,0,
-	0,456,457,5,0,0,1,457,464,1,0,0,0,458,459,3,204,102,0,459,460,7,1,0,0,460,
-	461,3,220,110,0,461,462,5,0,0,1,462,464,1,0,0,0,463,454,1,0,0,0,463,458,
-	1,0,0,0,464,19,1,0,0,0,465,466,5,104,0,0,466,467,3,22,11,0,467,468,7,2,
-	0,0,468,469,7,3,0,0,469,470,3,220,110,0,470,471,5,0,0,1,471,499,1,0,0,0,
-	472,473,5,104,0,0,473,474,3,22,11,0,474,475,7,4,0,0,475,476,5,0,0,1,476,
-	499,1,0,0,0,477,478,5,104,0,0,478,479,3,22,11,0,479,480,7,5,0,0,480,481,
-	5,263,0,0,481,482,5,160,0,0,482,483,5,0,0,1,483,499,1,0,0,0,484,485,5,104,
-	0,0,485,486,3,22,11,0,486,487,3,288,144,0,487,488,5,0,0,1,488,499,1,0,0,
-	0,489,490,5,104,0,0,490,492,3,204,102,0,491,493,7,6,0,0,492,491,1,0,0,0,
-	492,493,1,0,0,0,493,494,1,0,0,0,494,495,3,220,110,0,495,496,5,103,0,0,496,
-	497,5,0,0,1,497,499,1,0,0,0,498,465,1,0,0,0,498,472,1,0,0,0,498,477,1,0,
-	0,0,498,484,1,0,0,0,498,489,1,0,0,0,499,21,1,0,0,0,500,503,3,24,12,0,501,
-	502,5,237,0,0,502,504,3,204,102,0,503,501,1,0,0,0,503,504,1,0,0,0,504,23,
-	1,0,0,0,505,511,3,26,13,0,506,507,3,30,15,0,507,508,3,28,14,0,508,510,1,
-	0,0,0,509,506,1,0,0,0,510,513,1,0,0,0,511,509,1,0,0,0,511,512,1,0,0,0,512,
-	25,1,0,0,0,513,511,1,0,0,0,514,516,7,7,0,0,515,514,1,0,0,0,515,516,1,0,
-	0,0,516,518,1,0,0,0,517,519,3,36,18,0,518,517,1,0,0,0,519,520,1,0,0,0,520,
-	518,1,0,0,0,520,521,1,0,0,0,521,27,1,0,0,0,522,524,3,36,18,0,523,522,1,
-	0,0,0,524,525,1,0,0,0,525,523,1,0,0,0,525,526,1,0,0,0,526,29,1,0,0,0,527,
-	528,7,8,0,0,528,31,1,0,0,0,529,530,5,262,0,0,530,33,1,0,0,0,531,532,7,9,
-	0,0,532,35,1,0,0,0,533,534,7,10,0,0,534,37,1,0,0,0,535,537,7,7,0,0,536,
-	535,1,0,0,0,536,537,1,0,0,0,537,539,1,0,0,0,538,540,3,34,17,0,539,538,1,
-	0,0,0,540,541,1,0,0,0,541,539,1,0,0,0,541,542,1,0,0,0,542,593,1,0,0,0,543,
-	545,3,34,17,0,544,543,1,0,0,0,545,546,1,0,0,0,546,544,1,0,0,0,546,547,1,
-	0,0,0,547,593,1,0,0,0,548,550,5,42,0,0,549,551,3,34,17,0,550,549,1,0,0,
-	0,551,552,1,0,0,0,552,550,1,0,0,0,552,553,1,0,0,0,553,593,1,0,0,0,554,556,
-	5,42,0,0,555,557,3,34,17,0,556,555,1,0,0,0,557,558,1,0,0,0,558,556,1,0,
-	0,0,558,559,1,0,0,0,559,560,1,0,0,0,560,562,5,169,0,0,561,563,3,34,17,0,
-	562,561,1,0,0,0,563,564,1,0,0,0,564,562,1,0,0,0,564,565,1,0,0,0,565,593,
-	1,0,0,0,566,568,3,34,17,0,567,566,1,0,0,0,568,569,1,0,0,0,569,567,1,0,0,
-	0,569,570,1,0,0,0,570,571,1,0,0,0,571,573,5,169,0,0,572,574,3,34,17,0,573,
-	572,1,0,0,0,574,575,1,0,0,0,575,573,1,0,0,0,575,576,1,0,0,0,576,593,1,0,
-	0,0,577,579,5,133,0,0,578,580,3,34,17,0,579,578,1,0,0,0,580,581,1,0,0,0,
-	581,579,1,0,0,0,581,582,1,0,0,0,582,593,1,0,0,0,583,584,5,210,0,0,584,585,
-	5,183,0,0,585,586,5,203,0,0,586,588,5,213,0,0,587,589,3,34,17,0,588,587,
-	1,0,0,0,589,590,1,0,0,0,590,588,1,0,0,0,590,591,1,0,0,0,591,593,1,0,0,0,
-	592,536,1,0,0,0,592,544,1,0,0,0,592,548,1,0,0,0,592,554,1,0,0,0,592,567,
-	1,0,0,0,592,577,1,0,0,0,592,583,1,0,0,0,593,39,1,0,0,0,594,596,7,7,0,0,
-	595,594,1,0,0,0,595,596,1,0,0,0,596,598,1,0,0,0,597,599,3,42,21,0,598,597,
-	1,0,0,0,599,600,1,0,0,0,600,598,1,0,0,0,600,601,1,0,0,0,601,652,1,0,0,0,
-	602,604,3,42,21,0,603,602,1,0,0,0,604,605,1,0,0,0,605,603,1,0,0,0,605,606,
-	1,0,0,0,606,652,1,0,0,0,607,609,5,42,0,0,608,610,3,42,21,0,609,608,1,0,
-	0,0,610,611,1,0,0,0,611,609,1,0,0,0,611,612,1,0,0,0,612,652,1,0,0,0,613,
-	615,5,42,0,0,614,616,3,42,21,0,615,614,1,0,0,0,616,617,1,0,0,0,617,615,
-	1,0,0,0,617,618,1,0,0,0,618,619,1,0,0,0,619,621,5,169,0,0,620,622,3,42,
-	21,0,621,620,1,0,0,0,622,623,1,0,0,0,623,621,1,0,0,0,623,624,1,0,0,0,624,
-	652,1,0,0,0,625,627,3,42,21,0,626,625,1,0,0,0,627,628,1,0,0,0,628,626,1,
-	0,0,0,628,629,1,0,0,0,629,630,1,0,0,0,630,632,5,169,0,0,631,633,3,42,21,
-	0,632,631,1,0,0,0,633,634,1,0,0,0,634,632,1,0,0,0,634,635,1,0,0,0,635,652,
-	1,0,0,0,636,638,5,133,0,0,637,639,3,42,21,0,638,637,1,0,0,0,639,640,1,0,
-	0,0,640,638,1,0,0,0,640,641,1,0,0,0,641,652,1,0,0,0,642,643,5,210,0,0,643,
-	644,5,183,0,0,644,645,5,203,0,0,645,647,5,213,0,0,646,648,3,42,21,0,647,
-	646,1,0,0,0,648,649,1,0,0,0,649,647,1,0,0,0,649,650,1,0,0,0,650,652,1,0,
-	0,0,651,595,1,0,0,0,651,603,1,0,0,0,651,607,1,0,0,0,651,613,1,0,0,0,651,
-	626,1,0,0,0,651,636,1,0,0,0,651,642,1,0,0,0,652,41,1,0,0,0,653,656,3,34,
-	17,0,654,656,5,263,0,0,655,653,1,0,0,0,655,654,1,0,0,0,656,43,1,0,0,0,657,
-	659,7,7,0,0,658,657,1,0,0,0,658,659,1,0,0,0,659,661,1,0,0,0,660,662,3,36,
-	18,0,661,660,1,0,0,0,662,663,1,0,0,0,663,661,1,0,0,0,663,664,1,0,0,0,664,
-	706,1,0,0,0,665,667,3,36,18,0,666,665,1,0,0,0,667,668,1,0,0,0,668,666,1,
-	0,0,0,668,669,1,0,0,0,669,706,1,0,0,0,670,672,5,42,0,0,671,673,3,36,18,
-	0,672,671,1,0,0,0,673,674,1,0,0,0,674,672,1,0,0,0,674,675,1,0,0,0,675,706,
-	1,0,0,0,676,678,5,42,0,0,677,679,3,36,18,0,678,677,1,0,0,0,679,680,1,0,
-	0,0,680,678,1,0,0,0,680,681,1,0,0,0,681,682,1,0,0,0,682,684,5,169,0,0,683,
-	685,3,36,18,0,684,683,1,0,0,0,685,686,1,0,0,0,686,684,1,0,0,0,686,687,1,
-	0,0,0,687,706,1,0,0,0,688,690,3,36,18,0,689,688,1,0,0,0,690,691,1,0,0,0,
-	691,689,1,0,0,0,691,692,1,0,0,0,692,693,1,0,0,0,693,695,5,169,0,0,694,696,
-	3,36,18,0,695,694,1,0,0,0,696,697,1,0,0,0,697,695,1,0,0,0,697,698,1,0,0,
-	0,698,706,1,0,0,0,699,701,5,133,0,0,700,702,3,36,18,0,701,700,1,0,0,0,702,
-	703,1,0,0,0,703,701,1,0,0,0,703,704,1,0,0,0,704,706,1,0,0,0,705,658,1,0,
-	0,0,705,666,1,0,0,0,705,670,1,0,0,0,705,676,1,0,0,0,705,689,1,0,0,0,705,
-	699,1,0,0,0,706,45,1,0,0,0,707,713,3,38,19,0,708,709,3,52,26,0,709,710,
-	3,38,19,0,710,712,1,0,0,0,711,708,1,0,0,0,712,715,1,0,0,0,713,711,1,0,0,
-	0,713,714,1,0,0,0,714,47,1,0,0,0,715,713,1,0,0,0,716,722,3,40,20,0,717,
-	718,3,52,26,0,718,719,3,40,20,0,719,721,1,0,0,0,720,717,1,0,0,0,721,724,
-	1,0,0,0,722,720,1,0,0,0,722,723,1,0,0,0,723,49,1,0,0,0,724,722,1,0,0,0,
-	725,731,3,44,22,0,726,727,3,52,26,0,727,728,3,44,22,0,728,730,1,0,0,0,729,
-	726,1,0,0,0,730,733,1,0,0,0,731,729,1,0,0,0,731,732,1,0,0,0,732,51,1,0,
-	0,0,733,731,1,0,0,0,734,735,7,8,0,0,735,53,1,0,0,0,736,737,5,265,0,0,737,
-	55,1,0,0,0,738,739,5,262,0,0,739,57,1,0,0,0,740,741,7,11,0,0,741,59,1,0,
-	0,0,742,743,5,92,0,0,743,751,3,50,25,0,744,746,5,171,0,0,745,747,5,262,
-	0,0,746,745,1,0,0,0,747,748,1,0,0,0,748,746,1,0,0,0,748,749,1,0,0,0,749,
-	750,1,0,0,0,750,752,5,270,0,0,751,744,1,0,0,0,751,752,1,0,0,0,752,754,1,
-	0,0,0,753,755,5,158,0,0,754,753,1,0,0,0,754,755,1,0,0,0,755,759,1,0,0,0,
-	756,758,3,62,31,0,757,756,1,0,0,0,758,761,1,0,0,0,759,757,1,0,0,0,759,760,
-	1,0,0,0,760,61,1,0,0,0,761,759,1,0,0,0,762,765,3,64,32,0,763,765,3,66,33,
-	0,764,762,1,0,0,0,764,763,1,0,0,0,765,766,1,0,0,0,766,767,5,276,0,0,767,
-	63,1,0,0,0,768,770,5,106,0,0,769,768,1,0,0,0,769,770,1,0,0,0,770,771,1,
-	0,0,0,771,774,3,32,16,0,772,774,3,48,24,0,773,769,1,0,0,0,773,772,1,0,0,
-	0,774,775,1,0,0,0,775,777,5,167,0,0,776,778,7,12,0,0,777,776,1,0,0,0,777,
-	778,1,0,0,0,778,780,1,0,0,0,779,781,3,114,57,0,780,779,1,0,0,0,780,781,
-	1,0,0,0,781,65,1,0,0,0,782,786,3,48,24,0,783,787,3,68,34,0,784,787,3,90,
-	45,0,785,787,3,92,46,0,786,783,1,0,0,0,786,784,1,0,0,0,786,785,1,0,0,0,
-	787,790,1,0,0,0,788,789,5,170,0,0,789,791,3,102,51,0,790,788,1,0,0,0,790,
-	791,1,0,0,0,791,801,1,0,0,0,792,793,5,164,0,0,793,798,3,116,58,0,794,795,
-	5,209,0,0,795,797,3,116,58,0,796,794,1,0,0,0,797,800,1,0,0,0,798,796,1,
-	0,0,0,798,799,1,0,0,0,799,802,1,0,0,0,800,798,1,0,0,0,801,792,1,0,0,0,801,
-	802,1,0,0,0,802,804,1,0,0,0,803,805,3,114,57,0,804,803,1,0,0,0,804,805,
-	1,0,0,0,805,67,1,0,0,0,806,813,3,72,36,0,807,813,3,74,37,0,808,813,3,78,
-	39,0,809,813,3,80,40,0,810,813,3,70,35,0,811,813,3,76,38,0,812,806,1,0,
-	0,0,812,807,1,0,0,0,812,808,1,0,0,0,812,809,1,0,0,0,812,810,1,0,0,0,812,
-	811,1,0,0,0,813,69,1,0,0,0,814,815,5,94,0,0,815,819,5,237,0,0,816,820,3,
-	68,34,0,817,820,3,90,45,0,818,820,3,92,46,0,819,816,1,0,0,0,819,817,1,0,
-	0,0,819,818,1,0,0,0,820,71,1,0,0,0,821,826,5,174,0,0,822,823,5,269,0,0,
-	823,824,3,82,41,0,824,825,5,270,0,0,825,827,1,0,0,0,826,822,1,0,0,0,826,
-	827,1,0,0,0,827,73,1,0,0,0,828,829,5,179,0,0,829,75,1,0,0,0,830,835,5,175,
-	0,0,831,832,5,269,0,0,832,833,3,82,41,0,833,834,5,270,0,0,834,836,1,0,0,
-	0,835,831,1,0,0,0,835,836,1,0,0,0,836,77,1,0,0,0,837,838,5,159,0,0,838,
-	79,1,0,0,0,839,840,7,13,0,0,840,81,1,0,0,0,841,843,7,14,0,0,842,841,1,0,
-	0,0,842,843,1,0,0,0,843,850,1,0,0,0,844,851,5,165,0,0,845,846,5,166,0,0,
-	846,847,5,169,0,0,847,848,5,263,0,0,848,851,5,162,0,0,849,851,5,166,0,0,
-	850,844,1,0,0,0,850,845,1,0,0,0,850,849,1,0,0,0,851,83,1,0,0,0,852,853,
-	5,93,0,0,853,854,5,262,0,0,854,855,5,29,0,0,855,858,3,86,43,0,856,857,5,
-	170,0,0,857,859,3,102,51,0,858,856,1,0,0,0,858,859,1,0,0,0,859,861,1,0,
-	0,0,860,862,5,276,0,0,861,860,1,0,0,0,861,862,1,0,0,0,862,85,1,0,0,0,863,
-	869,3,88,44,0,864,869,3,72,36,0,865,869,3,74,37,0,866,869,3,78,39,0,867,
-	869,3,80,40,0,868,863,1,0,0,0,868,864,1,0,0,0,868,865,1,0,0,0,868,866,1,
-	0,0,0,868,867,1,0,0,0,869,87,1,0,0,0,870,872,5,163,0,0,871,873,5,268,0,
-	0,872,871,1,0,0,0,873,874,1,0,0,0,874,872,1,0,0,0,874,875,1,0,0,0,875,89,
-	1,0,0,0,876,877,5,262,0,0,877,91,1,0,0,0,878,879,5,262,0,0,879,93,1,0,0,
-	0,880,881,5,96,0,0,881,885,3,32,16,0,882,884,3,96,48,0,883,882,1,0,0,0,
-	884,887,1,0,0,0,885,883,1,0,0,0,885,886,1,0,0,0,886,95,1,0,0,0,887,885,
-	1,0,0,0,888,889,7,15,0,0,889,894,3,100,50,0,890,891,5,171,0,0,891,892,3,
-	100,50,0,892,893,5,270,0,0,893,895,1,0,0,0,894,890,1,0,0,0,894,895,1,0,
-	0,0,895,896,1,0,0,0,896,898,3,100,50,0,897,899,3,100,50,0,898,897,1,0,0,
-	0,898,899,1,0,0,0,899,906,1,0,0,0,900,902,5,264,0,0,901,903,5,277,0,0,902,
-	901,1,0,0,0,902,903,1,0,0,0,903,904,1,0,0,0,904,905,5,263,0,0,905,907,3,
-	100,50,0,906,900,1,0,0,0,906,907,1,0,0,0,907,97,1,0,0,0,908,909,7,16,0,
-	0,909,99,1,0,0,0,910,921,3,98,49,0,911,921,5,202,0,0,912,921,5,203,0,0,
-	913,921,5,217,0,0,914,921,5,218,0,0,915,921,5,214,0,0,916,921,5,215,0,0,
-	917,921,5,243,0,0,918,921,5,244,0,0,919,921,5,216,0,0,920,910,1,0,0,0,920,
-	911,1,0,0,0,920,912,1,0,0,0,920,913,1,0,0,0,920,914,1,0,0,0,920,915,1,0,
-	0,0,920,916,1,0,0,0,920,917,1,0,0,0,920,918,1,0,0,0,920,919,1,0,0,0,921,
-	101,1,0,0,0,922,927,3,104,52,0,923,924,5,277,0,0,924,926,3,104,52,0,925,
-	923,1,0,0,0,926,929,1,0,0,0,927,925,1,0,0,0,927,928,1,0,0,0,928,935,1,0,
-	0,0,929,927,1,0,0,0,930,935,5,263,0,0,931,935,5,278,0,0,932,935,5,259,0,
-	0,933,935,5,260,0,0,934,922,1,0,0,0,934,930,1,0,0,0,934,931,1,0,0,0,934,
-	932,1,0,0,0,934,933,1,0,0,0,935,103,1,0,0,0,936,941,3,106,53,0,937,938,
-	5,280,0,0,938,940,3,106,53,0,939,937,1,0,0,0,940,943,1,0,0,0,941,939,1,
-	0,0,0,941,942,1,0,0,0,942,105,1,0,0,0,943,941,1,0,0,0,944,947,3,98,49,0,
-	945,946,5,283,0,0,946,948,5,263,0,0,947,945,1,0,0,0,947,948,1,0,0,0,948,
-	107,1,0,0,0,949,950,5,95,0,0,950,952,3,46,23,0,951,953,5,273,0,0,952,951,
-	1,0,0,0,952,953,1,0,0,0,953,954,1,0,0,0,954,955,5,27,0,0,955,956,3,46,23,
-	0,956,958,3,110,55,0,957,959,3,112,56,0,958,957,1,0,0,0,959,960,1,0,0,0,
-	960,958,1,0,0,0,960,961,1,0,0,0,961,109,1,0,0,0,962,963,5,2,0,0,963,964,
-	3,52,26,0,964,966,5,270,0,0,965,967,5,275,0,0,966,965,1,0,0,0,966,967,1,
-	0,0,0,967,970,1,0,0,0,968,970,5,1,0,0,969,962,1,0,0,0,969,968,1,0,0,0,970,
-	111,1,0,0,0,971,972,5,263,0,0,972,973,5,274,0,0,973,974,3,46,23,0,974,113,
-	1,0,0,0,975,976,7,17,0,0,976,115,1,0,0,0,977,978,5,262,0,0,978,117,1,0,
-	0,0,979,980,5,97,0,0,980,981,3,120,60,0,981,984,5,275,0,0,982,985,3,68,
-	34,0,983,985,3,90,45,0,984,982,1,0,0,0,984,983,1,0,0,0,985,988,1,0,0,0,
-	986,987,5,170,0,0,987,989,3,102,51,0,988,986,1,0,0,0,988,989,1,0,0,0,989,
-	992,1,0,0,0,990,991,5,106,0,0,991,993,3,274,137,0,992,990,1,0,0,0,992,993,
-	1,0,0,0,993,995,1,0,0,0,994,996,3,114,57,0,995,994,1,0,0,0,995,996,1,0,
-	0,0,996,119,1,0,0,0,997,999,7,15,0,0,998,997,1,0,0,0,998,999,1,0,0,0,999,
-	1000,1,0,0,0,1000,1006,3,122,61,0,1001,1002,3,52,26,0,1002,1003,3,122,61,
-	0,1003,1005,1,0,0,0,1004,1001,1,0,0,0,1005,1008,1,0,0,0,1006,1004,1,0,0,
-	0,1006,1007,1,0,0,0,1007,121,1,0,0,0,1008,1006,1,0,0,0,1009,1013,7,18,0,
-	0,1010,1012,7,19,0,0,1011,1010,1,0,0,0,1012,1015,1,0,0,0,1013,1011,1,0,
-	0,0,1013,1014,1,0,0,0,1014,123,1,0,0,0,1015,1013,1,0,0,0,1016,1018,7,15,
-	0,0,1017,1016,1,0,0,0,1017,1018,1,0,0,0,1018,1019,1,0,0,0,1019,1025,3,122,
-	61,0,1020,1021,3,52,26,0,1021,1022,3,122,61,0,1022,1024,1,0,0,0,1023,1020,
-	1,0,0,0,1024,1027,1,0,0,0,1025,1023,1,0,0,0,1025,1026,1,0,0,0,1026,1030,
-	1,0,0,0,1027,1025,1,0,0,0,1028,1030,3,46,23,0,1029,1017,1,0,0,0,1029,1028,
-	1,0,0,0,1030,125,1,0,0,0,1031,1032,5,98,0,0,1032,1033,3,46,23,0,1033,1035,
-	3,128,64,0,1034,1036,3,128,64,0,1035,1034,1,0,0,0,1036,1037,1,0,0,0,1037,
-	1035,1,0,0,0,1037,1038,1,0,0,0,1038,1039,1,0,0,0,1039,1040,3,132,66,0,1040,
-	1047,1,0,0,0,1041,1042,5,28,0,0,1042,1043,3,46,23,0,1043,1044,3,128,64,
-	0,1044,1045,3,132,66,0,1045,1047,1,0,0,0,1046,1031,1,0,0,0,1046,1041,1,
-	0,0,0,1047,127,1,0,0,0,1048,1049,7,15,0,0,1049,1054,3,130,65,0,1050,1051,
-	5,171,0,0,1051,1052,3,46,23,0,1052,1053,5,270,0,0,1053,1055,1,0,0,0,1054,
-	1050,1,0,0,0,1054,1055,1,0,0,0,1055,1056,1,0,0,0,1056,1058,5,286,0,0,1057,
-	1059,5,262,0,0,1058,1057,1,0,0,0,1059,1060,1,0,0,0,1060,1058,1,0,0,0,1060,
-	1061,1,0,0,0,1061,129,1,0,0,0,1062,1065,3,34,17,0,1063,1065,3,52,26,0,1064,
-	1062,1,0,0,0,1064,1063,1,0,0,0,1065,1066,1,0,0,0,1066,1064,1,0,0,0,1066,
-	1067,1,0,0,0,1067,131,1,0,0,0,1068,1070,3,134,67,0,1069,1068,1,0,0,0,1070,
-	1071,1,0,0,0,1071,1069,1,0,0,0,1071,1072,1,0,0,0,1072,133,1,0,0,0,1073,
-	1074,8,20,0,0,1074,135,1,0,0,0,1075,1076,5,89,0,0,1076,1078,3,142,71,0,
-	1077,1079,5,263,0,0,1078,1077,1,0,0,0,1078,1079,1,0,0,0,1079,1081,1,0,0,
-	0,1080,1082,3,138,69,0,1081,1080,1,0,0,0,1082,1083,1,0,0,0,1083,1081,1,
-	0,0,0,1083,1084,1,0,0,0,1084,137,1,0,0,0,1085,1086,3,146,73,0,1086,1092,
-	3,152,76,0,1087,1089,3,184,92,0,1088,1090,5,274,0,0,1089,1088,1,0,0,0,1089,
-	1090,1,0,0,0,1090,1093,1,0,0,0,1091,1093,5,274,0,0,1092,1087,1,0,0,0,1092,
-	1091,1,0,0,0,1092,1093,1,0,0,0,1093,1095,1,0,0,0,1094,1096,3,268,134,0,
-	1095,1094,1,0,0,0,1095,1096,1,0,0,0,1096,139,1,0,0,0,1097,1098,5,90,0,0,
-	1098,1100,3,46,23,0,1099,1101,5,105,0,0,1100,1099,1,0,0,0,1100,1101,1,0,
-	0,0,1101,1104,1,0,0,0,1102,1105,3,136,68,0,1103,1105,3,176,88,0,1104,1102,
-	1,0,0,0,1104,1103,1,0,0,0,1105,1106,1,0,0,0,1106,1104,1,0,0,0,1106,1107,
-	1,0,0,0,1107,141,1,0,0,0,1108,1112,3,48,24,0,1109,1111,3,144,72,0,1110,
-	1109,1,0,0,0,1111,1114,1,0,0,0,1112,1110,1,0,0,0,1112,1113,1,0,0,0,1113,
-	143,1,0,0,0,1114,1112,1,0,0,0,1115,1130,5,191,0,0,1116,1117,5,273,0,0,1117,
-	1130,3,48,24,0,1118,1119,5,273,0,0,1119,1120,5,169,0,0,1120,1130,3,48,24,
-	0,1121,1122,5,209,0,0,1122,1130,3,48,24,0,1123,1124,5,106,0,0,1124,1130,
-	3,48,24,0,1125,1126,5,197,0,0,1126,1127,3,48,24,0,1127,1128,5,106,0,0,1128,
-	1130,1,0,0,0,1129,1115,1,0,0,0,1129,1116,1,0,0,0,1129,1118,1,0,0,0,1129,
-	1121,1,0,0,0,1129,1123,1,0,0,0,1129,1125,1,0,0,0,1130,145,1,0,0,0,1131,
-	1132,5,101,0,0,1132,1133,3,148,74,0,1133,147,1,0,0,0,1134,1144,5,200,0,
-	0,1135,1136,5,143,0,0,1136,1139,3,150,75,0,1137,1138,7,21,0,0,1138,1140,
-	3,150,75,0,1139,1137,1,0,0,0,1139,1140,1,0,0,0,1140,1144,1,0,0,0,1141,1142,
-	7,21,0,0,1142,1144,3,150,75,0,1143,1134,1,0,0,0,1143,1135,1,0,0,0,1143,
-	1141,1,0,0,0,1144,149,1,0,0,0,1145,1148,3,54,27,0,1146,1148,5,263,0,0,1147,
-	1145,1,0,0,0,1147,1146,1,0,0,0,1148,151,1,0,0,0,1149,1150,5,208,0,0,1150,
-	1151,5,202,0,0,1151,1152,5,106,0,0,1152,1153,5,208,0,0,1153,1190,3,46,23,
-	0,1154,1161,3,216,108,0,1155,1156,5,8,0,0,1156,1162,3,274,137,0,1157,1158,
-	5,9,0,0,1158,1162,3,274,137,0,1159,1160,5,10,0,0,1160,1162,3,274,137,0,
-	1161,1155,1,0,0,0,1161,1157,1,0,0,0,1161,1159,1,0,0,0,1162,1164,1,0,0,0,
-	1163,1165,3,312,156,0,1164,1163,1,0,0,0,1164,1165,1,0,0,0,1165,1190,1,0,
-	0,0,1166,1167,3,216,108,0,1167,1168,5,107,0,0,1168,1169,3,154,77,0,1169,
-	1170,3,274,137,0,1170,1190,1,0,0,0,1171,1190,3,156,78,0,1172,1190,3,168,
-	84,0,1173,1174,3,204,102,0,1174,1175,5,103,0,0,1175,1176,7,15,0,0,1176,
-	1177,3,46,23,0,1177,1178,5,169,0,0,1178,1179,3,218,109,0,1179,1180,7,22,
-	0,0,1180,1181,3,274,137,0,1181,1190,1,0,0,0,1182,1183,3,204,102,0,1183,
-	1184,7,1,0,0,1184,1186,3,220,110,0,1185,1187,3,312,156,0,1186,1185,1,0,
-	0,0,1186,1187,1,0,0,0,1187,1190,1,0,0,0,1188,1190,3,346,173,0,1189,1149,
-	1,0,0,0,1189,1154,1,0,0,0,1189,1166,1,0,0,0,1189,1171,1,0,0,0,1189,1172,
-	1,0,0,0,1189,1173,1,0,0,0,1189,1182,1,0,0,0,1189,1188,1,0,0,0,1190,153,
-	1,0,0,0,1191,1192,7,23,0,0,1192,155,1,0,0,0,1193,1194,5,208,0,0,1194,1195,
-	3,158,79,0,1195,1196,5,237,0,0,1196,1197,5,208,0,0,1197,1198,3,160,80,0,
-	1198,1199,5,106,0,0,1199,1200,7,6,0,0,1200,1201,3,158,79,0,1201,1202,5,
-	237,0,0,1202,1203,7,6,0,0,1203,1204,3,160,80,0,1204,157,1,0,0,0,1205,1207,
-	3,164,82,0,1206,1205,1,0,0,0,1207,1208,1,0,0,0,1208,1206,1,0,0,0,1208,1209,
-	1,0,0,0,1209,159,1,0,0,0,1210,1212,3,162,81,0,1211,1210,1,0,0,0,1212,1213,
-	1,0,0,0,1213,1211,1,0,0,0,1213,1214,1,0,0,0,1214,161,1,0,0,0,1215,1221,
-	3,34,17,0,1216,1221,3,52,26,0,1217,1221,5,205,0,0,1218,1221,5,210,0,0,1219,
-	1221,5,208,0,0,1220,1215,1,0,0,0,1220,1216,1,0,0,0,1220,1217,1,0,0,0,1220,
-	1218,1,0,0,0,1220,1219,1,0,0,0,1221,163,1,0,0,0,1222,1225,3,34,17,0,1223,
-	1225,3,166,83,0,1224,1222,1,0,0,0,1224,1223,1,0,0,0,1225,165,1,0,0,0,1226,
-	1227,7,24,0,0,1227,167,1,0,0,0,1228,1229,3,204,102,0,1229,1230,5,103,0,
-	0,1230,1231,7,6,0,0,1231,1233,3,46,23,0,1232,1234,3,170,85,0,1233,1232,
-	1,0,0,0,1233,1234,1,0,0,0,1234,1236,1,0,0,0,1235,1237,5,274,0,0,1236,1235,
-	1,0,0,0,1236,1237,1,0,0,0,1237,169,1,0,0,0,1238,1239,5,169,0,0,1239,1244,
-	3,172,86,0,1240,1241,5,273,0,0,1241,1243,3,172,86,0,1242,1240,1,0,0,0,1243,
-	1246,1,0,0,0,1244,1242,1,0,0,0,1244,1245,1,0,0,0,1245,1249,1,0,0,0,1246,
-	1244,1,0,0,0,1247,1248,5,209,0,0,1248,1250,3,172,86,0,1249,1247,1,0,0,0,
-	1249,1250,1,0,0,0,1250,171,1,0,0,0,1251,1252,3,174,87,0,1252,1253,5,121,
-	0,0,1253,1254,3,276,138,0,1254,173,1,0,0,0,1255,1256,3,38,19,0,1256,175,
-	1,0,0,0,1257,1258,5,88,0,0,1258,1268,3,46,23,0,1259,1269,3,178,89,0,1260,
-	1266,3,182,91,0,1261,1263,3,184,92,0,1262,1264,5,274,0,0,1263,1262,1,0,
-	0,0,1263,1264,1,0,0,0,1264,1267,1,0,0,0,1265,1267,5,274,0,0,1266,1261,1,
-	0,0,0,1266,1265,1,0,0,0,1266,1267,1,0,0,0,1267,1269,1,0,0,0,1268,1259,1,
-	0,0,0,1268,1260,1,0,0,0,1269,177,1,0,0,0,1270,1271,3,180,90,0,1271,1273,
-	5,85,0,0,1272,1274,5,274,0,0,1273,1272,1,0,0,0,1273,1274,1,0,0,0,1274,179,
-	1,0,0,0,1275,1276,5,205,0,0,1276,1277,3,46,23,0,1277,1278,5,237,0,0,1278,
-	1279,5,117,0,0,1279,1280,3,46,23,0,1280,181,1,0,0,0,1281,1283,7,25,0,0,
-	1282,1281,1,0,0,0,1282,1283,1,0,0,0,1283,1284,1,0,0,0,1284,1285,3,46,23,
-	0,1285,1286,5,87,0,0,1286,183,1,0,0,0,1287,1290,5,104,0,0,1288,1291,3,274,
-	137,0,1289,1291,3,186,93,0,1290,1288,1,0,0,0,1290,1289,1,0,0,0,1291,185,
-	1,0,0,0,1292,1293,5,43,0,0,1293,1294,3,188,94,0,1294,1295,7,26,0,0,1295,
-	1296,5,41,0,0,1296,1298,5,275,0,0,1297,1299,3,190,95,0,1298,1297,1,0,0,
-	0,1299,1300,1,0,0,0,1300,1298,1,0,0,0,1300,1301,1,0,0,0,1301,1335,1,0,0,
-	0,1302,1307,3,204,102,0,1303,1307,5,212,0,0,1304,1307,5,210,0,0,1305,1307,
-	5,245,0,0,1306,1302,1,0,0,0,1306,1303,1,0,0,0,1306,1304,1,0,0,0,1306,1305,
-	1,0,0,0,1307,1308,1,0,0,0,1308,1309,5,115,0,0,1309,1310,3,188,94,0,1310,
-	1311,7,26,0,0,1311,1312,5,147,0,0,1312,1314,5,275,0,0,1313,1315,3,190,95,
-	0,1314,1313,1,0,0,0,1315,1316,1,0,0,0,1316,1314,1,0,0,0,1316,1317,1,0,0,
-	0,1317,1335,1,0,0,0,1318,1323,3,204,102,0,1319,1323,5,212,0,0,1320,1323,
-	5,210,0,0,1321,1323,5,245,0,0,1322,1318,1,0,0,0,1322,1319,1,0,0,0,1322,
-	1320,1,0,0,0,1322,1321,1,0,0,0,1323,1324,1,0,0,0,1324,1325,5,147,0,0,1325,
-	1326,5,115,0,0,1326,1327,3,188,94,0,1327,1328,7,26,0,0,1328,1330,5,275,
-	0,0,1329,1331,3,190,95,0,1330,1329,1,0,0,0,1331,1332,1,0,0,0,1332,1330,
-	1,0,0,0,1332,1333,1,0,0,0,1333,1335,1,0,0,0,1334,1292,1,0,0,0,1334,1306,
-	1,0,0,0,1334,1322,1,0,0,0,1335,187,1,0,0,0,1336,1352,5,205,0,0,1337,1352,
-	5,117,0,0,1338,1352,5,196,0,0,1339,1340,7,27,0,0,1340,1341,7,28,0,0,1341,
-	1342,5,237,0,0,1342,1352,5,205,0,0,1343,1344,5,152,0,0,1344,1345,7,28,0,
-	0,1345,1346,5,237,0,0,1346,1352,5,205,0,0,1347,1348,5,153,0,0,1348,1349,
-	7,28,0,0,1349,1350,5,237,0,0,1350,1352,5,205,0,0,1351,1336,1,0,0,0,1351,
-	1337,1,0,0,0,1351,1338,1,0,0,0,1351,1339,1,0,0,0,1351,1343,1,0,0,0,1351,
-	1347,1,0,0,0,1352,189,1,0,0,0,1353,1356,3,192,96,0,1354,1357,3,198,99,0,
-	1355,1357,3,200,100,0,1356,1354,1,0,0,0,1356,1355,1,0,0,0,1357,191,1,0,
-	0,0,1358,1359,7,29,0,0,1359,193,1,0,0,0,1360,1364,5,284,0,0,1361,1362,5,
-	279,0,0,1362,1364,5,279,0,0,1363,1360,1,0,0,0,1363,1361,1,0,0,0,1364,195,
-	1,0,0,0,1365,1367,7,30,0,0,1366,1365,1,0,0,0,1367,1368,1,0,0,0,1368,1366,
-	1,0,0,0,1368,1369,1,0,0,0,1369,197,1,0,0,0,1370,1371,3,274,137,0,1371,199,
-	1,0,0,0,1372,1376,3,204,102,0,1373,1376,5,212,0,0,1374,1376,5,245,0,0,1375,
-	1372,1,0,0,0,1375,1373,1,0,0,0,1375,1374,1,0,0,0,1376,1377,1,0,0,0,1377,
-	1378,5,147,0,0,1378,1379,5,115,0,0,1379,1380,3,188,94,0,1380,1381,7,26,
-	0,0,1381,1383,5,275,0,0,1382,1384,3,202,101,0,1383,1382,1,0,0,0,1384,1385,
-	1,0,0,0,1385,1383,1,0,0,0,1385,1386,1,0,0,0,1386,201,1,0,0,0,1387,1390,
-	3,194,97,0,1388,1391,3,198,99,0,1389,1391,3,200,100,0,1390,1388,1,0,0,0,
-	1390,1389,1,0,0,0,1391,203,1,0,0,0,1392,1395,3,208,104,0,1393,1394,7,31,
-	0,0,1394,1396,3,228,114,0,1395,1393,1,0,0,0,1395,1396,1,0,0,0,1396,205,
-	1,0,0,0,1397,1400,3,210,105,0,1398,1399,7,31,0,0,1399,1401,3,228,114,0,
-	1400,1398,1,0,0,0,1400,1401,1,0,0,0,1401,207,1,0,0,0,1402,1408,3,212,106,
-	0,1403,1404,3,52,26,0,1404,1405,3,212,106,0,1405,1407,1,0,0,0,1406,1403,
-	1,0,0,0,1407,1410,1,0,0,0,1408,1406,1,0,0,0,1408,1409,1,0,0,0,1409,209,
-	1,0,0,0,1410,1408,1,0,0,0,1411,1417,3,214,107,0,1412,1413,3,52,26,0,1413,
-	1414,3,214,107,0,1414,1416,1,0,0,0,1415,1412,1,0,0,0,1416,1419,1,0,0,0,
-	1417,1415,1,0,0,0,1417,1418,1,0,0,0,1418,211,1,0,0,0,1419,1417,1,0,0,0,
-	1420,1422,7,7,0,0,1421,1423,3,34,17,0,1422,1421,1,0,0,0,1423,1424,1,0,0,
-	0,1424,1422,1,0,0,0,1424,1425,1,0,0,0,1425,1428,1,0,0,0,1426,1428,5,212,
-	0,0,1427,1420,1,0,0,0,1427,1426,1,0,0,0,1428,213,1,0,0,0,1429,1431,7,7,
-	0,0,1430,1432,3,42,21,0,1431,1430,1,0,0,0,1432,1433,1,0,0,0,1433,1431,1,
-	0,0,0,1433,1434,1,0,0,0,1434,1437,1,0,0,0,1435,1437,5,212,0,0,1436,1429,
-	1,0,0,0,1436,1435,1,0,0,0,1437,215,1,0,0,0,1438,1439,3,218,109,0,1439,1440,
-	5,237,0,0,1440,1441,3,204,102,0,1441,217,1,0,0,0,1442,1443,3,50,25,0,1443,
-	219,1,0,0,0,1444,1446,3,52,26,0,1445,1444,1,0,0,0,1445,1446,1,0,0,0,1446,
-	1447,1,0,0,0,1447,1448,3,48,24,0,1448,221,1,0,0,0,1449,1451,3,52,26,0,1450,
-	1449,1,0,0,0,1450,1451,1,0,0,0,1451,1453,1,0,0,0,1452,1454,7,6,0,0,1453,
-	1452,1,0,0,0,1453,1454,1,0,0,0,1454,1456,1,0,0,0,1455,1457,3,42,21,0,1456,
-	1455,1,0,0,0,1457,1458,1,0,0,0,1458,1456,1,0,0,0,1458,1459,1,0,0,0,1459,
-	223,1,0,0,0,1460,1461,7,32,0,0,1461,1462,3,46,23,0,1462,225,1,0,0,0,1463,
-	1464,5,117,0,0,1464,1471,3,46,23,0,1465,1468,3,46,23,0,1466,1467,7,31,0,
-	0,1467,1469,3,228,114,0,1468,1466,1,0,0,0,1468,1469,1,0,0,0,1469,1471,1,
-	0,0,0,1470,1463,1,0,0,0,1470,1465,1,0,0,0,1471,227,1,0,0,0,1472,1475,3,
-	230,115,0,1473,1475,3,246,123,0,1474,1472,1,0,0,0,1474,1473,1,0,0,0,1475,
-	229,1,0,0,0,1476,1482,3,238,119,0,1477,1482,3,232,116,0,1478,1482,3,240,
-	120,0,1479,1482,3,242,121,0,1480,1482,3,244,122,0,1481,1476,1,0,0,0,1481,
-	1477,1,0,0,0,1481,1478,1,0,0,0,1481,1479,1,0,0,0,1481,1480,1,0,0,0,1482,
-	231,1,0,0,0,1483,1484,3,234,117,0,1484,233,1,0,0,0,1485,1487,5,208,0,0,
-	1486,1485,1,0,0,0,1486,1487,1,0,0,0,1487,1490,1,0,0,0,1488,1491,3,220,110,
-	0,1489,1491,3,236,118,0,1490,1488,1,0,0,0,1490,1489,1,0,0,0,1491,1492,1,
-	0,0,0,1492,1493,7,33,0,0,1493,235,1,0,0,0,1494,1495,3,46,23,0,1495,237,
-	1,0,0,0,1496,1498,5,208,0,0,1497,1496,1,0,0,0,1497,1498,1,0,0,0,1498,1499,
-	1,0,0,0,1499,1500,3,46,23,0,1500,1501,5,102,0,0,1501,1502,3,288,144,0,1502,
-	1503,3,274,137,0,1503,239,1,0,0,0,1504,1505,3,256,128,0,1505,1506,3,262,
-	131,0,1506,241,1,0,0,0,1507,1508,3,258,129,0,1508,1509,3,264,132,0,1509,
-	243,1,0,0,0,1510,1511,3,260,130,0,1511,1512,3,266,133,0,1512,245,1,0,0,
-	0,1513,1514,5,115,0,0,1514,1515,3,188,94,0,1515,1516,7,26,0,0,1516,1517,
-	7,34,0,0,1517,1519,5,275,0,0,1518,1520,3,248,124,0,1519,1518,1,0,0,0,1520,
-	1521,1,0,0,0,1521,1519,1,0,0,0,1521,1522,1,0,0,0,1522,247,1,0,0,0,1523,
-	1524,3,196,98,0,1524,1525,3,250,125,0,1525,1530,1,0,0,0,1526,1527,3,196,
-	98,0,1527,1528,3,254,127,0,1528,1530,1,0,0,0,1529,1523,1,0,0,0,1529,1526,
-	1,0,0,0,1530,249,1,0,0,0,1531,1532,3,252,126,0,1532,251,1,0,0,0,1533,1536,
-	3,216,108,0,1534,1536,3,224,112,0,1535,1533,1,0,0,0,1535,1534,1,0,0,0,1536,
-	1537,1,0,0,0,1537,1538,7,2,0,0,1538,1539,3,220,110,0,1539,1552,1,0,0,0,
-	1540,1543,3,216,108,0,1541,1543,3,224,112,0,1542,1540,1,0,0,0,1542,1541,
-	1,0,0,0,1543,1544,1,0,0,0,1544,1545,3,288,144,0,1545,1546,3,274,137,0,1546,
-	1552,1,0,0,0,1547,1548,3,204,102,0,1548,1549,3,234,117,0,1549,1552,1,0,
-	0,0,1550,1552,3,234,117,0,1551,1535,1,0,0,0,1551,1542,1,0,0,0,1551,1547,
-	1,0,0,0,1551,1550,1,0,0,0,1552,253,1,0,0,0,1553,1558,5,147,0,0,1554,1558,
-	5,146,0,0,1555,1556,5,110,0,0,1556,1558,5,111,0,0,1557,1553,1,0,0,0,1557,
-	1554,1,0,0,0,1557,1555,1,0,0,0,1558,1559,1,0,0,0,1559,1560,5,115,0,0,1560,
-	1561,3,188,94,0,1561,1562,7,26,0,0,1562,1564,5,275,0,0,1563,1565,3,248,
-	124,0,1564,1563,1,0,0,0,1565,1566,1,0,0,0,1566,1564,1,0,0,0,1566,1567,1,
-	0,0,0,1567,255,1,0,0,0,1568,1569,7,35,0,0,1569,257,1,0,0,0,1570,1571,7,
-	36,0,0,1571,259,1,0,0,0,1572,1573,7,37,0,0,1573,261,1,0,0,0,1574,1575,3,
-	274,137,0,1575,263,1,0,0,0,1576,1577,3,274,137,0,1577,265,1,0,0,0,1578,
-	1603,3,54,27,0,1579,1603,5,228,0,0,1580,1603,5,229,0,0,1581,1582,5,17,0,
-	0,1582,1583,5,269,0,0,1583,1584,3,302,151,0,1584,1585,5,273,0,0,1585,1586,
-	3,302,151,0,1586,1587,5,273,0,0,1587,1588,3,302,151,0,1588,1589,5,270,0,
-	0,1589,1603,1,0,0,0,1590,1591,5,18,0,0,1591,1592,5,269,0,0,1592,1593,3,
-	302,151,0,1593,1594,5,270,0,0,1594,1603,1,0,0,0,1595,1603,3,216,108,0,1596,
-	1603,3,224,112,0,1597,1603,3,124,62,0,1598,1599,5,269,0,0,1599,1600,3,274,
-	137,0,1600,1601,5,270,0,0,1601,1603,1,0,0,0,1602,1578,1,0,0,0,1602,1579,
-	1,0,0,0,1602,1580,1,0,0,0,1602,1581,1,0,0,0,1602,1590,1,0,0,0,1602,1595,
-	1,0,0,0,1602,1596,1,0,0,0,1602,1597,1,0,0,0,1602,1598,1,0,0,0,1603,267,
-	1,0,0,0,1604,1608,5,100,0,0,1605,1607,3,270,135,0,1606,1605,1,0,0,0,1607,
-	1610,1,0,0,0,1608,1606,1,0,0,0,1608,1609,1,0,0,0,1609,1611,1,0,0,0,1610,
-	1608,1,0,0,0,1611,1612,5,274,0,0,1612,269,1,0,0,0,1613,1615,7,15,0,0,1614,
-	1613,1,0,0,0,1614,1615,1,0,0,0,1615,1616,1,0,0,0,1616,1617,5,262,0,0,1617,
-	1618,5,106,0,0,1618,1619,3,272,136,0,1619,271,1,0,0,0,1620,1629,3,302,151,
-	0,1621,1624,3,292,146,0,1622,1624,3,296,148,0,1623,1621,1,0,0,0,1623,1622,
-	1,0,0,0,1624,1625,1,0,0,0,1625,1626,3,302,151,0,1626,1628,1,0,0,0,1627,
-	1623,1,0,0,0,1628,1631,1,0,0,0,1629,1627,1,0,0,0,1629,1630,1,0,0,0,1630,
-	273,1,0,0,0,1631,1629,1,0,0,0,1632,1633,3,278,139,0,1633,1634,5,273,0,0,
-	1634,1635,3,306,153,0,1635,1636,3,304,152,0,1636,1646,1,0,0,0,1637,1638,
-	3,278,139,0,1638,1639,5,273,0,0,1639,1640,3,306,153,0,1640,1646,1,0,0,0,
-	1641,1642,3,278,139,0,1642,1643,3,304,152,0,1643,1646,1,0,0,0,1644,1646,
-	3,278,139,0,1645,1632,1,0,0,0,1645,1637,1,0,0,0,1645,1641,1,0,0,0,1645,
-	1644,1,0,0,0,1646,275,1,0,0,0,1647,1648,3,280,140,0,1648,1649,5,273,0,0,
-	1649,1650,3,306,153,0,1650,1651,3,304,152,0,1651,1661,1,0,0,0,1652,1653,
-	3,280,140,0,1653,1654,5,273,0,0,1654,1655,3,306,153,0,1655,1661,1,0,0,0,
-	1656,1657,3,280,140,0,1657,1658,3,304,152,0,1658,1661,1,0,0,0,1659,1661,
-	3,280,140,0,1660,1647,1,0,0,0,1660,1652,1,0,0,0,1660,1656,1,0,0,0,1660,
-	1659,1,0,0,0,1661,277,1,0,0,0,1662,1665,3,280,140,0,1663,1664,7,38,0,0,
-	1664,1666,3,278,139,0,1665,1663,1,0,0,0,1665,1666,1,0,0,0,1666,279,1,0,
-	0,0,1667,1668,3,290,145,0,1668,1669,7,2,0,0,1669,1670,7,3,0,0,1670,1671,
-	3,46,23,0,1671,1712,1,0,0,0,1672,1673,3,290,145,0,1673,1674,7,3,0,0,1674,
-	1675,3,46,23,0,1675,1676,7,2,0,0,1676,1712,1,0,0,0,1677,1712,3,340,170,
-	0,1678,1712,3,314,157,0,1679,1680,3,290,145,0,1680,1681,5,106,0,0,1681,
-	1682,3,48,24,0,1682,1712,1,0,0,0,1683,1684,3,290,145,0,1684,1685,5,103,
-	0,0,1685,1686,3,48,24,0,1686,1712,1,0,0,0,1687,1688,3,290,145,0,1688,1689,
-	3,284,142,0,1689,1694,3,282,141,0,1690,1691,5,273,0,0,1691,1693,3,282,141,
-	0,1692,1690,1,0,0,0,1693,1696,1,0,0,0,1694,1692,1,0,0,0,1694,1695,1,0,0,
-	0,1695,1697,1,0,0,0,1696,1694,1,0,0,0,1697,1698,5,222,0,0,1698,1699,3,282,
-	141,0,1699,1712,1,0,0,0,1700,1707,3,290,145,0,1701,1703,3,286,143,0,1702,
-	1701,1,0,0,0,1702,1703,1,0,0,0,1703,1704,1,0,0,0,1704,1705,3,288,144,0,
-	1705,1706,3,290,145,0,1706,1708,1,0,0,0,1707,1702,1,0,0,0,1707,1708,1,0,
-	0,0,1708,1712,1,0,0,0,1709,1712,3,334,167,0,1710,1712,3,336,168,0,1711,
-	1667,1,0,0,0,1711,1672,1,0,0,0,1711,1677,1,0,0,0,1711,1678,1,0,0,0,1711,
-	1679,1,0,0,0,1711,1683,1,0,0,0,1711,1687,1,0,0,0,1711,1700,1,0,0,0,1711,
-	1709,1,0,0,0,1711,1710,1,0,0,0,1712,281,1,0,0,0,1713,1723,5,268,0,0,1714,
-	1723,5,267,0,0,1715,1717,5,263,0,0,1716,1718,3,102,51,0,1717,1716,1,0,0,
-	0,1717,1718,1,0,0,0,1718,1723,1,0,0,0,1719,1723,5,266,0,0,1720,1723,3,54,
-	27,0,1721,1723,3,32,16,0,1722,1713,1,0,0,0,1722,1714,1,0,0,0,1722,1715,
-	1,0,0,0,1722,1719,1,0,0,0,1722,1720,1,0,0,0,1722,1721,1,0,0,0,1723,283,
-	1,0,0,0,1724,1725,7,39,0,0,1725,285,1,0,0,0,1726,1728,5,133,0,0,1727,1726,
-	1,0,0,0,1727,1728,1,0,0,0,1728,1733,1,0,0,0,1729,1730,5,5,0,0,1730,1734,
-	5,214,0,0,1731,1732,5,6,0,0,1732,1734,5,217,0,0,1733,1729,1,0,0,0,1733,
-	1731,1,0,0,0,1734,287,1,0,0,0,1735,1736,7,40,0,0,1736,289,1,0,0,0,1737,
-	1743,3,294,147,0,1738,1739,3,292,146,0,1739,1740,3,294,147,0,1740,1742,
-	1,0,0,0,1741,1738,1,0,0,0,1742,1745,1,0,0,0,1743,1741,1,0,0,0,1743,1744,
-	1,0,0,0,1744,291,1,0,0,0,1745,1743,1,0,0,0,1746,1747,7,41,0,0,1747,293,
-	1,0,0,0,1748,1754,3,298,149,0,1749,1750,3,296,148,0,1750,1751,3,298,149,
-	0,1751,1753,1,0,0,0,1752,1749,1,0,0,0,1753,1756,1,0,0,0,1754,1752,1,0,0,
-	0,1754,1755,1,0,0,0,1755,295,1,0,0,0,1756,1754,1,0,0,0,1757,1758,7,42,0,
-	0,1758,297,1,0,0,0,1759,1765,3,302,151,0,1760,1761,3,300,150,0,1761,1762,
-	3,302,151,0,1762,1764,1,0,0,0,1763,1760,1,0,0,0,1764,1767,1,0,0,0,1765,
-	1763,1,0,0,0,1765,1766,1,0,0,0,1766,299,1,0,0,0,1767,1765,1,0,0,0,1768,
-	1769,7,43,0,0,1769,301,1,0,0,0,1770,1771,6,151,-1,0,1771,1772,5,130,0,0,
-	1772,2036,3,302,151,55,1773,1774,5,289,0,0,1774,2036,3,302,151,54,1775,
-	1776,5,133,0,0,1776,2036,3,302,151,53,1777,1778,5,11,0,0,1778,1779,3,302,
-	151,0,1779,1780,5,139,0,0,1780,1783,3,302,151,0,1781,1782,5,185,0,0,1782,
-	1784,3,100,50,0,1783,1781,1,0,0,0,1783,1784,1,0,0,0,1784,2036,1,0,0,0,1785,
-	1786,5,189,0,0,1786,1787,3,302,151,0,1787,1788,5,139,0,0,1788,1791,3,302,
-	151,0,1789,1790,5,185,0,0,1790,1792,3,100,50,0,1791,1789,1,0,0,0,1791,1792,
-	1,0,0,0,1792,2036,1,0,0,0,1793,1794,5,188,0,0,1794,1799,3,302,151,0,1795,
+	167,1,167,1,167,3,167,2217,8,167,1,168,1,168,1,168,1,168,1,168,1,168,1,
+	168,1,168,3,168,2227,8,168,1,169,1,169,4,169,2231,8,169,11,169,12,169,2232,
+	1,170,1,170,1,170,1,170,1,170,1,170,1,170,1,170,1,170,1,170,1,170,1,170,
+	3,170,2247,8,170,1,171,1,171,1,171,1,171,4,171,2253,8,171,11,171,12,171,
+	2254,1,171,3,171,2258,8,171,1,171,3,171,2261,8,171,1,172,1,172,1,173,1,
+	173,1,173,1,173,1,173,1,173,1,173,3,173,2272,8,173,1,173,3,173,2275,8,173,
+	1,174,1,174,1,175,1,175,1,175,3,175,2282,8,175,1,176,1,176,5,176,2286,8,
+	176,10,176,12,176,2289,9,176,1,177,1,177,1,177,3,177,2294,8,177,1,178,1,
+	178,1,178,1,178,1,178,1,178,1,178,1,178,1,178,1,178,1,178,1,178,1,178,1,
+	178,3,178,2310,8,178,1,179,1,179,1,179,3,179,2315,8,179,1,179,0,1,302,180,
+	0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,
+	52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82,84,86,88,90,92,94,96,98,
+	100,102,104,106,108,110,112,114,116,118,120,122,124,126,128,130,132,134,
+	136,138,140,142,144,146,148,150,152,154,156,158,160,162,164,166,168,170,
+	172,174,176,178,180,182,184,186,188,190,192,194,196,198,200,202,204,206,
+	208,210,212,214,216,218,220,222,224,226,228,230,232,234,236,238,240,242,
+	244,246,248,250,252,254,256,258,260,262,264,266,268,270,272,274,276,278,
+	280,282,284,286,288,290,292,294,296,298,300,302,304,306,308,310,312,314,
+	316,318,320,322,324,326,328,330,332,334,336,338,340,342,344,346,348,350,
+	352,354,356,358,0,54,1,0,290,290,2,0,103,103,106,106,2,0,106,106,112,112,
+	2,0,197,197,208,208,3,0,65,66,77,77,79,79,1,0,81,84,3,0,205,205,208,208,
+	210,210,4,0,112,112,205,205,208,208,210,210,12,0,139,139,141,141,169,169,
+	201,201,209,209,213,213,222,222,224,224,226,226,234,234,237,237,241,241,
+	18,0,89,89,103,103,106,106,117,117,125,125,154,154,183,183,194,195,198,
+	199,202,203,214,221,225,225,227,227,231,232,235,236,243,244,246,246,262,
+	262,17,0,89,89,103,103,117,117,125,125,154,154,183,183,194,195,198,199,
+	202,203,214,221,225,225,227,227,231,232,235,236,243,244,246,246,262,262,
+	7,0,202,203,214,215,217,218,220,221,231,232,235,236,243,244,1,0,156,157,
+	2,0,3,3,161,161,2,0,172,173,176,176,2,0,205,205,210,210,6,0,130,130,219,
+	221,231,232,235,236,246,250,253,262,1,0,180,182,2,0,183,183,262,262,2,0,
+	183,183,262,263,4,0,28,28,88,93,95,99,276,276,2,0,141,141,233,233,2,0,44,
+	45,121,121,6,0,45,47,49,49,121,121,124,124,126,126,134,135,9,0,139,139,
+	169,169,201,201,209,209,213,213,224,224,226,226,234,234,241,241,3,0,205,
+	205,210,210,245,245,1,0,238,239,1,0,150,151,4,0,194,195,198,199,208,208,
+	263,263,2,0,279,279,289,289,3,0,279,280,284,284,289,289,2,0,204,204,207,
+	207,1,0,112,114,2,0,102,102,112,112,1,0,146,147,1,0,51,56,1,0,51,52,2,0,
+	51,52,61,64,2,0,209,209,222,222,3,0,44,45,51,51,121,121,12,0,22,25,39,40,
+	44,64,106,106,118,118,121,121,124,124,126,127,133,133,135,135,213,213,251,
+	252,3,0,130,130,136,136,145,145,2,0,119,120,129,129,2,0,140,140,283,283,
+	2,0,130,130,136,136,2,0,214,214,217,217,3,0,131,132,137,138,148,148,2,0,
+	184,184,186,186,2,0,65,68,77,80,2,0,122,122,128,128,4,0,69,69,71,71,73,
+	73,75,75,4,0,70,70,72,72,74,74,76,76,1,0,273,274,2,0,190,190,193,193,2574,
+	0,368,1,0,0,0,2,379,1,0,0,0,4,381,1,0,0,0,6,388,1,0,0,0,8,395,1,0,0,0,10,
+	411,1,0,0,0,12,431,1,0,0,0,14,447,1,0,0,0,16,450,1,0,0,0,18,463,1,0,0,0,
+	20,498,1,0,0,0,22,500,1,0,0,0,24,505,1,0,0,0,26,515,1,0,0,0,28,523,1,0,
+	0,0,30,527,1,0,0,0,32,529,1,0,0,0,34,531,1,0,0,0,36,533,1,0,0,0,38,592,
+	1,0,0,0,40,651,1,0,0,0,42,655,1,0,0,0,44,705,1,0,0,0,46,707,1,0,0,0,48,
+	716,1,0,0,0,50,725,1,0,0,0,52,734,1,0,0,0,54,736,1,0,0,0,56,738,1,0,0,0,
+	58,740,1,0,0,0,60,742,1,0,0,0,62,764,1,0,0,0,64,773,1,0,0,0,66,782,1,0,
+	0,0,68,812,1,0,0,0,70,814,1,0,0,0,72,821,1,0,0,0,74,828,1,0,0,0,76,830,
+	1,0,0,0,78,837,1,0,0,0,80,839,1,0,0,0,82,842,1,0,0,0,84,852,1,0,0,0,86,
+	868,1,0,0,0,88,870,1,0,0,0,90,876,1,0,0,0,92,878,1,0,0,0,94,880,1,0,0,0,
+	96,888,1,0,0,0,98,908,1,0,0,0,100,920,1,0,0,0,102,934,1,0,0,0,104,936,1,
+	0,0,0,106,944,1,0,0,0,108,949,1,0,0,0,110,969,1,0,0,0,112,971,1,0,0,0,114,
+	975,1,0,0,0,116,977,1,0,0,0,118,979,1,0,0,0,120,998,1,0,0,0,122,1009,1,
+	0,0,0,124,1029,1,0,0,0,126,1046,1,0,0,0,128,1048,1,0,0,0,130,1064,1,0,0,
+	0,132,1069,1,0,0,0,134,1073,1,0,0,0,136,1075,1,0,0,0,138,1085,1,0,0,0,140,
+	1097,1,0,0,0,142,1108,1,0,0,0,144,1129,1,0,0,0,146,1131,1,0,0,0,148,1143,
+	1,0,0,0,150,1147,1,0,0,0,152,1189,1,0,0,0,154,1191,1,0,0,0,156,1193,1,0,
+	0,0,158,1206,1,0,0,0,160,1211,1,0,0,0,162,1220,1,0,0,0,164,1224,1,0,0,0,
+	166,1226,1,0,0,0,168,1228,1,0,0,0,170,1238,1,0,0,0,172,1251,1,0,0,0,174,
+	1255,1,0,0,0,176,1257,1,0,0,0,178,1270,1,0,0,0,180,1275,1,0,0,0,182,1282,
+	1,0,0,0,184,1287,1,0,0,0,186,1334,1,0,0,0,188,1351,1,0,0,0,190,1353,1,0,
+	0,0,192,1358,1,0,0,0,194,1363,1,0,0,0,196,1366,1,0,0,0,198,1370,1,0,0,0,
+	200,1375,1,0,0,0,202,1387,1,0,0,0,204,1392,1,0,0,0,206,1397,1,0,0,0,208,
+	1402,1,0,0,0,210,1411,1,0,0,0,212,1427,1,0,0,0,214,1436,1,0,0,0,216,1438,
+	1,0,0,0,218,1442,1,0,0,0,220,1445,1,0,0,0,222,1450,1,0,0,0,224,1460,1,0,
+	0,0,226,1470,1,0,0,0,228,1474,1,0,0,0,230,1481,1,0,0,0,232,1483,1,0,0,0,
+	234,1486,1,0,0,0,236,1494,1,0,0,0,238,1497,1,0,0,0,240,1504,1,0,0,0,242,
+	1507,1,0,0,0,244,1510,1,0,0,0,246,1513,1,0,0,0,248,1529,1,0,0,0,250,1531,
+	1,0,0,0,252,1551,1,0,0,0,254,1557,1,0,0,0,256,1568,1,0,0,0,258,1570,1,0,
+	0,0,260,1572,1,0,0,0,262,1574,1,0,0,0,264,1576,1,0,0,0,266,1602,1,0,0,0,
+	268,1604,1,0,0,0,270,1614,1,0,0,0,272,1620,1,0,0,0,274,1645,1,0,0,0,276,
+	1660,1,0,0,0,278,1662,1,0,0,0,280,1711,1,0,0,0,282,1722,1,0,0,0,284,1724,
+	1,0,0,0,286,1727,1,0,0,0,288,1735,1,0,0,0,290,1737,1,0,0,0,292,1746,1,0,
+	0,0,294,1748,1,0,0,0,296,1757,1,0,0,0,298,1759,1,0,0,0,300,1768,1,0,0,0,
+	302,2035,1,0,0,0,304,2062,1,0,0,0,306,2073,1,0,0,0,308,2075,1,0,0,0,310,
+	2078,1,0,0,0,312,2084,1,0,0,0,314,2086,1,0,0,0,316,2105,1,0,0,0,318,2123,
+	1,0,0,0,320,2129,1,0,0,0,322,2137,1,0,0,0,324,2139,1,0,0,0,326,2151,1,0,
+	0,0,328,2153,1,0,0,0,330,2159,1,0,0,0,332,2166,1,0,0,0,334,2216,1,0,0,0,
+	336,2226,1,0,0,0,338,2230,1,0,0,0,340,2246,1,0,0,0,342,2248,1,0,0,0,344,
+	2262,1,0,0,0,346,2264,1,0,0,0,348,2276,1,0,0,0,350,2278,1,0,0,0,352,2283,
+	1,0,0,0,354,2290,1,0,0,0,356,2309,1,0,0,0,358,2311,1,0,0,0,360,367,3,2,
+	1,0,361,367,3,136,68,0,362,367,3,140,70,0,363,367,3,4,2,0,364,367,3,176,
+	88,0,365,367,3,94,47,0,366,360,1,0,0,0,366,361,1,0,0,0,366,362,1,0,0,0,
+	366,363,1,0,0,0,366,364,1,0,0,0,366,365,1,0,0,0,367,370,1,0,0,0,368,366,
+	1,0,0,0,368,369,1,0,0,0,369,371,1,0,0,0,370,368,1,0,0,0,371,372,5,0,0,1,
+	372,1,1,0,0,0,373,380,3,60,30,0,374,380,3,84,42,0,375,380,3,118,59,0,376,
+	380,3,108,54,0,377,380,3,126,63,0,378,380,3,342,171,0,379,373,1,0,0,0,379,
+	374,1,0,0,0,379,375,1,0,0,0,379,376,1,0,0,0,379,377,1,0,0,0,379,378,1,0,
+	0,0,380,3,1,0,0,0,381,382,5,91,0,0,382,384,3,46,23,0,383,385,3,146,73,0,
+	384,383,1,0,0,0,384,385,1,0,0,0,385,386,1,0,0,0,386,387,3,6,3,0,387,5,1,
+	0,0,0,388,389,3,8,4,0,389,391,3,10,5,0,390,392,3,12,6,0,391,390,1,0,0,0,
+	392,393,1,0,0,0,393,391,1,0,0,0,393,394,1,0,0,0,394,7,1,0,0,0,395,397,5,
+	290,0,0,396,398,5,290,0,0,397,396,1,0,0,0,397,398,1,0,0,0,398,399,1,0,0,
+	0,399,404,3,16,8,0,400,401,5,290,0,0,401,403,3,16,8,0,402,400,1,0,0,0,403,
+	406,1,0,0,0,404,402,1,0,0,0,404,405,1,0,0,0,405,408,1,0,0,0,406,404,1,0,
+	0,0,407,409,5,290,0,0,408,407,1,0,0,0,408,409,1,0,0,0,409,9,1,0,0,0,410,
+	412,5,290,0,0,411,410,1,0,0,0,411,412,1,0,0,0,412,421,1,0,0,0,413,415,5,
+	289,0,0,414,413,1,0,0,0,415,416,1,0,0,0,416,414,1,0,0,0,416,417,1,0,0,0,
+	417,419,1,0,0,0,418,420,5,290,0,0,419,418,1,0,0,0,419,420,1,0,0,0,420,422,
+	1,0,0,0,421,414,1,0,0,0,422,423,1,0,0,0,423,421,1,0,0,0,423,424,1,0,0,0,
+	424,428,1,0,0,0,425,427,5,289,0,0,426,425,1,0,0,0,427,430,1,0,0,0,428,426,
+	1,0,0,0,428,429,1,0,0,0,429,11,1,0,0,0,430,428,1,0,0,0,431,432,5,290,0,
+	0,432,433,5,263,0,0,433,434,5,290,0,0,434,439,3,14,7,0,435,436,5,290,0,
+	0,436,438,3,14,7,0,437,435,1,0,0,0,438,441,1,0,0,0,439,437,1,0,0,0,439,
+	440,1,0,0,0,440,443,1,0,0,0,441,439,1,0,0,0,442,444,5,290,0,0,443,442,1,
+	0,0,0,443,444,1,0,0,0,444,13,1,0,0,0,445,448,3,274,137,0,446,448,5,291,
+	0,0,447,445,1,0,0,0,447,446,1,0,0,0,448,15,1,0,0,0,449,451,8,0,0,0,450,
+	449,1,0,0,0,451,452,1,0,0,0,452,450,1,0,0,0,452,453,1,0,0,0,453,17,1,0,
+	0,0,454,455,3,22,11,0,455,456,5,9,0,0,456,457,5,0,0,1,457,464,1,0,0,0,458,
+	459,3,204,102,0,459,460,7,1,0,0,460,461,3,220,110,0,461,462,5,0,0,1,462,
+	464,1,0,0,0,463,454,1,0,0,0,463,458,1,0,0,0,464,19,1,0,0,0,465,466,5,104,
+	0,0,466,467,3,22,11,0,467,468,7,2,0,0,468,469,7,3,0,0,469,470,3,220,110,
+	0,470,471,5,0,0,1,471,499,1,0,0,0,472,473,5,104,0,0,473,474,3,22,11,0,474,
+	475,7,4,0,0,475,476,5,0,0,1,476,499,1,0,0,0,477,478,5,104,0,0,478,479,3,
+	22,11,0,479,480,7,5,0,0,480,481,5,263,0,0,481,482,5,160,0,0,482,483,5,0,
+	0,1,483,499,1,0,0,0,484,485,5,104,0,0,485,486,3,22,11,0,486,487,3,288,144,
+	0,487,488,5,0,0,1,488,499,1,0,0,0,489,490,5,104,0,0,490,492,3,204,102,0,
+	491,493,7,6,0,0,492,491,1,0,0,0,492,493,1,0,0,0,493,494,1,0,0,0,494,495,
+	3,220,110,0,495,496,5,103,0,0,496,497,5,0,0,1,497,499,1,0,0,0,498,465,1,
+	0,0,0,498,472,1,0,0,0,498,477,1,0,0,0,498,484,1,0,0,0,498,489,1,0,0,0,499,
+	21,1,0,0,0,500,503,3,24,12,0,501,502,5,237,0,0,502,504,3,204,102,0,503,
+	501,1,0,0,0,503,504,1,0,0,0,504,23,1,0,0,0,505,511,3,26,13,0,506,507,3,
+	30,15,0,507,508,3,28,14,0,508,510,1,0,0,0,509,506,1,0,0,0,510,513,1,0,0,
+	0,511,509,1,0,0,0,511,512,1,0,0,0,512,25,1,0,0,0,513,511,1,0,0,0,514,516,
+	7,7,0,0,515,514,1,0,0,0,515,516,1,0,0,0,516,518,1,0,0,0,517,519,3,36,18,
+	0,518,517,1,0,0,0,519,520,1,0,0,0,520,518,1,0,0,0,520,521,1,0,0,0,521,27,
+	1,0,0,0,522,524,3,36,18,0,523,522,1,0,0,0,524,525,1,0,0,0,525,523,1,0,0,
+	0,525,526,1,0,0,0,526,29,1,0,0,0,527,528,7,8,0,0,528,31,1,0,0,0,529,530,
+	5,262,0,0,530,33,1,0,0,0,531,532,7,9,0,0,532,35,1,0,0,0,533,534,7,10,0,
+	0,534,37,1,0,0,0,535,537,7,7,0,0,536,535,1,0,0,0,536,537,1,0,0,0,537,539,
+	1,0,0,0,538,540,3,34,17,0,539,538,1,0,0,0,540,541,1,0,0,0,541,539,1,0,0,
+	0,541,542,1,0,0,0,542,593,1,0,0,0,543,545,3,34,17,0,544,543,1,0,0,0,545,
+	546,1,0,0,0,546,544,1,0,0,0,546,547,1,0,0,0,547,593,1,0,0,0,548,550,5,42,
+	0,0,549,551,3,34,17,0,550,549,1,0,0,0,551,552,1,0,0,0,552,550,1,0,0,0,552,
+	553,1,0,0,0,553,593,1,0,0,0,554,556,5,42,0,0,555,557,3,34,17,0,556,555,
+	1,0,0,0,557,558,1,0,0,0,558,556,1,0,0,0,558,559,1,0,0,0,559,560,1,0,0,0,
+	560,562,5,169,0,0,561,563,3,34,17,0,562,561,1,0,0,0,563,564,1,0,0,0,564,
+	562,1,0,0,0,564,565,1,0,0,0,565,593,1,0,0,0,566,568,3,34,17,0,567,566,1,
+	0,0,0,568,569,1,0,0,0,569,567,1,0,0,0,569,570,1,0,0,0,570,571,1,0,0,0,571,
+	573,5,169,0,0,572,574,3,34,17,0,573,572,1,0,0,0,574,575,1,0,0,0,575,573,
+	1,0,0,0,575,576,1,0,0,0,576,593,1,0,0,0,577,579,5,133,0,0,578,580,3,34,
+	17,0,579,578,1,0,0,0,580,581,1,0,0,0,581,579,1,0,0,0,581,582,1,0,0,0,582,
+	593,1,0,0,0,583,584,5,210,0,0,584,585,5,183,0,0,585,586,5,203,0,0,586,588,
+	5,213,0,0,587,589,3,34,17,0,588,587,1,0,0,0,589,590,1,0,0,0,590,588,1,0,
+	0,0,590,591,1,0,0,0,591,593,1,0,0,0,592,536,1,0,0,0,592,544,1,0,0,0,592,
+	548,1,0,0,0,592,554,1,0,0,0,592,567,1,0,0,0,592,577,1,0,0,0,592,583,1,0,
+	0,0,593,39,1,0,0,0,594,596,7,7,0,0,595,594,1,0,0,0,595,596,1,0,0,0,596,
+	598,1,0,0,0,597,599,3,42,21,0,598,597,1,0,0,0,599,600,1,0,0,0,600,598,1,
+	0,0,0,600,601,1,0,0,0,601,652,1,0,0,0,602,604,3,42,21,0,603,602,1,0,0,0,
+	604,605,1,0,0,0,605,603,1,0,0,0,605,606,1,0,0,0,606,652,1,0,0,0,607,609,
+	5,42,0,0,608,610,3,42,21,0,609,608,1,0,0,0,610,611,1,0,0,0,611,609,1,0,
+	0,0,611,612,1,0,0,0,612,652,1,0,0,0,613,615,5,42,0,0,614,616,3,42,21,0,
+	615,614,1,0,0,0,616,617,1,0,0,0,617,615,1,0,0,0,617,618,1,0,0,0,618,619,
+	1,0,0,0,619,621,5,169,0,0,620,622,3,42,21,0,621,620,1,0,0,0,622,623,1,0,
+	0,0,623,621,1,0,0,0,623,624,1,0,0,0,624,652,1,0,0,0,625,627,3,42,21,0,626,
+	625,1,0,0,0,627,628,1,0,0,0,628,626,1,0,0,0,628,629,1,0,0,0,629,630,1,0,
+	0,0,630,632,5,169,0,0,631,633,3,42,21,0,632,631,1,0,0,0,633,634,1,0,0,0,
+	634,632,1,0,0,0,634,635,1,0,0,0,635,652,1,0,0,0,636,638,5,133,0,0,637,639,
+	3,42,21,0,638,637,1,0,0,0,639,640,1,0,0,0,640,638,1,0,0,0,640,641,1,0,0,
+	0,641,652,1,0,0,0,642,643,5,210,0,0,643,644,5,183,0,0,644,645,5,203,0,0,
+	645,647,5,213,0,0,646,648,3,42,21,0,647,646,1,0,0,0,648,649,1,0,0,0,649,
+	647,1,0,0,0,649,650,1,0,0,0,650,652,1,0,0,0,651,595,1,0,0,0,651,603,1,0,
+	0,0,651,607,1,0,0,0,651,613,1,0,0,0,651,626,1,0,0,0,651,636,1,0,0,0,651,
+	642,1,0,0,0,652,41,1,0,0,0,653,656,3,34,17,0,654,656,5,263,0,0,655,653,
+	1,0,0,0,655,654,1,0,0,0,656,43,1,0,0,0,657,659,7,7,0,0,658,657,1,0,0,0,
+	658,659,1,0,0,0,659,661,1,0,0,0,660,662,3,36,18,0,661,660,1,0,0,0,662,663,
+	1,0,0,0,663,661,1,0,0,0,663,664,1,0,0,0,664,706,1,0,0,0,665,667,3,36,18,
+	0,666,665,1,0,0,0,667,668,1,0,0,0,668,666,1,0,0,0,668,669,1,0,0,0,669,706,
+	1,0,0,0,670,672,5,42,0,0,671,673,3,36,18,0,672,671,1,0,0,0,673,674,1,0,
+	0,0,674,672,1,0,0,0,674,675,1,0,0,0,675,706,1,0,0,0,676,678,5,42,0,0,677,
+	679,3,36,18,0,678,677,1,0,0,0,679,680,1,0,0,0,680,678,1,0,0,0,680,681,1,
+	0,0,0,681,682,1,0,0,0,682,684,5,169,0,0,683,685,3,36,18,0,684,683,1,0,0,
+	0,685,686,1,0,0,0,686,684,1,0,0,0,686,687,1,0,0,0,687,706,1,0,0,0,688,690,
+	3,36,18,0,689,688,1,0,0,0,690,691,1,0,0,0,691,689,1,0,0,0,691,692,1,0,0,
+	0,692,693,1,0,0,0,693,695,5,169,0,0,694,696,3,36,18,0,695,694,1,0,0,0,696,
+	697,1,0,0,0,697,695,1,0,0,0,697,698,1,0,0,0,698,706,1,0,0,0,699,701,5,133,
+	0,0,700,702,3,36,18,0,701,700,1,0,0,0,702,703,1,0,0,0,703,701,1,0,0,0,703,
+	704,1,0,0,0,704,706,1,0,0,0,705,658,1,0,0,0,705,666,1,0,0,0,705,670,1,0,
+	0,0,705,676,1,0,0,0,705,689,1,0,0,0,705,699,1,0,0,0,706,45,1,0,0,0,707,
+	713,3,38,19,0,708,709,3,52,26,0,709,710,3,38,19,0,710,712,1,0,0,0,711,708,
+	1,0,0,0,712,715,1,0,0,0,713,711,1,0,0,0,713,714,1,0,0,0,714,47,1,0,0,0,
+	715,713,1,0,0,0,716,722,3,40,20,0,717,718,3,52,26,0,718,719,3,40,20,0,719,
+	721,1,0,0,0,720,717,1,0,0,0,721,724,1,0,0,0,722,720,1,0,0,0,722,723,1,0,
+	0,0,723,49,1,0,0,0,724,722,1,0,0,0,725,731,3,44,22,0,726,727,3,52,26,0,
+	727,728,3,44,22,0,728,730,1,0,0,0,729,726,1,0,0,0,730,733,1,0,0,0,731,729,
+	1,0,0,0,731,732,1,0,0,0,732,51,1,0,0,0,733,731,1,0,0,0,734,735,7,8,0,0,
+	735,53,1,0,0,0,736,737,5,265,0,0,737,55,1,0,0,0,738,739,5,262,0,0,739,57,
+	1,0,0,0,740,741,7,11,0,0,741,59,1,0,0,0,742,743,5,92,0,0,743,751,3,50,25,
+	0,744,746,5,171,0,0,745,747,5,262,0,0,746,745,1,0,0,0,747,748,1,0,0,0,748,
+	746,1,0,0,0,748,749,1,0,0,0,749,750,1,0,0,0,750,752,5,270,0,0,751,744,1,
+	0,0,0,751,752,1,0,0,0,752,754,1,0,0,0,753,755,5,158,0,0,754,753,1,0,0,0,
+	754,755,1,0,0,0,755,759,1,0,0,0,756,758,3,62,31,0,757,756,1,0,0,0,758,761,
+	1,0,0,0,759,757,1,0,0,0,759,760,1,0,0,0,760,61,1,0,0,0,761,759,1,0,0,0,
+	762,765,3,64,32,0,763,765,3,66,33,0,764,762,1,0,0,0,764,763,1,0,0,0,765,
+	766,1,0,0,0,766,767,5,276,0,0,767,63,1,0,0,0,768,770,5,106,0,0,769,768,
+	1,0,0,0,769,770,1,0,0,0,770,771,1,0,0,0,771,774,3,32,16,0,772,774,3,48,
+	24,0,773,769,1,0,0,0,773,772,1,0,0,0,774,775,1,0,0,0,775,777,5,167,0,0,
+	776,778,7,12,0,0,777,776,1,0,0,0,777,778,1,0,0,0,778,780,1,0,0,0,779,781,
+	3,114,57,0,780,779,1,0,0,0,780,781,1,0,0,0,781,65,1,0,0,0,782,786,3,48,
+	24,0,783,787,3,68,34,0,784,787,3,90,45,0,785,787,3,92,46,0,786,783,1,0,
+	0,0,786,784,1,0,0,0,786,785,1,0,0,0,787,790,1,0,0,0,788,789,5,170,0,0,789,
+	791,3,102,51,0,790,788,1,0,0,0,790,791,1,0,0,0,791,801,1,0,0,0,792,793,
+	5,164,0,0,793,798,3,116,58,0,794,795,5,209,0,0,795,797,3,116,58,0,796,794,
+	1,0,0,0,797,800,1,0,0,0,798,796,1,0,0,0,798,799,1,0,0,0,799,802,1,0,0,0,
+	800,798,1,0,0,0,801,792,1,0,0,0,801,802,1,0,0,0,802,804,1,0,0,0,803,805,
+	3,114,57,0,804,803,1,0,0,0,804,805,1,0,0,0,805,67,1,0,0,0,806,813,3,72,
+	36,0,807,813,3,74,37,0,808,813,3,78,39,0,809,813,3,80,40,0,810,813,3,70,
+	35,0,811,813,3,76,38,0,812,806,1,0,0,0,812,807,1,0,0,0,812,808,1,0,0,0,
+	812,809,1,0,0,0,812,810,1,0,0,0,812,811,1,0,0,0,813,69,1,0,0,0,814,815,
+	5,94,0,0,815,819,5,237,0,0,816,820,3,68,34,0,817,820,3,90,45,0,818,820,
+	3,92,46,0,819,816,1,0,0,0,819,817,1,0,0,0,819,818,1,0,0,0,820,71,1,0,0,
+	0,821,826,5,174,0,0,822,823,5,269,0,0,823,824,3,82,41,0,824,825,5,270,0,
+	0,825,827,1,0,0,0,826,822,1,0,0,0,826,827,1,0,0,0,827,73,1,0,0,0,828,829,
+	5,179,0,0,829,75,1,0,0,0,830,835,5,175,0,0,831,832,5,269,0,0,832,833,3,
+	82,41,0,833,834,5,270,0,0,834,836,1,0,0,0,835,831,1,0,0,0,835,836,1,0,0,
+	0,836,77,1,0,0,0,837,838,5,159,0,0,838,79,1,0,0,0,839,840,7,13,0,0,840,
+	81,1,0,0,0,841,843,7,14,0,0,842,841,1,0,0,0,842,843,1,0,0,0,843,850,1,0,
+	0,0,844,851,5,165,0,0,845,846,5,166,0,0,846,847,5,169,0,0,847,848,5,263,
+	0,0,848,851,5,162,0,0,849,851,5,166,0,0,850,844,1,0,0,0,850,845,1,0,0,0,
+	850,849,1,0,0,0,851,83,1,0,0,0,852,853,5,93,0,0,853,854,5,262,0,0,854,855,
+	5,29,0,0,855,858,3,86,43,0,856,857,5,170,0,0,857,859,3,102,51,0,858,856,
+	1,0,0,0,858,859,1,0,0,0,859,861,1,0,0,0,860,862,5,276,0,0,861,860,1,0,0,
+	0,861,862,1,0,0,0,862,85,1,0,0,0,863,869,3,88,44,0,864,869,3,72,36,0,865,
+	869,3,74,37,0,866,869,3,78,39,0,867,869,3,80,40,0,868,863,1,0,0,0,868,864,
+	1,0,0,0,868,865,1,0,0,0,868,866,1,0,0,0,868,867,1,0,0,0,869,87,1,0,0,0,
+	870,872,5,163,0,0,871,873,5,268,0,0,872,871,1,0,0,0,873,874,1,0,0,0,874,
+	872,1,0,0,0,874,875,1,0,0,0,875,89,1,0,0,0,876,877,5,262,0,0,877,91,1,0,
+	0,0,878,879,5,262,0,0,879,93,1,0,0,0,880,881,5,96,0,0,881,885,3,32,16,0,
+	882,884,3,96,48,0,883,882,1,0,0,0,884,887,1,0,0,0,885,883,1,0,0,0,885,886,
+	1,0,0,0,886,95,1,0,0,0,887,885,1,0,0,0,888,889,7,15,0,0,889,894,3,100,50,
+	0,890,891,5,171,0,0,891,892,3,100,50,0,892,893,5,270,0,0,893,895,1,0,0,
+	0,894,890,1,0,0,0,894,895,1,0,0,0,895,896,1,0,0,0,896,898,3,100,50,0,897,
+	899,3,100,50,0,898,897,1,0,0,0,898,899,1,0,0,0,899,906,1,0,0,0,900,902,
+	5,264,0,0,901,903,5,277,0,0,902,901,1,0,0,0,902,903,1,0,0,0,903,904,1,0,
+	0,0,904,905,5,263,0,0,905,907,3,100,50,0,906,900,1,0,0,0,906,907,1,0,0,
+	0,907,97,1,0,0,0,908,909,7,16,0,0,909,99,1,0,0,0,910,921,3,98,49,0,911,
+	921,5,202,0,0,912,921,5,203,0,0,913,921,5,217,0,0,914,921,5,218,0,0,915,
+	921,5,214,0,0,916,921,5,215,0,0,917,921,5,243,0,0,918,921,5,244,0,0,919,
+	921,5,216,0,0,920,910,1,0,0,0,920,911,1,0,0,0,920,912,1,0,0,0,920,913,1,
+	0,0,0,920,914,1,0,0,0,920,915,1,0,0,0,920,916,1,0,0,0,920,917,1,0,0,0,920,
+	918,1,0,0,0,920,919,1,0,0,0,921,101,1,0,0,0,922,927,3,104,52,0,923,924,
+	5,277,0,0,924,926,3,104,52,0,925,923,1,0,0,0,926,929,1,0,0,0,927,925,1,
+	0,0,0,927,928,1,0,0,0,928,935,1,0,0,0,929,927,1,0,0,0,930,935,5,263,0,0,
+	931,935,5,278,0,0,932,935,5,259,0,0,933,935,5,260,0,0,934,922,1,0,0,0,934,
+	930,1,0,0,0,934,931,1,0,0,0,934,932,1,0,0,0,934,933,1,0,0,0,935,103,1,0,
+	0,0,936,941,3,106,53,0,937,938,5,280,0,0,938,940,3,106,53,0,939,937,1,0,
+	0,0,940,943,1,0,0,0,941,939,1,0,0,0,941,942,1,0,0,0,942,105,1,0,0,0,943,
+	941,1,0,0,0,944,947,3,98,49,0,945,946,5,283,0,0,946,948,5,263,0,0,947,945,
+	1,0,0,0,947,948,1,0,0,0,948,107,1,0,0,0,949,950,5,95,0,0,950,952,3,46,23,
+	0,951,953,5,273,0,0,952,951,1,0,0,0,952,953,1,0,0,0,953,954,1,0,0,0,954,
+	955,5,27,0,0,955,956,3,46,23,0,956,958,3,110,55,0,957,959,3,112,56,0,958,
+	957,1,0,0,0,959,960,1,0,0,0,960,958,1,0,0,0,960,961,1,0,0,0,961,109,1,0,
+	0,0,962,963,5,2,0,0,963,964,3,52,26,0,964,966,5,270,0,0,965,967,5,275,0,
+	0,966,965,1,0,0,0,966,967,1,0,0,0,967,970,1,0,0,0,968,970,5,1,0,0,969,962,
+	1,0,0,0,969,968,1,0,0,0,970,111,1,0,0,0,971,972,5,263,0,0,972,973,5,274,
+	0,0,973,974,3,46,23,0,974,113,1,0,0,0,975,976,7,17,0,0,976,115,1,0,0,0,
+	977,978,5,262,0,0,978,117,1,0,0,0,979,980,5,97,0,0,980,981,3,120,60,0,981,
+	984,5,275,0,0,982,985,3,68,34,0,983,985,3,90,45,0,984,982,1,0,0,0,984,983,
+	1,0,0,0,985,988,1,0,0,0,986,987,5,170,0,0,987,989,3,102,51,0,988,986,1,
+	0,0,0,988,989,1,0,0,0,989,992,1,0,0,0,990,991,5,106,0,0,991,993,3,274,137,
+	0,992,990,1,0,0,0,992,993,1,0,0,0,993,995,1,0,0,0,994,996,3,114,57,0,995,
+	994,1,0,0,0,995,996,1,0,0,0,996,119,1,0,0,0,997,999,7,15,0,0,998,997,1,
+	0,0,0,998,999,1,0,0,0,999,1000,1,0,0,0,1000,1006,3,122,61,0,1001,1002,3,
+	52,26,0,1002,1003,3,122,61,0,1003,1005,1,0,0,0,1004,1001,1,0,0,0,1005,1008,
+	1,0,0,0,1006,1004,1,0,0,0,1006,1007,1,0,0,0,1007,121,1,0,0,0,1008,1006,
+	1,0,0,0,1009,1013,7,18,0,0,1010,1012,7,19,0,0,1011,1010,1,0,0,0,1012,1015,
+	1,0,0,0,1013,1011,1,0,0,0,1013,1014,1,0,0,0,1014,123,1,0,0,0,1015,1013,
+	1,0,0,0,1016,1018,7,15,0,0,1017,1016,1,0,0,0,1017,1018,1,0,0,0,1018,1019,
+	1,0,0,0,1019,1025,3,122,61,0,1020,1021,3,52,26,0,1021,1022,3,122,61,0,1022,
+	1024,1,0,0,0,1023,1020,1,0,0,0,1024,1027,1,0,0,0,1025,1023,1,0,0,0,1025,
+	1026,1,0,0,0,1026,1030,1,0,0,0,1027,1025,1,0,0,0,1028,1030,3,46,23,0,1029,
+	1017,1,0,0,0,1029,1028,1,0,0,0,1030,125,1,0,0,0,1031,1032,5,98,0,0,1032,
+	1033,3,46,23,0,1033,1035,3,128,64,0,1034,1036,3,128,64,0,1035,1034,1,0,
+	0,0,1036,1037,1,0,0,0,1037,1035,1,0,0,0,1037,1038,1,0,0,0,1038,1039,1,0,
+	0,0,1039,1040,3,132,66,0,1040,1047,1,0,0,0,1041,1042,5,28,0,0,1042,1043,
+	3,46,23,0,1043,1044,3,128,64,0,1044,1045,3,132,66,0,1045,1047,1,0,0,0,1046,
+	1031,1,0,0,0,1046,1041,1,0,0,0,1047,127,1,0,0,0,1048,1049,7,15,0,0,1049,
+	1054,3,130,65,0,1050,1051,5,171,0,0,1051,1052,3,46,23,0,1052,1053,5,270,
+	0,0,1053,1055,1,0,0,0,1054,1050,1,0,0,0,1054,1055,1,0,0,0,1055,1056,1,0,
+	0,0,1056,1058,5,286,0,0,1057,1059,5,262,0,0,1058,1057,1,0,0,0,1059,1060,
+	1,0,0,0,1060,1058,1,0,0,0,1060,1061,1,0,0,0,1061,129,1,0,0,0,1062,1065,
+	3,34,17,0,1063,1065,3,52,26,0,1064,1062,1,0,0,0,1064,1063,1,0,0,0,1065,
+	1066,1,0,0,0,1066,1064,1,0,0,0,1066,1067,1,0,0,0,1067,131,1,0,0,0,1068,
+	1070,3,134,67,0,1069,1068,1,0,0,0,1070,1071,1,0,0,0,1071,1069,1,0,0,0,1071,
+	1072,1,0,0,0,1072,133,1,0,0,0,1073,1074,8,20,0,0,1074,135,1,0,0,0,1075,
+	1076,5,89,0,0,1076,1078,3,142,71,0,1077,1079,5,263,0,0,1078,1077,1,0,0,
+	0,1078,1079,1,0,0,0,1079,1081,1,0,0,0,1080,1082,3,138,69,0,1081,1080,1,
+	0,0,0,1082,1083,1,0,0,0,1083,1081,1,0,0,0,1083,1084,1,0,0,0,1084,137,1,
+	0,0,0,1085,1086,3,146,73,0,1086,1092,3,152,76,0,1087,1089,3,184,92,0,1088,
+	1090,5,274,0,0,1089,1088,1,0,0,0,1089,1090,1,0,0,0,1090,1093,1,0,0,0,1091,
+	1093,5,274,0,0,1092,1087,1,0,0,0,1092,1091,1,0,0,0,1092,1093,1,0,0,0,1093,
+	1095,1,0,0,0,1094,1096,3,268,134,0,1095,1094,1,0,0,0,1095,1096,1,0,0,0,
+	1096,139,1,0,0,0,1097,1098,5,90,0,0,1098,1100,3,46,23,0,1099,1101,5,105,
+	0,0,1100,1099,1,0,0,0,1100,1101,1,0,0,0,1101,1104,1,0,0,0,1102,1105,3,136,
+	68,0,1103,1105,3,176,88,0,1104,1102,1,0,0,0,1104,1103,1,0,0,0,1105,1106,
+	1,0,0,0,1106,1104,1,0,0,0,1106,1107,1,0,0,0,1107,141,1,0,0,0,1108,1112,
+	3,48,24,0,1109,1111,3,144,72,0,1110,1109,1,0,0,0,1111,1114,1,0,0,0,1112,
+	1110,1,0,0,0,1112,1113,1,0,0,0,1113,143,1,0,0,0,1114,1112,1,0,0,0,1115,
+	1130,5,191,0,0,1116,1117,5,273,0,0,1117,1130,3,48,24,0,1118,1119,5,273,
+	0,0,1119,1120,5,169,0,0,1120,1130,3,48,24,0,1121,1122,5,209,0,0,1122,1130,
+	3,48,24,0,1123,1124,5,106,0,0,1124,1130,3,48,24,0,1125,1126,5,197,0,0,1126,
+	1127,3,48,24,0,1127,1128,5,106,0,0,1128,1130,1,0,0,0,1129,1115,1,0,0,0,
+	1129,1116,1,0,0,0,1129,1118,1,0,0,0,1129,1121,1,0,0,0,1129,1123,1,0,0,0,
+	1129,1125,1,0,0,0,1130,145,1,0,0,0,1131,1132,5,101,0,0,1132,1133,3,148,
+	74,0,1133,147,1,0,0,0,1134,1144,5,200,0,0,1135,1136,5,143,0,0,1136,1139,
+	3,150,75,0,1137,1138,7,21,0,0,1138,1140,3,150,75,0,1139,1137,1,0,0,0,1139,
+	1140,1,0,0,0,1140,1144,1,0,0,0,1141,1142,7,21,0,0,1142,1144,3,150,75,0,
+	1143,1134,1,0,0,0,1143,1135,1,0,0,0,1143,1141,1,0,0,0,1144,149,1,0,0,0,
+	1145,1148,3,54,27,0,1146,1148,5,263,0,0,1147,1145,1,0,0,0,1147,1146,1,0,
+	0,0,1148,151,1,0,0,0,1149,1150,5,208,0,0,1150,1151,5,202,0,0,1151,1152,
+	5,106,0,0,1152,1153,5,208,0,0,1153,1190,3,46,23,0,1154,1161,3,216,108,0,
+	1155,1156,5,8,0,0,1156,1162,3,274,137,0,1157,1158,5,9,0,0,1158,1162,3,274,
+	137,0,1159,1160,5,10,0,0,1160,1162,3,274,137,0,1161,1155,1,0,0,0,1161,1157,
+	1,0,0,0,1161,1159,1,0,0,0,1162,1164,1,0,0,0,1163,1165,3,312,156,0,1164,
+	1163,1,0,0,0,1164,1165,1,0,0,0,1165,1190,1,0,0,0,1166,1167,3,216,108,0,
+	1167,1168,5,107,0,0,1168,1169,3,154,77,0,1169,1170,3,274,137,0,1170,1190,
+	1,0,0,0,1171,1190,3,156,78,0,1172,1190,3,168,84,0,1173,1174,3,204,102,0,
+	1174,1175,5,103,0,0,1175,1176,7,15,0,0,1176,1177,3,46,23,0,1177,1178,5,
+	169,0,0,1178,1179,3,218,109,0,1179,1180,7,22,0,0,1180,1181,3,274,137,0,
+	1181,1190,1,0,0,0,1182,1183,3,204,102,0,1183,1184,7,1,0,0,1184,1186,3,220,
+	110,0,1185,1187,3,312,156,0,1186,1185,1,0,0,0,1186,1187,1,0,0,0,1187,1190,
+	1,0,0,0,1188,1190,3,346,173,0,1189,1149,1,0,0,0,1189,1154,1,0,0,0,1189,
+	1166,1,0,0,0,1189,1171,1,0,0,0,1189,1172,1,0,0,0,1189,1173,1,0,0,0,1189,
+	1182,1,0,0,0,1189,1188,1,0,0,0,1190,153,1,0,0,0,1191,1192,7,23,0,0,1192,
+	155,1,0,0,0,1193,1194,5,208,0,0,1194,1195,3,158,79,0,1195,1196,5,237,0,
+	0,1196,1197,5,208,0,0,1197,1198,3,160,80,0,1198,1199,5,106,0,0,1199,1200,
+	7,6,0,0,1200,1201,3,158,79,0,1201,1202,5,237,0,0,1202,1203,7,6,0,0,1203,
+	1204,3,160,80,0,1204,157,1,0,0,0,1205,1207,3,164,82,0,1206,1205,1,0,0,0,
+	1207,1208,1,0,0,0,1208,1206,1,0,0,0,1208,1209,1,0,0,0,1209,159,1,0,0,0,
+	1210,1212,3,162,81,0,1211,1210,1,0,0,0,1212,1213,1,0,0,0,1213,1211,1,0,
+	0,0,1213,1214,1,0,0,0,1214,161,1,0,0,0,1215,1221,3,34,17,0,1216,1221,3,
+	52,26,0,1217,1221,5,205,0,0,1218,1221,5,210,0,0,1219,1221,5,208,0,0,1220,
+	1215,1,0,0,0,1220,1216,1,0,0,0,1220,1217,1,0,0,0,1220,1218,1,0,0,0,1220,
+	1219,1,0,0,0,1221,163,1,0,0,0,1222,1225,3,34,17,0,1223,1225,3,166,83,0,
+	1224,1222,1,0,0,0,1224,1223,1,0,0,0,1225,165,1,0,0,0,1226,1227,7,24,0,0,
+	1227,167,1,0,0,0,1228,1229,3,204,102,0,1229,1230,5,103,0,0,1230,1231,7,
+	6,0,0,1231,1233,3,46,23,0,1232,1234,3,170,85,0,1233,1232,1,0,0,0,1233,1234,
+	1,0,0,0,1234,1236,1,0,0,0,1235,1237,5,274,0,0,1236,1235,1,0,0,0,1236,1237,
+	1,0,0,0,1237,169,1,0,0,0,1238,1239,5,169,0,0,1239,1244,3,172,86,0,1240,
+	1241,5,273,0,0,1241,1243,3,172,86,0,1242,1240,1,0,0,0,1243,1246,1,0,0,0,
+	1244,1242,1,0,0,0,1244,1245,1,0,0,0,1245,1249,1,0,0,0,1246,1244,1,0,0,0,
+	1247,1248,5,209,0,0,1248,1250,3,172,86,0,1249,1247,1,0,0,0,1249,1250,1,
+	0,0,0,1250,171,1,0,0,0,1251,1252,3,174,87,0,1252,1253,5,121,0,0,1253,1254,
+	3,276,138,0,1254,173,1,0,0,0,1255,1256,3,38,19,0,1256,175,1,0,0,0,1257,
+	1258,5,88,0,0,1258,1268,3,46,23,0,1259,1269,3,178,89,0,1260,1266,3,182,
+	91,0,1261,1263,3,184,92,0,1262,1264,5,274,0,0,1263,1262,1,0,0,0,1263,1264,
+	1,0,0,0,1264,1267,1,0,0,0,1265,1267,5,274,0,0,1266,1261,1,0,0,0,1266,1265,
+	1,0,0,0,1266,1267,1,0,0,0,1267,1269,1,0,0,0,1268,1259,1,0,0,0,1268,1260,
+	1,0,0,0,1269,177,1,0,0,0,1270,1271,3,180,90,0,1271,1273,5,85,0,0,1272,1274,
+	5,274,0,0,1273,1272,1,0,0,0,1273,1274,1,0,0,0,1274,179,1,0,0,0,1275,1276,
+	5,205,0,0,1276,1277,3,46,23,0,1277,1278,5,237,0,0,1278,1279,5,117,0,0,1279,
+	1280,3,46,23,0,1280,181,1,0,0,0,1281,1283,7,25,0,0,1282,1281,1,0,0,0,1282,
+	1283,1,0,0,0,1283,1284,1,0,0,0,1284,1285,3,46,23,0,1285,1286,5,87,0,0,1286,
+	183,1,0,0,0,1287,1290,5,104,0,0,1288,1291,3,274,137,0,1289,1291,3,186,93,
+	0,1290,1288,1,0,0,0,1290,1289,1,0,0,0,1291,185,1,0,0,0,1292,1293,5,43,0,
+	0,1293,1294,3,188,94,0,1294,1295,7,26,0,0,1295,1296,5,41,0,0,1296,1298,
+	5,275,0,0,1297,1299,3,190,95,0,1298,1297,1,0,0,0,1299,1300,1,0,0,0,1300,
+	1298,1,0,0,0,1300,1301,1,0,0,0,1301,1335,1,0,0,0,1302,1307,3,204,102,0,
+	1303,1307,5,212,0,0,1304,1307,5,210,0,0,1305,1307,5,245,0,0,1306,1302,1,
+	0,0,0,1306,1303,1,0,0,0,1306,1304,1,0,0,0,1306,1305,1,0,0,0,1307,1308,1,
+	0,0,0,1308,1309,5,115,0,0,1309,1310,3,188,94,0,1310,1311,7,26,0,0,1311,
+	1312,5,147,0,0,1312,1314,5,275,0,0,1313,1315,3,190,95,0,1314,1313,1,0,0,
+	0,1315,1316,1,0,0,0,1316,1314,1,0,0,0,1316,1317,1,0,0,0,1317,1335,1,0,0,
+	0,1318,1323,3,204,102,0,1319,1323,5,212,0,0,1320,1323,5,210,0,0,1321,1323,
+	5,245,0,0,1322,1318,1,0,0,0,1322,1319,1,0,0,0,1322,1320,1,0,0,0,1322,1321,
+	1,0,0,0,1323,1324,1,0,0,0,1324,1325,5,147,0,0,1325,1326,5,115,0,0,1326,
+	1327,3,188,94,0,1327,1328,7,26,0,0,1328,1330,5,275,0,0,1329,1331,3,190,
+	95,0,1330,1329,1,0,0,0,1331,1332,1,0,0,0,1332,1330,1,0,0,0,1332,1333,1,
+	0,0,0,1333,1335,1,0,0,0,1334,1292,1,0,0,0,1334,1306,1,0,0,0,1334,1322,1,
+	0,0,0,1335,187,1,0,0,0,1336,1352,5,205,0,0,1337,1352,5,117,0,0,1338,1352,
+	5,196,0,0,1339,1340,7,27,0,0,1340,1341,7,28,0,0,1341,1342,5,237,0,0,1342,
+	1352,5,205,0,0,1343,1344,5,152,0,0,1344,1345,7,28,0,0,1345,1346,5,237,0,
+	0,1346,1352,5,205,0,0,1347,1348,5,153,0,0,1348,1349,7,28,0,0,1349,1350,
+	5,237,0,0,1350,1352,5,205,0,0,1351,1336,1,0,0,0,1351,1337,1,0,0,0,1351,
+	1338,1,0,0,0,1351,1339,1,0,0,0,1351,1343,1,0,0,0,1351,1347,1,0,0,0,1352,
+	189,1,0,0,0,1353,1356,3,192,96,0,1354,1357,3,198,99,0,1355,1357,3,200,100,
+	0,1356,1354,1,0,0,0,1356,1355,1,0,0,0,1357,191,1,0,0,0,1358,1359,7,29,0,
+	0,1359,193,1,0,0,0,1360,1364,5,284,0,0,1361,1362,5,279,0,0,1362,1364,5,
+	279,0,0,1363,1360,1,0,0,0,1363,1361,1,0,0,0,1364,195,1,0,0,0,1365,1367,
+	7,30,0,0,1366,1365,1,0,0,0,1367,1368,1,0,0,0,1368,1366,1,0,0,0,1368,1369,
+	1,0,0,0,1369,197,1,0,0,0,1370,1371,3,274,137,0,1371,199,1,0,0,0,1372,1376,
+	3,204,102,0,1373,1376,5,212,0,0,1374,1376,5,245,0,0,1375,1372,1,0,0,0,1375,
+	1373,1,0,0,0,1375,1374,1,0,0,0,1376,1377,1,0,0,0,1377,1378,5,147,0,0,1378,
+	1379,5,115,0,0,1379,1380,3,188,94,0,1380,1381,7,26,0,0,1381,1383,5,275,
+	0,0,1382,1384,3,202,101,0,1383,1382,1,0,0,0,1384,1385,1,0,0,0,1385,1383,
+	1,0,0,0,1385,1386,1,0,0,0,1386,201,1,0,0,0,1387,1390,3,194,97,0,1388,1391,
+	3,198,99,0,1389,1391,3,200,100,0,1390,1388,1,0,0,0,1390,1389,1,0,0,0,1391,
+	203,1,0,0,0,1392,1395,3,208,104,0,1393,1394,7,31,0,0,1394,1396,3,228,114,
+	0,1395,1393,1,0,0,0,1395,1396,1,0,0,0,1396,205,1,0,0,0,1397,1400,3,210,
+	105,0,1398,1399,7,31,0,0,1399,1401,3,228,114,0,1400,1398,1,0,0,0,1400,1401,
+	1,0,0,0,1401,207,1,0,0,0,1402,1408,3,212,106,0,1403,1404,3,52,26,0,1404,
+	1405,3,212,106,0,1405,1407,1,0,0,0,1406,1403,1,0,0,0,1407,1410,1,0,0,0,
+	1408,1406,1,0,0,0,1408,1409,1,0,0,0,1409,209,1,0,0,0,1410,1408,1,0,0,0,
+	1411,1417,3,214,107,0,1412,1413,3,52,26,0,1413,1414,3,214,107,0,1414,1416,
+	1,0,0,0,1415,1412,1,0,0,0,1416,1419,1,0,0,0,1417,1415,1,0,0,0,1417,1418,
+	1,0,0,0,1418,211,1,0,0,0,1419,1417,1,0,0,0,1420,1422,7,7,0,0,1421,1423,
+	3,34,17,0,1422,1421,1,0,0,0,1423,1424,1,0,0,0,1424,1422,1,0,0,0,1424,1425,
+	1,0,0,0,1425,1428,1,0,0,0,1426,1428,5,212,0,0,1427,1420,1,0,0,0,1427,1426,
+	1,0,0,0,1428,213,1,0,0,0,1429,1431,7,7,0,0,1430,1432,3,42,21,0,1431,1430,
+	1,0,0,0,1432,1433,1,0,0,0,1433,1431,1,0,0,0,1433,1434,1,0,0,0,1434,1437,
+	1,0,0,0,1435,1437,5,212,0,0,1436,1429,1,0,0,0,1436,1435,1,0,0,0,1437,215,
+	1,0,0,0,1438,1439,3,218,109,0,1439,1440,5,237,0,0,1440,1441,3,204,102,0,
+	1441,217,1,0,0,0,1442,1443,3,50,25,0,1443,219,1,0,0,0,1444,1446,3,52,26,
+	0,1445,1444,1,0,0,0,1445,1446,1,0,0,0,1446,1447,1,0,0,0,1447,1448,3,48,
+	24,0,1448,221,1,0,0,0,1449,1451,3,52,26,0,1450,1449,1,0,0,0,1450,1451,1,
+	0,0,0,1451,1453,1,0,0,0,1452,1454,7,6,0,0,1453,1452,1,0,0,0,1453,1454,1,
+	0,0,0,1454,1456,1,0,0,0,1455,1457,3,42,21,0,1456,1455,1,0,0,0,1457,1458,
+	1,0,0,0,1458,1456,1,0,0,0,1458,1459,1,0,0,0,1459,223,1,0,0,0,1460,1461,
+	7,32,0,0,1461,1462,3,46,23,0,1462,225,1,0,0,0,1463,1464,5,117,0,0,1464,
+	1471,3,46,23,0,1465,1468,3,46,23,0,1466,1467,7,31,0,0,1467,1469,3,228,114,
+	0,1468,1466,1,0,0,0,1468,1469,1,0,0,0,1469,1471,1,0,0,0,1470,1463,1,0,0,
+	0,1470,1465,1,0,0,0,1471,227,1,0,0,0,1472,1475,3,230,115,0,1473,1475,3,
+	246,123,0,1474,1472,1,0,0,0,1474,1473,1,0,0,0,1475,229,1,0,0,0,1476,1482,
+	3,238,119,0,1477,1482,3,232,116,0,1478,1482,3,240,120,0,1479,1482,3,242,
+	121,0,1480,1482,3,244,122,0,1481,1476,1,0,0,0,1481,1477,1,0,0,0,1481,1478,
+	1,0,0,0,1481,1479,1,0,0,0,1481,1480,1,0,0,0,1482,231,1,0,0,0,1483,1484,
+	3,234,117,0,1484,233,1,0,0,0,1485,1487,5,208,0,0,1486,1485,1,0,0,0,1486,
+	1487,1,0,0,0,1487,1490,1,0,0,0,1488,1491,3,220,110,0,1489,1491,3,236,118,
+	0,1490,1488,1,0,0,0,1490,1489,1,0,0,0,1491,1492,1,0,0,0,1492,1493,7,33,
+	0,0,1493,235,1,0,0,0,1494,1495,3,46,23,0,1495,237,1,0,0,0,1496,1498,5,208,
+	0,0,1497,1496,1,0,0,0,1497,1498,1,0,0,0,1498,1499,1,0,0,0,1499,1500,3,46,
+	23,0,1500,1501,5,102,0,0,1501,1502,3,288,144,0,1502,1503,3,274,137,0,1503,
+	239,1,0,0,0,1504,1505,3,256,128,0,1505,1506,3,262,131,0,1506,241,1,0,0,
+	0,1507,1508,3,258,129,0,1508,1509,3,264,132,0,1509,243,1,0,0,0,1510,1511,
+	3,260,130,0,1511,1512,3,266,133,0,1512,245,1,0,0,0,1513,1514,5,115,0,0,
+	1514,1515,3,188,94,0,1515,1516,7,26,0,0,1516,1517,7,34,0,0,1517,1519,5,
+	275,0,0,1518,1520,3,248,124,0,1519,1518,1,0,0,0,1520,1521,1,0,0,0,1521,
+	1519,1,0,0,0,1521,1522,1,0,0,0,1522,247,1,0,0,0,1523,1524,3,196,98,0,1524,
+	1525,3,250,125,0,1525,1530,1,0,0,0,1526,1527,3,196,98,0,1527,1528,3,254,
+	127,0,1528,1530,1,0,0,0,1529,1523,1,0,0,0,1529,1526,1,0,0,0,1530,249,1,
+	0,0,0,1531,1532,3,252,126,0,1532,251,1,0,0,0,1533,1536,3,216,108,0,1534,
+	1536,3,224,112,0,1535,1533,1,0,0,0,1535,1534,1,0,0,0,1536,1537,1,0,0,0,
+	1537,1538,7,2,0,0,1538,1539,3,220,110,0,1539,1552,1,0,0,0,1540,1543,3,216,
+	108,0,1541,1543,3,224,112,0,1542,1540,1,0,0,0,1542,1541,1,0,0,0,1543,1544,
+	1,0,0,0,1544,1545,3,288,144,0,1545,1546,3,274,137,0,1546,1552,1,0,0,0,1547,
+	1548,3,204,102,0,1548,1549,3,234,117,0,1549,1552,1,0,0,0,1550,1552,3,234,
+	117,0,1551,1535,1,0,0,0,1551,1542,1,0,0,0,1551,1547,1,0,0,0,1551,1550,1,
+	0,0,0,1552,253,1,0,0,0,1553,1558,5,147,0,0,1554,1558,5,146,0,0,1555,1556,
+	5,110,0,0,1556,1558,5,111,0,0,1557,1553,1,0,0,0,1557,1554,1,0,0,0,1557,
+	1555,1,0,0,0,1558,1559,1,0,0,0,1559,1560,5,115,0,0,1560,1561,3,188,94,0,
+	1561,1562,7,26,0,0,1562,1564,5,275,0,0,1563,1565,3,248,124,0,1564,1563,
+	1,0,0,0,1565,1566,1,0,0,0,1566,1564,1,0,0,0,1566,1567,1,0,0,0,1567,255,
+	1,0,0,0,1568,1569,7,35,0,0,1569,257,1,0,0,0,1570,1571,7,36,0,0,1571,259,
+	1,0,0,0,1572,1573,7,37,0,0,1573,261,1,0,0,0,1574,1575,3,274,137,0,1575,
+	263,1,0,0,0,1576,1577,3,274,137,0,1577,265,1,0,0,0,1578,1603,3,54,27,0,
+	1579,1603,5,228,0,0,1580,1603,5,229,0,0,1581,1582,5,17,0,0,1582,1583,5,
+	269,0,0,1583,1584,3,302,151,0,1584,1585,5,273,0,0,1585,1586,3,302,151,0,
+	1586,1587,5,273,0,0,1587,1588,3,302,151,0,1588,1589,5,270,0,0,1589,1603,
+	1,0,0,0,1590,1591,5,18,0,0,1591,1592,5,269,0,0,1592,1593,3,302,151,0,1593,
+	1594,5,270,0,0,1594,1603,1,0,0,0,1595,1603,3,216,108,0,1596,1603,3,224,
+	112,0,1597,1603,3,124,62,0,1598,1599,5,269,0,0,1599,1600,3,274,137,0,1600,
+	1601,5,270,0,0,1601,1603,1,0,0,0,1602,1578,1,0,0,0,1602,1579,1,0,0,0,1602,
+	1580,1,0,0,0,1602,1581,1,0,0,0,1602,1590,1,0,0,0,1602,1595,1,0,0,0,1602,
+	1596,1,0,0,0,1602,1597,1,0,0,0,1602,1598,1,0,0,0,1603,267,1,0,0,0,1604,
+	1608,5,100,0,0,1605,1607,3,270,135,0,1606,1605,1,0,0,0,1607,1610,1,0,0,
+	0,1608,1606,1,0,0,0,1608,1609,1,0,0,0,1609,1611,1,0,0,0,1610,1608,1,0,0,
+	0,1611,1612,5,274,0,0,1612,269,1,0,0,0,1613,1615,7,15,0,0,1614,1613,1,0,
+	0,0,1614,1615,1,0,0,0,1615,1616,1,0,0,0,1616,1617,5,262,0,0,1617,1618,5,
+	106,0,0,1618,1619,3,272,136,0,1619,271,1,0,0,0,1620,1629,3,302,151,0,1621,
+	1624,3,292,146,0,1622,1624,3,296,148,0,1623,1621,1,0,0,0,1623,1622,1,0,
+	0,0,1624,1625,1,0,0,0,1625,1626,3,302,151,0,1626,1628,1,0,0,0,1627,1623,
+	1,0,0,0,1628,1631,1,0,0,0,1629,1627,1,0,0,0,1629,1630,1,0,0,0,1630,273,
+	1,0,0,0,1631,1629,1,0,0,0,1632,1633,3,278,139,0,1633,1634,5,273,0,0,1634,
+	1635,3,306,153,0,1635,1636,3,304,152,0,1636,1646,1,0,0,0,1637,1638,3,278,
+	139,0,1638,1639,5,273,0,0,1639,1640,3,306,153,0,1640,1646,1,0,0,0,1641,
+	1642,3,278,139,0,1642,1643,3,304,152,0,1643,1646,1,0,0,0,1644,1646,3,278,
+	139,0,1645,1632,1,0,0,0,1645,1637,1,0,0,0,1645,1641,1,0,0,0,1645,1644,1,
+	0,0,0,1646,275,1,0,0,0,1647,1648,3,280,140,0,1648,1649,5,273,0,0,1649,1650,
+	3,306,153,0,1650,1651,3,304,152,0,1651,1661,1,0,0,0,1652,1653,3,280,140,
+	0,1653,1654,5,273,0,0,1654,1655,3,306,153,0,1655,1661,1,0,0,0,1656,1657,
+	3,280,140,0,1657,1658,3,304,152,0,1658,1661,1,0,0,0,1659,1661,3,280,140,
+	0,1660,1647,1,0,0,0,1660,1652,1,0,0,0,1660,1656,1,0,0,0,1660,1659,1,0,0,
+	0,1661,277,1,0,0,0,1662,1665,3,280,140,0,1663,1664,7,38,0,0,1664,1666,3,
+	278,139,0,1665,1663,1,0,0,0,1665,1666,1,0,0,0,1666,279,1,0,0,0,1667,1668,
+	3,290,145,0,1668,1669,7,2,0,0,1669,1670,7,3,0,0,1670,1671,3,46,23,0,1671,
+	1712,1,0,0,0,1672,1673,3,290,145,0,1673,1674,7,3,0,0,1674,1675,3,46,23,
+	0,1675,1676,7,2,0,0,1676,1712,1,0,0,0,1677,1712,3,340,170,0,1678,1712,3,
+	314,157,0,1679,1680,3,290,145,0,1680,1681,5,106,0,0,1681,1682,3,48,24,0,
+	1682,1712,1,0,0,0,1683,1684,3,290,145,0,1684,1685,5,103,0,0,1685,1686,3,
+	48,24,0,1686,1712,1,0,0,0,1687,1688,3,290,145,0,1688,1689,3,284,142,0,1689,
+	1694,3,282,141,0,1690,1691,5,273,0,0,1691,1693,3,282,141,0,1692,1690,1,
+	0,0,0,1693,1696,1,0,0,0,1694,1692,1,0,0,0,1694,1695,1,0,0,0,1695,1697,1,
+	0,0,0,1696,1694,1,0,0,0,1697,1698,5,222,0,0,1698,1699,3,282,141,0,1699,
+	1712,1,0,0,0,1700,1707,3,290,145,0,1701,1703,3,286,143,0,1702,1701,1,0,
+	0,0,1702,1703,1,0,0,0,1703,1704,1,0,0,0,1704,1705,3,288,144,0,1705,1706,
+	3,290,145,0,1706,1708,1,0,0,0,1707,1702,1,0,0,0,1707,1708,1,0,0,0,1708,
+	1712,1,0,0,0,1709,1712,3,334,167,0,1710,1712,3,336,168,0,1711,1667,1,0,
+	0,0,1711,1672,1,0,0,0,1711,1677,1,0,0,0,1711,1678,1,0,0,0,1711,1679,1,0,
+	0,0,1711,1683,1,0,0,0,1711,1687,1,0,0,0,1711,1700,1,0,0,0,1711,1709,1,0,
+	0,0,1711,1710,1,0,0,0,1712,281,1,0,0,0,1713,1723,5,268,0,0,1714,1723,5,
+	267,0,0,1715,1717,5,263,0,0,1716,1718,3,102,51,0,1717,1716,1,0,0,0,1717,
+	1718,1,0,0,0,1718,1723,1,0,0,0,1719,1723,5,266,0,0,1720,1723,3,54,27,0,
+	1721,1723,3,32,16,0,1722,1713,1,0,0,0,1722,1714,1,0,0,0,1722,1715,1,0,0,
+	0,1722,1719,1,0,0,0,1722,1720,1,0,0,0,1722,1721,1,0,0,0,1723,283,1,0,0,
+	0,1724,1725,7,39,0,0,1725,285,1,0,0,0,1726,1728,5,133,0,0,1727,1726,1,0,
+	0,0,1727,1728,1,0,0,0,1728,1733,1,0,0,0,1729,1730,5,5,0,0,1730,1734,5,214,
+	0,0,1731,1732,5,6,0,0,1732,1734,5,217,0,0,1733,1729,1,0,0,0,1733,1731,1,
+	0,0,0,1734,287,1,0,0,0,1735,1736,7,40,0,0,1736,289,1,0,0,0,1737,1743,3,
+	294,147,0,1738,1739,3,292,146,0,1739,1740,3,294,147,0,1740,1742,1,0,0,0,
+	1741,1738,1,0,0,0,1742,1745,1,0,0,0,1743,1741,1,0,0,0,1743,1744,1,0,0,0,
+	1744,291,1,0,0,0,1745,1743,1,0,0,0,1746,1747,7,41,0,0,1747,293,1,0,0,0,
+	1748,1754,3,298,149,0,1749,1750,3,296,148,0,1750,1751,3,298,149,0,1751,
+	1753,1,0,0,0,1752,1749,1,0,0,0,1753,1756,1,0,0,0,1754,1752,1,0,0,0,1754,
+	1755,1,0,0,0,1755,295,1,0,0,0,1756,1754,1,0,0,0,1757,1758,7,42,0,0,1758,
+	297,1,0,0,0,1759,1765,3,302,151,0,1760,1761,3,300,150,0,1761,1762,3,302,
+	151,0,1762,1764,1,0,0,0,1763,1760,1,0,0,0,1764,1767,1,0,0,0,1765,1763,1,
+	0,0,0,1765,1766,1,0,0,0,1766,299,1,0,0,0,1767,1765,1,0,0,0,1768,1769,7,
+	43,0,0,1769,301,1,0,0,0,1770,1771,6,151,-1,0,1771,1772,5,130,0,0,1772,2036,
+	3,302,151,55,1773,1774,5,289,0,0,1774,2036,3,302,151,54,1775,1776,5,133,
+	0,0,1776,2036,3,302,151,53,1777,1778,5,11,0,0,1778,1779,3,302,151,0,1779,
+	1780,5,139,0,0,1780,1783,3,302,151,0,1781,1782,5,185,0,0,1782,1784,3,100,
+	50,0,1783,1781,1,0,0,0,1783,1784,1,0,0,0,1784,2036,1,0,0,0,1785,1786,5,
+	189,0,0,1786,1787,3,302,151,0,1787,1788,5,139,0,0,1788,1791,3,302,151,0,
+	1789,1790,5,185,0,0,1790,1792,3,100,50,0,1791,1789,1,0,0,0,1791,1792,1,
+	0,0,0,1792,2036,1,0,0,0,1793,1794,5,188,0,0,1794,1799,3,302,151,0,1795,
 	1796,5,273,0,0,1796,1798,3,302,151,0,1797,1795,1,0,0,0,1798,1801,1,0,0,
 	0,1799,1797,1,0,0,0,1799,1800,1,0,0,0,1800,1802,1,0,0,0,1801,1799,1,0,0,
 	0,1802,1803,5,209,0,0,1803,1804,3,302,151,50,1804,2036,1,0,0,0,1805,1806,
@@ -13490,63 +13531,65 @@ export default class RegelSpraakParser extends Parser {
 	273,0,0,2172,2174,3,46,23,0,2173,2171,1,0,0,0,2174,2177,1,0,0,0,2175,2173,
 	1,0,0,0,2175,2176,1,0,0,0,2176,2178,1,0,0,0,2177,2175,1,0,0,0,2178,2179,
 	5,209,0,0,2179,2180,3,46,23,0,2180,2181,5,272,0,0,2181,333,1,0,0,0,2182,
-	2183,3,302,151,0,2183,2184,7,48,0,0,2184,2209,1,0,0,0,2185,2186,3,302,151,
-	0,2186,2187,7,49,0,0,2187,2188,7,2,0,0,2188,2209,1,0,0,0,2189,2190,3,302,
-	151,0,2190,2191,7,5,0,0,2191,2192,5,263,0,0,2192,2193,5,160,0,0,2193,2209,
-	1,0,0,0,2194,2195,3,302,151,0,2195,2196,7,50,0,0,2196,2197,3,32,16,0,2197,
-	2209,1,0,0,0,2198,2199,3,302,151,0,2199,2200,7,51,0,0,2200,2201,3,32,16,
-	0,2201,2209,1,0,0,0,2202,2203,3,204,102,0,2203,2204,5,85,0,0,2204,2209,
-	1,0,0,0,2205,2206,3,302,151,0,2206,2207,5,87,0,0,2207,2209,1,0,0,0,2208,
-	2182,1,0,0,0,2208,2185,1,0,0,0,2208,2189,1,0,0,0,2208,2194,1,0,0,0,2208,
-	2198,1,0,0,0,2208,2202,1,0,0,0,2208,2205,1,0,0,0,2209,335,1,0,0,0,2210,
-	2211,5,230,0,0,2211,2212,3,338,169,0,2212,2213,5,86,0,0,2213,2219,1,0,0,
-	0,2214,2215,5,230,0,0,2215,2216,3,338,169,0,2216,2217,5,87,0,0,2217,2219,
-	1,0,0,0,2218,2210,1,0,0,0,2218,2214,1,0,0,0,2219,337,1,0,0,0,2220,2223,
-	3,46,23,0,2221,2223,5,197,0,0,2222,2220,1,0,0,0,2222,2221,1,0,0,0,2223,
-	2224,1,0,0,0,2224,2222,1,0,0,0,2224,2225,1,0,0,0,2225,339,1,0,0,0,2226,
-	2227,3,204,102,0,2227,2228,3,48,24,0,2228,2229,5,103,0,0,2229,2239,1,0,
-	0,0,2230,2231,3,204,102,0,2231,2232,3,48,24,0,2232,2233,5,106,0,0,2233,
-	2239,1,0,0,0,2234,2235,3,204,102,0,2235,2236,5,106,0,0,2236,2237,3,48,24,
-	0,2237,2239,1,0,0,0,2238,2226,1,0,0,0,2238,2230,1,0,0,0,2238,2234,1,0,0,
-	0,2239,341,1,0,0,0,2240,2241,5,99,0,0,2241,2249,3,46,23,0,2242,2244,5,171,
-	0,0,2243,2245,5,262,0,0,2244,2243,1,0,0,0,2245,2246,1,0,0,0,2246,2244,1,
-	0,0,0,2246,2247,1,0,0,0,2247,2248,1,0,0,0,2248,2250,5,270,0,0,2249,2242,
-	1,0,0,0,2249,2250,1,0,0,0,2250,2252,1,0,0,0,2251,2253,5,276,0,0,2252,2251,
-	1,0,0,0,2252,2253,1,0,0,0,2253,343,1,0,0,0,2254,2255,5,267,0,0,2255,345,
-	1,0,0,0,2256,2257,3,274,137,0,2257,2258,5,109,0,0,2258,2259,3,274,137,0,
-	2259,2260,5,273,0,0,2260,2263,5,26,0,0,2261,2264,3,348,174,0,2262,2264,
-	3,350,175,0,2263,2261,1,0,0,0,2263,2262,1,0,0,0,2264,2266,1,0,0,0,2265,
-	2267,3,358,179,0,2266,2265,1,0,0,0,2266,2267,1,0,0,0,2267,347,1,0,0,0,2268,
-	2269,3,356,178,0,2269,349,1,0,0,0,2270,2271,5,275,0,0,2271,2273,3,352,176,
-	0,2272,2274,5,274,0,0,2273,2272,1,0,0,0,2273,2274,1,0,0,0,2274,351,1,0,
-	0,0,2275,2279,3,354,177,0,2276,2278,3,354,177,0,2277,2276,1,0,0,0,2278,
-	2281,1,0,0,0,2279,2277,1,0,0,0,2279,2280,1,0,0,0,2280,353,1,0,0,0,2281,
-	2279,1,0,0,0,2282,2283,5,289,0,0,2283,2285,3,356,178,0,2284,2286,7,52,0,
-	0,2285,2284,1,0,0,0,2285,2286,1,0,0,0,2286,355,1,0,0,0,2287,2302,5,191,
-	0,0,2288,2289,5,35,0,0,2289,2302,3,274,137,0,2290,2291,5,34,0,0,2291,2292,
-	7,53,0,0,2292,2302,3,274,137,0,2293,2294,5,33,0,0,2294,2302,3,356,178,0,
-	2295,2296,5,21,0,0,2296,2302,3,218,109,0,2297,2298,5,116,0,0,2298,2299,
-	5,263,0,0,2299,2300,5,162,0,0,2300,2302,5,131,0,0,2301,2287,1,0,0,0,2301,
-	2288,1,0,0,0,2301,2290,1,0,0,0,2301,2293,1,0,0,0,2301,2295,1,0,0,0,2301,
-	2297,1,0,0,0,2302,357,1,0,0,0,2303,2304,5,19,0,0,2304,2306,3,274,137,0,
-	2305,2307,5,192,0,0,2306,2305,1,0,0,0,2306,2307,1,0,0,0,2307,359,1,0,0,
-	0,260,366,368,379,384,393,397,404,408,411,416,419,423,428,439,443,447,452,
-	463,492,498,503,511,515,520,525,536,541,546,552,558,564,569,575,581,590,
-	592,595,600,605,611,617,623,628,634,640,649,651,655,658,663,668,674,680,
-	686,691,697,703,705,713,722,731,748,751,754,759,764,769,773,777,780,786,
-	790,798,801,804,812,819,826,835,842,850,858,861,868,874,885,894,898,902,
-	906,920,927,934,941,947,952,960,966,969,984,988,992,995,998,1006,1013,1017,
-	1025,1029,1037,1046,1054,1060,1064,1066,1071,1078,1083,1089,1092,1095,1100,
-	1104,1106,1112,1129,1139,1143,1147,1161,1164,1186,1189,1208,1213,1220,1224,
-	1233,1236,1244,1249,1263,1266,1268,1273,1282,1290,1300,1306,1316,1322,1332,
-	1334,1351,1356,1363,1368,1375,1385,1390,1395,1400,1408,1417,1424,1427,1433,
-	1436,1445,1450,1453,1458,1468,1470,1474,1481,1486,1490,1497,1521,1529,1535,
-	1542,1551,1557,1566,1602,1608,1614,1623,1629,1645,1660,1665,1694,1702,1707,
-	1711,1717,1722,1727,1733,1743,1754,1765,1783,1791,1799,1814,1825,1828,1841,
-	1860,1875,1921,1933,1942,1949,1953,1956,1963,1968,1975,1980,1987,1991,1996,
-	2000,2004,2011,2015,2035,2042,2057,2059,2073,2084,2105,2123,2129,2137,2145,
-	2151,2157,2175,2208,2218,2222,2224,2238,2246,2249,2252,2263,2266,2273,2279,
-	2285,2301,2306];
+	2183,3,302,151,0,2183,2184,7,48,0,0,2184,2217,1,0,0,0,2185,2186,3,302,151,
+	0,2186,2187,7,2,0,0,2187,2188,3,286,143,0,2188,2189,7,49,0,0,2189,2217,
+	1,0,0,0,2190,2192,3,302,151,0,2191,2193,3,286,143,0,2192,2191,1,0,0,0,2192,
+	2193,1,0,0,0,2193,2194,1,0,0,0,2194,2195,7,49,0,0,2195,2196,7,2,0,0,2196,
+	2217,1,0,0,0,2197,2198,3,302,151,0,2198,2199,7,5,0,0,2199,2200,5,263,0,
+	0,2200,2201,5,160,0,0,2201,2217,1,0,0,0,2202,2203,3,302,151,0,2203,2204,
+	7,50,0,0,2204,2205,3,32,16,0,2205,2217,1,0,0,0,2206,2207,3,302,151,0,2207,
+	2208,7,51,0,0,2208,2209,3,32,16,0,2209,2217,1,0,0,0,2210,2211,3,204,102,
+	0,2211,2212,5,85,0,0,2212,2217,1,0,0,0,2213,2214,3,302,151,0,2214,2215,
+	5,87,0,0,2215,2217,1,0,0,0,2216,2182,1,0,0,0,2216,2185,1,0,0,0,2216,2190,
+	1,0,0,0,2216,2197,1,0,0,0,2216,2202,1,0,0,0,2216,2206,1,0,0,0,2216,2210,
+	1,0,0,0,2216,2213,1,0,0,0,2217,335,1,0,0,0,2218,2219,5,230,0,0,2219,2220,
+	3,338,169,0,2220,2221,5,86,0,0,2221,2227,1,0,0,0,2222,2223,5,230,0,0,2223,
+	2224,3,338,169,0,2224,2225,5,87,0,0,2225,2227,1,0,0,0,2226,2218,1,0,0,0,
+	2226,2222,1,0,0,0,2227,337,1,0,0,0,2228,2231,3,46,23,0,2229,2231,5,197,
+	0,0,2230,2228,1,0,0,0,2230,2229,1,0,0,0,2231,2232,1,0,0,0,2232,2230,1,0,
+	0,0,2232,2233,1,0,0,0,2233,339,1,0,0,0,2234,2235,3,204,102,0,2235,2236,
+	3,48,24,0,2236,2237,5,103,0,0,2237,2247,1,0,0,0,2238,2239,3,204,102,0,2239,
+	2240,3,48,24,0,2240,2241,5,106,0,0,2241,2247,1,0,0,0,2242,2243,3,204,102,
+	0,2243,2244,5,106,0,0,2244,2245,3,48,24,0,2245,2247,1,0,0,0,2246,2234,1,
+	0,0,0,2246,2238,1,0,0,0,2246,2242,1,0,0,0,2247,341,1,0,0,0,2248,2249,5,
+	99,0,0,2249,2257,3,46,23,0,2250,2252,5,171,0,0,2251,2253,5,262,0,0,2252,
+	2251,1,0,0,0,2253,2254,1,0,0,0,2254,2252,1,0,0,0,2254,2255,1,0,0,0,2255,
+	2256,1,0,0,0,2256,2258,5,270,0,0,2257,2250,1,0,0,0,2257,2258,1,0,0,0,2258,
+	2260,1,0,0,0,2259,2261,5,276,0,0,2260,2259,1,0,0,0,2260,2261,1,0,0,0,2261,
+	343,1,0,0,0,2262,2263,5,267,0,0,2263,345,1,0,0,0,2264,2265,3,274,137,0,
+	2265,2266,5,109,0,0,2266,2267,3,274,137,0,2267,2268,5,273,0,0,2268,2271,
+	5,26,0,0,2269,2272,3,348,174,0,2270,2272,3,350,175,0,2271,2269,1,0,0,0,
+	2271,2270,1,0,0,0,2272,2274,1,0,0,0,2273,2275,3,358,179,0,2274,2273,1,0,
+	0,0,2274,2275,1,0,0,0,2275,347,1,0,0,0,2276,2277,3,356,178,0,2277,349,1,
+	0,0,0,2278,2279,5,275,0,0,2279,2281,3,352,176,0,2280,2282,5,274,0,0,2281,
+	2280,1,0,0,0,2281,2282,1,0,0,0,2282,351,1,0,0,0,2283,2287,3,354,177,0,2284,
+	2286,3,354,177,0,2285,2284,1,0,0,0,2286,2289,1,0,0,0,2287,2285,1,0,0,0,
+	2287,2288,1,0,0,0,2288,353,1,0,0,0,2289,2287,1,0,0,0,2290,2291,5,289,0,
+	0,2291,2293,3,356,178,0,2292,2294,7,52,0,0,2293,2292,1,0,0,0,2293,2294,
+	1,0,0,0,2294,355,1,0,0,0,2295,2310,5,191,0,0,2296,2297,5,35,0,0,2297,2310,
+	3,274,137,0,2298,2299,5,34,0,0,2299,2300,7,53,0,0,2300,2310,3,274,137,0,
+	2301,2302,5,33,0,0,2302,2310,3,356,178,0,2303,2304,5,21,0,0,2304,2310,3,
+	218,109,0,2305,2306,5,116,0,0,2306,2307,5,263,0,0,2307,2308,5,162,0,0,2308,
+	2310,5,131,0,0,2309,2295,1,0,0,0,2309,2296,1,0,0,0,2309,2298,1,0,0,0,2309,
+	2301,1,0,0,0,2309,2303,1,0,0,0,2309,2305,1,0,0,0,2310,357,1,0,0,0,2311,
+	2312,5,19,0,0,2312,2314,3,274,137,0,2313,2315,5,192,0,0,2314,2313,1,0,0,
+	0,2314,2315,1,0,0,0,2315,359,1,0,0,0,261,366,368,379,384,393,397,404,408,
+	411,416,419,423,428,439,443,447,452,463,492,498,503,511,515,520,525,536,
+	541,546,552,558,564,569,575,581,590,592,595,600,605,611,617,623,628,634,
+	640,649,651,655,658,663,668,674,680,686,691,697,703,705,713,722,731,748,
+	751,754,759,764,769,773,777,780,786,790,798,801,804,812,819,826,835,842,
+	850,858,861,868,874,885,894,898,902,906,920,927,934,941,947,952,960,966,
+	969,984,988,992,995,998,1006,1013,1017,1025,1029,1037,1046,1054,1060,1064,
+	1066,1071,1078,1083,1089,1092,1095,1100,1104,1106,1112,1129,1139,1143,1147,
+	1161,1164,1186,1189,1208,1213,1220,1224,1233,1236,1244,1249,1263,1266,1268,
+	1273,1282,1290,1300,1306,1316,1322,1332,1334,1351,1356,1363,1368,1375,1385,
+	1390,1395,1400,1408,1417,1424,1427,1433,1436,1445,1450,1453,1458,1468,1470,
+	1474,1481,1486,1490,1497,1521,1529,1535,1542,1551,1557,1566,1602,1608,1614,
+	1623,1629,1645,1660,1665,1694,1702,1707,1711,1717,1722,1727,1733,1743,1754,
+	1765,1783,1791,1799,1814,1825,1828,1841,1860,1875,1921,1933,1942,1949,1953,
+	1956,1963,1968,1975,1980,1987,1991,1996,2000,2004,2011,2015,2035,2042,2057,
+	2059,2073,2084,2105,2123,2129,2137,2145,2151,2157,2175,2192,2216,2226,2230,
+	2232,2246,2254,2257,2260,2271,2274,2281,2287,2293,2309,2314];
 
 	private static __ATN: ATN;
 	public static get _ATN(): ATN {
@@ -21801,6 +21844,42 @@ export class UnaryConditionContext extends ParserRuleContext {
 		super.copyFrom(ctx);
 	}
 }
+export class UnaryCheckStellendeGehelePeriodeConditionContext extends UnaryConditionContext {
+	public _expr!: PrimaryExpressionContext;
+	public _v!: Token;
+	public _gp!: GeheleVergelijkingPrefixContext;
+	public _check!: Token;
+	constructor(parser: RegelSpraakParser, ctx: UnaryConditionContext) {
+		super(parser, ctx.parentCtx, ctx.invokingState);
+		super.copyFrom(ctx);
+	}
+	public primaryExpression(): PrimaryExpressionContext {
+		return this.getTypedRuleContext(PrimaryExpressionContext, 0) as PrimaryExpressionContext;
+	}
+	public geheleVergelijkingPrefix(): GeheleVergelijkingPrefixContext {
+		return this.getTypedRuleContext(GeheleVergelijkingPrefixContext, 0) as GeheleVergelijkingPrefixContext;
+	}
+	public IS(): TerminalNode {
+		return this.getToken(RegelSpraakParser.IS, 0);
+	}
+	public ZIJN(): TerminalNode {
+		return this.getToken(RegelSpraakParser.ZIJN, 0);
+	}
+	public LEEG(): TerminalNode {
+		return this.getToken(RegelSpraakParser.LEEG, 0);
+	}
+	public GEVULD(): TerminalNode {
+		return this.getToken(RegelSpraakParser.GEVULD, 0);
+	}
+	// @Override
+	public accept<Result>(visitor: RegelSpraakVisitor<Result>): Result {
+		if (visitor.visitUnaryCheckStellendeGehelePeriodeCondition) {
+			return visitor.visitUnaryCheckStellendeGehelePeriodeCondition(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
 export class UnaryCheckConditionContext extends UnaryConditionContext {
 	public _expr!: PrimaryExpressionContext;
 	public _op!: Token;
@@ -21846,6 +21925,7 @@ export class UnaryCheckConditionContext extends UnaryConditionContext {
 }
 export class UnaryCheckVragendConditionContext extends UnaryConditionContext {
 	public _expr!: PrimaryExpressionContext;
+	public _gp!: GeheleVergelijkingPrefixContext;
 	public _check!: Token;
 	public _v!: Token;
 	constructor(parser: RegelSpraakParser, ctx: UnaryConditionContext) {
@@ -21866,6 +21946,9 @@ export class UnaryCheckVragendConditionContext extends UnaryConditionContext {
 	}
 	public ZIJN(): TerminalNode {
 		return this.getToken(RegelSpraakParser.ZIJN, 0);
+	}
+	public geheleVergelijkingPrefix(): GeheleVergelijkingPrefixContext {
+		return this.getTypedRuleContext(GeheleVergelijkingPrefixContext, 0) as GeheleVergelijkingPrefixContext;
 	}
 	// @Override
 	public accept<Result>(visitor: RegelSpraakVisitor<Result>): Result {
