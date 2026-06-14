@@ -12,6 +12,44 @@ Split from [regelspraak-parser](https://github.com/yhavinga/regelspraak-parser) 
 | Syntaxdiagrammen v2.1.0 | [PDF](https://github.com/yhavinga/regelspraak-parser/blob/main/specification/RegelSpraak-specificatie%20-%20syntaxdiagrammen%20v2.1.0.pdf) | [MD](https://github.com/yhavinga/regelspraak-parser/blob/main/specification/RegelSpraak-specificatie%20-%20syntaxdiagrammen%20v2.1.0.md) |
 | TOKA Casus v2.1.0 | — | [MD](https://github.com/yhavinga/regelspraak-parser/blob/main/specification/RegelSpraak-TOKA-casus-v2.1.0.md) |
 
+## Grammar & spec notes (hard-won)
+
+Things that repeatedly bite when extending the grammar/visitor. The spec is the oracle, and the
+engine runtime is a fallible cross-check — fix the parser/resolver when it diverges.
+
+- **The §13.4.11 EBNF outranks the §13.4.16 stencils.** When they disagree, the formal operator
+  tables (§13.4.11) are authoritative; support every surface form they list. The stencils
+  (§13.4.16) are a useful surface-template index but are *not* exhaustive — e.g. they listed only
+  the singular dagsoortcontrole, while §13.4.11 forms 27/79 sanction the meervoud `… zijn`.
+- **Stellend (verb-first) vs vragend (verb-last).** Most eenzijdige datum predicates have both:
+  `is een <dagsoort>` / `een <dagsoort> is`, `is leeg` / `leeg is`. A condition may be written
+  either way; support both and map them to one operator tag so the resolver/consumers don't care.
+- **One surface phrase, three grammar paths.** A predicate like `is een <X>` routes differently
+  by position: `comparisonExpression` (top-level `indien …` conditions *and* value position, e.g.
+  an RHS), `vergelijkingInPredicaat` (criteria inside a samengestelde voorwaarde), and
+  `resultaatDeel` (rule conclusions). Adding a form in one place does not add it in the others.
+- **A verb-second kenmerk-check does not resolve at top-level.** `hij is volwassen` (verb-second)
+  parses to a `VergelijkingInPredicaat` that strict resolution rejects; the *working* kenmerk
+  condition is verb-last (`hij volwassen is` → an `AttributeReference` to the boolean getter).
+  This is why `<datum> is een <noun>` (verb-first) can be claimed unambiguously for the
+  dagsoortcontrole — there is no competing *working* kenmerk reading at that position.
+- **A subordinate clause silently mis-parses `<datum> een <noun> is`** as a kenmerk and *drops the
+  datum operand*. A dedicated alternative (placed ahead of the subordinate clause) is required to
+  capture the operand; resolution can't recover what the parse threw away.
+- **Multiword operators lex as single tokens** (`IS_GELIJK_AAN`, `GROTER_IS_DAN`, `IS_LEEG`), so a
+  bare `IS` in a rule alternative never collides with them. Names that span words use `naamwoord`
+  (multi-word), not `identifier` (one token) — a day-type/kenmerk like "tweede paasdag".
+- **Disambiguate semantically at resolution, structurally at parse where you can.** `X is een
+  <noun>` is dagsoort-vs-kenmerk only by whether `<noun>` is a declared dagsoort — a resolution-
+  time fact. Where the grammar *can* discriminate (an article `een`/`geen`, a trailing `heeft`),
+  use it; otherwise resolve it and emit a clear "Unknown dagsoort/kenmerk" error.
+- **Regen dance.** Edit `grammar/*.g4` and the visitor → `make parser` → `npm run build` →
+  **revert the timestamp-only churn** in `src/_generated/multiword-keywords.{json,ts}` (`git
+  checkout --`) unless a keyword was genuinely added/removed → commit grammar + the regenerated
+  `RegelSpraak.interp` / `RegelSpraakParser.ts` / `RegelSpraakVisitor.ts` + the visitor together.
+  Labeled-alt visitor methods are auto-dispatched by `this.visit(ctx)`; two alts with identical
+  operand labels can share one visitor method.
+
 ## Installation
 
 ```bash
