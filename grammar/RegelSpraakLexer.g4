@@ -63,6 +63,15 @@ ER_AAN: [Ee]'r aan';
 
 // --- Comparison Phrase Tokens ---
 GELIJK_IS_AAN: 'gelijk is aan';
+// Vragende (verb-in-middle) operators completing §13.4.11 forms 23 (getal) and 29 (datum), the
+// siblings of GROTER_IS_DAN / GELIJK_IS_AAN: the verb "is" sits inside the operator phrase. Without
+// these the vragende inequality and datum-ordening forms ("ongelijk is aan", "later is dan") did not
+// tokenize at all (only the stellende "is ongelijk aan" / "is later dan" existed).
+ONGELIJK_IS_AAN: 'ongelijk is aan';
+LATER_OF_GELIJK_IS_AAN: 'later of gelijk is aan';
+EERDER_OF_GELIJK_IS_AAN: 'eerder of gelijk is aan';
+LATER_IS_DAN: 'later is dan';
+EERDER_IS_DAN: 'eerder is dan';
 IS_GELIJK_AAN: 'is gelijk aan';
 IS_ONGELIJK_AAN: 'is ongelijk aan';
 IS_KLEINER_DAN: 'is kleiner dan';

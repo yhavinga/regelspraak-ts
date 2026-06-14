@@ -852,7 +852,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     switch (opText) {
       case 'gelijk aan': case 'gelijk is aan': case 'is gelijk aan': case 'zijn gelijk aan':
         return '==';
-      case 'ongelijk aan': case 'is ongelijk aan': case 'zijn ongelijk aan':
+      case 'ongelijk aan': case 'ongelijk is aan': case 'is ongelijk aan': case 'zijn ongelijk aan':
         return '!=';
       case 'groter dan': case 'groter is dan': case 'is groter dan': case 'zijn groter dan':
         return '>';
@@ -864,13 +864,15 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       case 'kleiner of gelijk aan': case 'kleiner of gelijk is aan':
       case 'is kleiner of gelijk aan': case 'zijn kleiner of gelijk aan':
         return '<=';
-      case 'later dan': case 'is later dan': case 'zijn later dan':
+      case 'later dan': case 'later is dan': case 'is later dan': case 'zijn later dan':
         return '>';
-      case 'later of gelijk aan': case 'is later of gelijk aan': case 'zijn later of gelijk aan':
+      case 'later of gelijk aan': case 'later of gelijk is aan':
+      case 'is later of gelijk aan': case 'zijn later of gelijk aan':
         return '>=';
-      case 'eerder dan': case 'is eerder dan': case 'zijn eerder dan':
+      case 'eerder dan': case 'eerder is dan': case 'is eerder dan': case 'zijn eerder dan':
         return '<';
-      case 'eerder of gelijk aan': case 'is eerder of gelijk aan': case 'zijn eerder of gelijk aan':
+      case 'eerder of gelijk aan': case 'eerder of gelijk is aan':
+      case 'is eerder of gelijk aan': case 'zijn eerder of gelijk aan':
         return '<=';
       default:
         throw new Error(`Unknown comparison operator: ${opText}`);

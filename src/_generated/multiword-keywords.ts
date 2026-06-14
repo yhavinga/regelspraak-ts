@@ -10,9 +10,9 @@ export interface MultiWordData {
 }
 
 export const multiWordKeywords: MultiWordData = {
-  "generated": "2026-06-14T12:40:52.686Z",
+  "generated": "2026-06-14T18:23:53.713Z",
   "source": "grammar/RegelSpraakLexer.g4",
-  "totalMultiWords": 127,
+  "totalMultiWords": 132,
   "byFirstWord": {
     "(voor": [
       "(voor het attribuut zonder voorzetsel):"
@@ -75,11 +75,15 @@ export const multiWordKeywords: MultiWordData = {
     ],
     "later": [
       "later dan",
-      "later of gelijk aan"
+      "later is dan",
+      "later of gelijk aan",
+      "later of gelijk is aan"
     ],
     "eerder": [
       "eerder dan",
-      "eerder of gelijk aan"
+      "eerder is dan",
+      "eerder of gelijk aan",
+      "eerder of gelijk is aan"
     ],
     "waarbij": [
       "waarbij wordt verdeeld"
@@ -147,6 +151,11 @@ export const multiWordKeywords: MultiWordData = {
       "gelijk aan",
       "gelijk is aan"
     ],
+    "ongelijk": [
+      "ongelijk aan",
+      "ongelijk is aan",
+      "ongelijk zijn aan"
+    ],
     "zijn": [
       "zijn eerder dan",
       "zijn eerder of gelijk aan",
@@ -187,10 +196,6 @@ export const multiWordKeywords: MultiWordData = {
     "gedeeld": [
       "gedeeld door",
       "gedeeld door (abs)"
-    ],
-    "ongelijk": [
-      "ongelijk aan",
-      "ongelijk zijn aan"
     ],
     "richting": [
       "richting nul"
@@ -258,7 +263,9 @@ export const multiWordKeywords: MultiWordData = {
     "de tijdsduur van",
     "de wortel van",
     "eerder dan",
+    "eerder is dan",
     "eerder of gelijk aan",
+    "eerder of gelijk is aan",
     "gedeeld door",
     "gedeeld door (abs)",
     "gedimensioneerd met",
@@ -305,7 +312,9 @@ export const multiWordKeywords: MultiWordData = {
     "kleiner of gelijk aan",
     "kleiner of gelijk is aan",
     "later dan",
+    "later is dan",
     "later of gelijk aan",
+    "later of gelijk is aan",
     "met een maximum van",
     "met een minimum van",
     "met eenheid",
@@ -319,6 +328,7 @@ export const multiWordKeywords: MultiWordData = {
     "numeriek met exact",
     "of 0 als die er niet zijn",
     "ongelijk aan",
+    "ongelijk is aan",
     "ongelijk zijn aan",
     "op volgorde van",
     "reeks van teksten en waarden",
