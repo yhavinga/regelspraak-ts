@@ -770,9 +770,11 @@ eenzijdigeObjectVergelijking
 
 rolNaam : naamwoord ; // Role name is similar to kenmerk name
 
-// Attribute comparison predicaat (e.g., "een leeftijd hebben kleiner dan 18")
+// Attribute comparison predicaat (e.g., "een leeftijd hebben kleiner dan 18"). The optional §8.2
+// prefix makes it a whole-period check on a tijdsafhankelijk attribuut of the filtered element ("een
+// score hebben gedurende het gehele jaar groter dan 5").
 attribuutVergelijkingsPredicaat
-    : EEN? attribuutNaam=naamwoord HEBBEN comparisonOperator expressie
+    : EEN? attribuutNaam=naamwoord HEBBEN gp=geheleVergelijkingPrefix? comparisonOperator expressie
     ;
 
 // Comparison predicates
@@ -810,7 +812,9 @@ vergelijkingInPredicaat
     // real comparison ("is kleiner dan", a single IS_KLEINER_DAN token) cannot match the
     // bare (IS | ZIJN) here and so falls through to the comparison alternative.
     : (attribuutReferentie | bezieldeReferentie) (IS | ZIJN) kenmerkNaam         // "zijn reis is duurzaam" / "de reis van hem is duurzaam"
-    | (attribuutReferentie | bezieldeReferentie) comparisonOperator expressie    // "zijn leeftijd is groter dan 65" / "de leeftijd van hij is groter dan 65"
+    // The optional §8.2 prefix makes a bullet criterion a whole-period check on a tijdsafhankelijk
+    // attribuut ("zijn score gedurende het gehele jaar groter is dan 5").
+    | (attribuutReferentie | bezieldeReferentie) gp=geheleVergelijkingPrefix? comparisonOperator expressie    // "zijn leeftijd is groter dan 65" / "de leeftijd van hij is groter dan 65"
     | onderwerpReferentie eenzijdigeObjectVergelijking    // "hij is een passagier"
     | eenzijdigeObjectVergelijking                        // "minderjarig zijn" / "een passagier zijn" — kenmerk/rol check on the element
     ;

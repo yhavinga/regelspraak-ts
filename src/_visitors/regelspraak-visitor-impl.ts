@@ -3705,6 +3705,9 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         value: expr
       } as AttributePredicate
     } as AttributeComparisonPredicaat & { predicate?: AttributePredicate };
+    // §8.2: a whole-period subselectie criterion ("een score gedurende het gehele jaar groter dan 5")
+    // annotates the predicate so the aggregation lowering reduces the element's timeline over the period.
+    this.attachGehelePeriode(node.predicate, this.gehelePeriodePrefixOf(ctx));
     this.setLocation(node, ctx);
     if (node.predicate) {
       this.setLocation(node.predicate, ctx);
@@ -3859,6 +3862,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         operator,
         waarde
       };
+      // §8.2: a whole-period bullet criterion ("zijn score gedurende het gehele jaar groter is dan 5").
+      this.attachGehelePeriode(node, this.gehelePeriodePrefixOf(ctx));
       this.setLocation(node, ctx);
       return node;
     }
@@ -4002,12 +4007,19 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       if (v.attribuut && v.attribuut.type === 'AttributeReference') {
         attributePath = (v.attribuut as AttributeReference).path?.join('.') || '';
       }
-      return {
+      const pred: any = {
         type: 'AttributePredicate',
         attribute: attributePath,
         operator: this.mapOperator(v.operator || '==') as import('../predicates/predicate-types').ComparisonOperator,
         value: v.waarde
-      } as AttributePredicate;
+      };
+      // §8.2: carry the whole-period annotation onto the predicate so the subselectie lowering reduces
+      // the element's tijdsafhankelijk attribuut over the period.
+      if ((v as any).gehelePeriode) {
+        pred.gehelePeriode = (v as any).gehelePeriode;
+        pred.gehelePeriodeNegated = (v as any).gehelePeriodeNegated;
+      }
+      return pred as AttributePredicate;
     }
 
     // kenmerk_check or object_check - use SimplePredicate
