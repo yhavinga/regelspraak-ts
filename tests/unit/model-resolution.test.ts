@@ -717,4 +717,19 @@ De status van een Passagier moet berekend worden als 1 indien zijn correctie is 
     expect(check).toBeDefined();
     expect(check.resolved?.resolvedType).toMatchObject({ type: 'Boolean' });
   });
+
+  // §8.1.2 names "leeg is/leeg zijn/is leeg" (and the gevuld trio) as one same scalar
+  // attribuut null-check — the is/zijn verb is number agreement, not a different semantic.
+  // So the plural verb-last "leeg zijn" (operator tag "zijn leeg") must resolve to Boolean
+  // just like its singular sibling; otherwise the strict resolver gates the model out.
+  test('accepts the plural verb "leeg zijn" (§8.1.2) and resolves it to Boolean', () => {
+    const model = new AntlrParser().parseModel(
+      source.replace('zijn correctie is leeg', 'zijn correctie leeg zijn'),
+    );
+    const result = resolveModel(model, { strict: true });
+    expect(result.success).toBe(true);
+    const check = findNode(model, n => n.type === 'UnaryExpression' && n.operator === 'zijn leeg');
+    expect(check).toBeDefined();
+    expect(check.resolved?.resolvedType).toMatchObject({ type: 'Boolean' });
+  });
 });

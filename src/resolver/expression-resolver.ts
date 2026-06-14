@@ -1807,6 +1807,8 @@ function resolveUnaryExpression(
       expr.operator === 'niet' ||
       expr.operator === 'is leeg' ||
       expr.operator === 'is gevuld' ||
+      expr.operator === 'zijn leeg' ||
+      expr.operator === 'zijn gevuld' ||
       expr.operator === 'voldoet aan de elfproef' ||
       expr.operator === 'voldoen aan de elfproef' ||
       expr.operator === 'voldoet niet aan de elfproef' ||
