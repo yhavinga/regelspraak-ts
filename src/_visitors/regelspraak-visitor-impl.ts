@@ -864,6 +864,28 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       case 'zijn kleiner of gelijk aan':
         operator = '<=';
         break;
+      // Datum-ordening (§8.1.1): "later dan" is after (>) and "eerder dan" is before (<); the
+      // datum datatype is Comparable, so these reuse the ordinal comparison lowering.
+      case 'later dan':
+      case 'is later dan':
+      case 'zijn later dan':
+        operator = '>';
+        break;
+      case 'later of gelijk aan':
+      case 'is later of gelijk aan':
+      case 'zijn later of gelijk aan':
+        operator = '>=';
+        break;
+      case 'eerder dan':
+      case 'is eerder dan':
+      case 'zijn eerder dan':
+        operator = '<';
+        break;
+      case 'eerder of gelijk aan':
+      case 'is eerder of gelijk aan':
+      case 'zijn eerder of gelijk aan':
+        operator = '<=';
+        break;
       default:
         throw new Error(`Unknown comparison operator: ${opText}`);
     }
@@ -3996,7 +4018,20 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       'groter of gelijk is aan': '>=',
       'groter dan of gelijk aan': '>=',
       'is groter of gelijk aan': '>=',
-      'zijn groter of gelijk aan': '>='
+      'zijn groter of gelijk aan': '>=',
+      // Datum-ordening (§8.1.1): later dan = after (>), eerder dan = before (<).
+      'later dan': '>',
+      'is later dan': '>',
+      'zijn later dan': '>',
+      'later of gelijk aan': '>=',
+      'is later of gelijk aan': '>=',
+      'zijn later of gelijk aan': '>=',
+      'eerder dan': '<',
+      'is eerder dan': '<',
+      'zijn eerder dan': '<',
+      'eerder of gelijk aan': '<=',
+      'is eerder of gelijk aan': '<=',
+      'zijn eerder of gelijk aan': '<='
     };
     return operatorMap[op] || op;
   }

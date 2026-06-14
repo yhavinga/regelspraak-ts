@@ -140,4 +140,21 @@ describe('Engine - Comparison Operators', () => {
       });
     });
   });
+
+  // §8.1.1 gives four date-only comparison predicates; "later dan" is after and "eerder dan" is
+  // before, mapping to the same ordinal comparison the numeric operators use.
+  describe('Date ordering operators (§8.1.1)', () => {
+    test('should evaluate eerder dan (before)', () => {
+      expect(engine.run('31-12-1947 is eerder dan 01-01-1948').value).toEqual({ type: 'boolean', value: true });
+    });
+    test('should evaluate later dan (after)', () => {
+      expect(engine.run('01-01-1948 is later dan 31-12-1947').value).toEqual({ type: 'boolean', value: true });
+    });
+    test('should evaluate eerder of gelijk aan on equal dates', () => {
+      expect(engine.run('01-01-1948 is eerder of gelijk aan 01-01-1948').value).toEqual({ type: 'boolean', value: true });
+    });
+    test('should evaluate later of gelijk aan on equal dates', () => {
+      expect(engine.run('01-01-1948 is later of gelijk aan 01-01-1948').value).toEqual({ type: 'boolean', value: true });
+    });
+  });
 });
