@@ -825,6 +825,25 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       (typeof ctx.geheleVergelijkingPrefix === 'function' ? ctx.geheleVergelijkingPrefix() : null);
   }
 
+  // §8.2 vragende kenmerkcheck ("<subject> gedurende het gehele jaar <kenmerk> is/heeft"): a whole-
+  // period check on a tijdsafhankelijk boolean kenmerk holds when the kenmerk is true on every day of
+  // the period. Express it as the kenmerk == true whole-period comparison so it reuses the §8.2
+  // comparison reduction (the boolean kenmerk timeline lifts, the literal true lifts to a constant).
+  // Without the prefix the kenmerk reference is returned unchanged, so plain conditions are untouched.
+  private wrapKenmerkGehelePeriode(kenmerkRef: Expression, ctx: any): Expression {
+    const gp = this.gehelePeriodePrefixOf(ctx);
+    if (!gp) return kenmerkRef;
+    const node: any = {
+      type: 'BinaryExpression',
+      operator: '==',
+      left: kenmerkRef,
+      right: { type: 'BooleanLiteral', value: true }
+    };
+    this.attachGehelePeriode(node, gp);
+    this.setLocation(node, ctx);
+    return node;
+  }
+
   // Map a Dutch comparison operator's surface text — bare ("groter dan"), vragende ("groter is dan")
   // or stellende ("is groter dan") — to the canonical symbol. Datum-ordening (§8.1.1): "later dan" is
   // after (>) and "eerder dan" before (<), the datum datatype being Comparable, so they reuse the
@@ -3038,7 +3057,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
     // Return a boolean expression that's always true if the kenmerk exists
     // This is a simplification - in reality we'd check the actual value
-    return kenmerkRef;
+    return this.wrapKenmerkGehelePeriode(kenmerkRef, ctx);
   }
 
   visitSubordinateHasExpr(ctx: any): Expression {
@@ -3079,7 +3098,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     };
 
     // Return the attribute reference - it will be evaluated as truthy/falsy
-    return attributeRef;
+    return this.wrapKenmerkGehelePeriode(attributeRef, ctx);
   }
 
   // Rule parsing visitor methods

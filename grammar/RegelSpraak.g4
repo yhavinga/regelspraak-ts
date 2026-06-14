@@ -1230,8 +1230,12 @@ regelversieNaam
 
 // Dutch subordinate clause expressions (Subject-Object-Verb order)
 subordinateClauseExpression
-    : subject=onderwerpReferentie object=naamwoordWithNumbers verb=HEEFT           # SubordinateHasExpr  // hij een recht op korting heeft
-    | subject=onderwerpReferentie prepPhrase=naamwoordWithNumbers verb=IS          # SubordinateIsWithExpr  // hij met vakantie is / hij passagier van 65 jaar of ouder is
+    // §8.2 vragende kenmerkcheck (verb-last, the form §8.3.1 conditions use): the geheleperiode prefix
+    // sits before the kenmerk ("hij gedurende het gehele jaar een recht op korting heeft" / "... een
+    // tijdsafhankelijk kenmerk is"), reducing the tijdsafhankelijk boolean kenmerk over the period. The
+    // stellende form (verb-second) takes the prefix after the verb.
+    : subject=onderwerpReferentie gp=geheleVergelijkingPrefix? object=naamwoordWithNumbers verb=HEEFT           # SubordinateHasExpr  // hij een recht op korting heeft
+    | subject=onderwerpReferentie gp=geheleVergelijkingPrefix? prepPhrase=naamwoordWithNumbers verb=IS          # SubordinateIsWithExpr  // hij met vakantie is / hij passagier van 65 jaar of ouder is
     | subject=onderwerpReferentie verb=IS kenmerk=naamwoordWithNumbers             # SubordinateIsKenmerkExpr  // hij is minderjarig / hij is passagier van 18 tot en met 24 jaar
     ;
 
