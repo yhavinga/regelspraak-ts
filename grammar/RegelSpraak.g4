@@ -943,6 +943,11 @@ comparisonExpression
     // Special case for "x gelijk is aan 'A', 'B' of 'C'" pattern per spec §5.6 - restricted to literal values only
     | left=additiveExpression op=gelijkIsAanOperator firstValue=literalValue
       (COMMA middleValues+=literalValue)* OF lastValue=literalValue # GelijkIsAanOfExpr
+    // §8.2 stellende placement: "<x> is gedurende het gehele jaar groter dan <y>". After the verb the
+    // operator is the bare form — the fused "is groter dan" de-fuses to IS + "groter dan" once the
+    // prefix intervenes — so the prefix is required here (its absence is the vragende form below). The
+    // visitor builds the same BinaryExpression + whole-period annotation, so the §8.2 lowering is shared.
+    | left=additiveExpression v=(IS | ZIJN) gp=geheleVergelijkingPrefix op=bareComparisonOperator right=additiveExpression # BinaryComparisonStellendeExpr
     | left=additiveExpression ( gp=geheleVergelijkingPrefix? comparisonOperator right=additiveExpression )? # BinaryComparisonExpr
     | unaryCondition # UnaryConditionExpr // Try unary conditions after more specific patterns
     | regelStatusCondition # RegelStatusConditionExpr // Integrate rule status checks here
@@ -972,6 +977,15 @@ gelijkIsAanOperator
 // from "gedurende de tijd dat", so the prefix is unambiguous.
 geheleVergelijkingPrefix
     : NIET? (GEDURENDE_HET_GEHELE JAAR | GEDURENDE_DE_GEHELE MAAND)
+    ;
+
+// §8.2 stellende placement: after the verb (is/zijn) and the geheleperiodevergelijking prefix the
+// comparison operator is its bare form ("... gedurende het gehele jaar groter dan ..."), the fused
+// IS_*/ZIJN_* tokens having de-fused once the prefix intervened.
+bareComparisonOperator
+    : GELIJK_AAN | ONGELIJK_AAN
+    | GROTER_DAN | GROTER_OF_GELIJK_AAN | KLEINER_DAN | KLEINER_OF_GELIJK_AAN
+    | LATER_DAN | LATER_OF_GELIJK_AAN | EERDER_DAN | EERDER_OF_GELIJK_AAN
     ;
 
 comparisonOperator // Expanded list

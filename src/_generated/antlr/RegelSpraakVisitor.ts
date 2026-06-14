@@ -168,12 +168,14 @@ import { PeriodeCheckExprContext } from "./RegelSpraakParser";
 import { IsKenmerkExprContext } from "./RegelSpraakParser";
 import { HeeftKenmerkExprContext } from "./RegelSpraakParser";
 import { GelijkIsAanOfExprContext } from "./RegelSpraakParser";
+import { BinaryComparisonStellendeExprContext } from "./RegelSpraakParser";
 import { BinaryComparisonExprContext } from "./RegelSpraakParser";
 import { UnaryConditionExprContext } from "./RegelSpraakParser";
 import { RegelStatusConditionExprContext } from "./RegelSpraakParser";
 import { LiteralValueContext } from "./RegelSpraakParser";
 import { GelijkIsAanOperatorContext } from "./RegelSpraakParser";
 import { GeheleVergelijkingPrefixContext } from "./RegelSpraakParser";
+import { BareComparisonOperatorContext } from "./RegelSpraakParser";
 import { ComparisonOperatorContext } from "./RegelSpraakParser";
 import { AdditiveExpressionContext } from "./RegelSpraakParser";
 import { AdditiveOperatorContext } from "./RegelSpraakParser";
@@ -1313,6 +1315,13 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitGelijkIsAanOfExpr?: (ctx: GelijkIsAanOfExprContext) => Result;
 	/**
+	 * Visit a parse tree produced by the `BinaryComparisonStellendeExpr`
+	 * labeled alternative in `RegelSpraakParser.comparisonExpression`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBinaryComparisonStellendeExpr?: (ctx: BinaryComparisonStellendeExprContext) => Result;
+	/**
 	 * Visit a parse tree produced by the `BinaryComparisonExpr`
 	 * labeled alternative in `RegelSpraakParser.comparisonExpression`.
 	 * @param ctx the parse tree
@@ -1351,6 +1360,12 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitGeheleVergelijkingPrefix?: (ctx: GeheleVergelijkingPrefixContext) => Result;
+	/**
+	 * Visit a parse tree produced by `RegelSpraakParser.bareComparisonOperator`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBareComparisonOperator?: (ctx: BareComparisonOperatorContext) => Result;
 	/**
 	 * Visit a parse tree produced by `RegelSpraakParser.comparisonOperator`.
 	 * @param ctx the parse tree

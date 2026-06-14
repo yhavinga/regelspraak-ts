@@ -651,6 +651,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
 
     if (contextName === 'BinaryComparisonExprContext') {
       return this.visitBinaryComparisonExpr(ctx);
+    } else if (contextName === 'BinaryComparisonStellendeExprContext') {
+      return this.visitBinaryComparisonStellendeExpr(ctx);
     } else if (contextName === 'UnaryConditionExprContext') {
       return this.visitUnaryConditionExpr(ctx);
     } else if (contextName === 'RegelStatusConditionExprContext') {
@@ -823,6 +825,55 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       (typeof ctx.geheleVergelijkingPrefix === 'function' ? ctx.geheleVergelijkingPrefix() : null);
   }
 
+  // Map a Dutch comparison operator's surface text — bare ("groter dan"), vragende ("groter is dan")
+  // or stellende ("is groter dan") — to the canonical symbol. Datum-ordening (§8.1.1): "later dan" is
+  // after (>) and "eerder dan" before (<), the datum datatype being Comparable, so they reuse the
+  // ordinal lowering. Shared by the vragende and stellende §8.2 comparison visitors.
+  private mapComparisonOperatorText(opText: string): string {
+    switch (opText) {
+      case 'gelijk aan': case 'gelijk is aan': case 'is gelijk aan': case 'zijn gelijk aan':
+        return '==';
+      case 'ongelijk aan': case 'is ongelijk aan': case 'zijn ongelijk aan':
+        return '!=';
+      case 'groter dan': case 'groter is dan': case 'is groter dan': case 'zijn groter dan':
+        return '>';
+      case 'groter of gelijk aan': case 'groter of gelijk is aan':
+      case 'is groter of gelijk aan': case 'zijn groter of gelijk aan':
+        return '>=';
+      case 'kleiner dan': case 'kleiner is dan': case 'is kleiner dan': case 'zijn kleiner dan':
+        return '<';
+      case 'kleiner of gelijk aan': case 'kleiner of gelijk is aan':
+      case 'is kleiner of gelijk aan': case 'zijn kleiner of gelijk aan':
+        return '<=';
+      case 'later dan': case 'is later dan': case 'zijn later dan':
+        return '>';
+      case 'later of gelijk aan': case 'is later of gelijk aan': case 'zijn later of gelijk aan':
+        return '>=';
+      case 'eerder dan': case 'is eerder dan': case 'zijn eerder dan':
+        return '<';
+      case 'eerder of gelijk aan': case 'is eerder of gelijk aan': case 'zijn eerder of gelijk aan':
+        return '<=';
+      default:
+        throw new Error(`Unknown comparison operator: ${opText}`);
+    }
+  }
+
+  visitBinaryComparisonStellendeExpr(ctx: any): Expression {
+    // §8.2 stellende: "<x> is gedurende het gehele jaar groter dan <y>". The verb (is/zijn), then the
+    // prefix, then the bare operator; builds the same BinaryExpression + whole-period annotation as
+    // the vragende form, so the transpiler's §8.2 lowering is shared.
+    const additiveExprs = ctx.additiveExpression_list();
+    const node = {
+      type: 'BinaryExpression',
+      operator: this.mapComparisonOperatorText(ctx.bareComparisonOperator().getText()) as any,
+      left: this.visit(additiveExprs[0]),
+      right: this.visit(additiveExprs[1])
+    } as BinaryExpression;
+    this.attachGehelePeriode(node, this.gehelePeriodePrefixOf(ctx));
+    this.setLocation(node, ctx);
+    return node;
+  }
+
   visitBinaryComparisonExpr(ctx: BinaryComparisonExprContext): Expression {
     // Get the additive expressions
     const additiveExprs = ctx.additiveExpression_list();
@@ -840,70 +891,7 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const compOp = ctx.comparisonOperator();
 
     // Map Dutch operators to standard operators
-    const opText = compOp.getText();
-    let operator: string;
-
-    switch (opText) {
-      case 'gelijk aan':
-      case 'gelijk is aan':
-      case 'is gelijk aan':
-      case 'zijn gelijk aan':
-        operator = '==';
-        break;
-      case 'ongelijk aan':
-      case 'is ongelijk aan':
-      case 'zijn ongelijk aan':
-        operator = '!=';
-        break;
-      case 'groter dan':
-      case 'groter is dan':
-      case 'is groter dan':
-      case 'zijn groter dan':
-        operator = '>';
-        break;
-      case 'groter of gelijk aan':
-      case 'groter of gelijk is aan':
-      case 'is groter of gelijk aan':
-      case 'zijn groter of gelijk aan':
-        operator = '>=';
-        break;
-      case 'kleiner dan':
-      case 'kleiner is dan':
-      case 'is kleiner dan':
-      case 'zijn kleiner dan':
-        operator = '<';
-        break;
-      case 'kleiner of gelijk aan':
-      case 'kleiner of gelijk is aan':
-      case 'is kleiner of gelijk aan':
-      case 'zijn kleiner of gelijk aan':
-        operator = '<=';
-        break;
-      // Datum-ordening (§8.1.1): "later dan" is after (>) and "eerder dan" is before (<); the
-      // datum datatype is Comparable, so these reuse the ordinal comparison lowering.
-      case 'later dan':
-      case 'is later dan':
-      case 'zijn later dan':
-        operator = '>';
-        break;
-      case 'later of gelijk aan':
-      case 'is later of gelijk aan':
-      case 'zijn later of gelijk aan':
-        operator = '>=';
-        break;
-      case 'eerder dan':
-      case 'is eerder dan':
-      case 'zijn eerder dan':
-        operator = '<';
-        break;
-      case 'eerder of gelijk aan':
-      case 'is eerder of gelijk aan':
-      case 'zijn eerder of gelijk aan':
-        operator = '<=';
-        break;
-      default:
-        throw new Error(`Unknown comparison operator: ${opText}`);
-    }
+    const operator = this.mapComparisonOperatorText(compOp.getText());
 
     const node = {
       type: 'BinaryExpression',
