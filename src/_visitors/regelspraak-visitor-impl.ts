@@ -896,6 +896,16 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       left,
       right
     } as BinaryExpression;
+
+    // §8.2 check op volledige periode: an optional "gedurende het gehele jaar/maand" prefix makes the
+    // comparison a whole-period check — true only if it holds at every moment in the calendar period.
+    const gp = (ctx as any)._gp ??
+      (typeof (ctx as any).geheleVergelijkingPrefix === 'function' ? (ctx as any).geheleVergelijkingPrefix() : null);
+    if (gp) {
+      (node as any).gehelePeriode = (gp.JAAR && gp.JAAR()) ? 'jaar' : 'maand';
+      (node as any).gehelePeriodeNegated = !!(gp.NIET && gp.NIET());
+    }
+
     this.setLocation(node, ctx);
     return node;
   }

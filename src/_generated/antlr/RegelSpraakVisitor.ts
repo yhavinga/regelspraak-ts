@@ -173,6 +173,7 @@ import { UnaryConditionExprContext } from "./RegelSpraakParser";
 import { RegelStatusConditionExprContext } from "./RegelSpraakParser";
 import { LiteralValueContext } from "./RegelSpraakParser";
 import { GelijkIsAanOperatorContext } from "./RegelSpraakParser";
+import { GeheleVergelijkingPrefixContext } from "./RegelSpraakParser";
 import { ComparisonOperatorContext } from "./RegelSpraakParser";
 import { AdditiveExpressionContext } from "./RegelSpraakParser";
 import { AdditiveOperatorContext } from "./RegelSpraakParser";
@@ -1343,6 +1344,12 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitGelijkIsAanOperator?: (ctx: GelijkIsAanOperatorContext) => Result;
+	/**
+	 * Visit a parse tree produced by `RegelSpraakParser.geheleVergelijkingPrefix`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitGeheleVergelijkingPrefix?: (ctx: GeheleVergelijkingPrefixContext) => Result;
 	/**
 	 * Visit a parse tree produced by `RegelSpraakParser.comparisonOperator`.
 	 * @param ctx the parse tree

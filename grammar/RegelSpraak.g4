@@ -943,7 +943,7 @@ comparisonExpression
     // Special case for "x gelijk is aan 'A', 'B' of 'C'" pattern per spec §5.6 - restricted to literal values only
     | left=additiveExpression op=gelijkIsAanOperator firstValue=literalValue
       (COMMA middleValues+=literalValue)* OF lastValue=literalValue # GelijkIsAanOfExpr
-    | left=additiveExpression ( comparisonOperator right=additiveExpression )? # BinaryComparisonExpr
+    | left=additiveExpression ( gp=geheleVergelijkingPrefix? comparisonOperator right=additiveExpression )? # BinaryComparisonExpr
     | unaryCondition # UnaryConditionExpr // Try unary conditions after more specific patterns
     | regelStatusCondition # RegelStatusConditionExpr // Integrate rule status checks here
     ;
@@ -964,6 +964,14 @@ gelijkIsAanOperator
     | IS_GELIJK_AAN
     | GELIJK_AAN
     | ZIJN_GELIJK_AAN  // For plural forms
+    ;
+
+// §8.2 "check op volledige periode": the vragende geheleperiodevergelijking prefix, inserted before
+// the comparison operator ("X gedurende het gehele jaar groter is dan Y"). The optional NIET negates
+// the whole-period check. GEDURENDE_HET_GEHELE / GEDURENDE_DE_GEHELE are maximal-munch tokens distinct
+// from "gedurende de tijd dat", so the prefix is unambiguous.
+geheleVergelijkingPrefix
+    : NIET? (GEDURENDE_HET_GEHELE JAAR | GEDURENDE_DE_GEHELE MAAND)
     ;
 
 comparisonOperator // Expanded list

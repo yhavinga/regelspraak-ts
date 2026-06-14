@@ -75,6 +75,13 @@ export interface BinaryExpression extends Expression {
   sourceOperator?: string;
   left: Expression;
   right: Expression;
+  /**
+   * §8.2 "check op volledige periode": when set, the comparison is a whole-period check — true only
+   * if it holds at every moment in the named calendar period (the rekendatum's jaar or maand). Only
+   * meaningful when an operand is tijdsafhankelijk; `gehelePeriodeNegated` is the "niet" form.
+   */
+  gehelePeriode?: 'jaar' | 'maand';
+  gehelePeriodeNegated?: boolean;
 }
 
 export interface VariableReference extends Expression {
