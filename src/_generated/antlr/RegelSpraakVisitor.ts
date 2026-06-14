@@ -261,6 +261,7 @@ import { UnaryUniekConditionContext } from "./RegelSpraakParser";
 import { UnaryInconsistentDataConditionContext } from "./RegelSpraakParser";
 import { RegelStatusGevuurdCheckContext } from "./RegelSpraakParser";
 import { RegelStatusInconsistentCheckContext } from "./RegelSpraakParser";
+import { RegelversieNaamContext } from "./RegelSpraakParser";
 import { SubordinateHasExprContext } from "./RegelSpraakParser";
 import { SubordinateIsWithExprContext } from "./RegelSpraakParser";
 import { SubordinateIsKenmerkExprContext } from "./RegelSpraakParser";
@@ -1937,6 +1938,12 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitRegelStatusInconsistentCheck?: (ctx: RegelStatusInconsistentCheckContext) => Result;
+	/**
+	 * Visit a parse tree produced by `RegelSpraakParser.regelversieNaam`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRegelversieNaam?: (ctx: RegelversieNaamContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `SubordinateHasExpr`
 	 * labeled alternative in `RegelSpraakParser.subordinateClauseExpression`.

@@ -1184,10 +1184,20 @@ unaryCondition // Now potentially part of comparisonExpression
     | expr=primaryExpression IS_INCONSISTENT # unaryInconsistentDataCondition // For 'data is inconsistent'
     ;
 
-// Represents conditions checking the status of a rule
+// Represents conditions checking the status of a rule (§8.1.9). The referenced regelversie is a
+// <karakterreeks> = the rule's NAME (EBNF prod 66). The bare `naamwoord` cannot span a name
+// containing `geen` (the TOKA example "Controleer of vlucht geen rondvlucht is"), and `regelName`
+// would demand a trailing standalone `is` that the maximal-munch IS_GEVUURD/IS_INCONSISTENT token
+// swallows — so neither parses the canonical reference. `regelversieNaam` is a free run of name
+// words (including `geen`) up to the status token; because that token absorbs the name's final
+// "is", the parsed name ends one "is" short of the declared name and the resolver reconciles it.
 regelStatusCondition // Now potentially part of comparisonExpression
-    : REGELVERSIE name=naamwoord IS_GEVUURD # regelStatusGevuurdCheck
-    | REGELVERSIE name=naamwoord IS_INCONSISTENT # regelStatusInconsistentCheck
+    : REGELVERSIE name=regelversieNaam IS_GEVUURD # regelStatusGevuurdCheck
+    | REGELVERSIE name=regelversieNaam IS_INCONSISTENT # regelStatusInconsistentCheck
+    ;
+
+regelversieNaam
+    : ( naamwoord | GEEN )+
     ;
 
 // Dutch subordinate clause expressions (Subject-Object-Verb order)

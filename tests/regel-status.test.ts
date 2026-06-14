@@ -51,6 +51,36 @@ describe('Regel Status Conditions', () => {
       expect(controleRegel!.condition).toBeDefined();
     });
 
+    it('should parse the canonical §8.1.9 reference whose name contains "geen"', () => {
+      // "Controleer of vlucht geen rondvlucht is" (TOKA §9.5) — a bare naamwoord cannot span "geen",
+      // and regelName would demand a trailing standalone "is" the maximal-munch IS_INCONSISTENT token
+      // swallows; the permissive regelversieNaam parses it, dropping that final "is" into the token.
+      const code = `
+        Objecttype de Vlucht (mv: vluchten)
+            de vertrek Tekst;
+            de bestemming Tekst;
+            is rond kenmerk (bijvoeglijk);
+
+        Regel Controleer of vlucht geen rondvlucht is
+            geldig altijd
+                Een Vlucht is rond indien de vertrek van de vlucht gelijk is aan de bestemming van de vlucht.
+
+        Regel lees status
+            geldig altijd
+                Een Vlucht is rond indien regelversie Controleer of vlucht geen rondvlucht is inconsistent.
+      `;
+
+      const parser = new AntlrParser();
+      const model = parser.parseModel(code);
+
+      const reader = model.regels.find(r => r.name === 'lees status')!;
+      const expr = (reader.condition as any).expression;
+      expect(expr.type).toBe('RegelStatusExpression');
+      expect(expr.check).toBe('inconsistent');
+      // The name is one "is" short of the declared "...rondvlucht is" — the resolver reconciles it.
+      expect(expr.regelNaam).toBe('Controleer of vlucht geen rondvlucht');
+    });
+
     it('should parse multi-word regel name in regelversie condition', () => {
       const code = `
         Objecttype de Aanvraag
