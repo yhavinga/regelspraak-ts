@@ -733,3 +733,26 @@ De status van een Passagier moet berekend worden als 1 indien zijn correctie is 
     expect(check.resolved?.resolvedType).toMatchObject({ type: 'Boolean' });
   });
 });
+
+describe('consistentieregel subject binding', () => {
+  // The subject must be bound for a consistentieregel (like a gelijkstelling), or a possessive in
+  // the criterion ("... van zijn vereniging") cannot resolve against it.
+  const source = `Objecttype de Persoon (mv: personen) (bezield)
+  de leeftijd Numeriek;
+Objecttype de Club (mv: clubs)
+  de minleeftijd Numeriek;
+Feittype lidmaatschap
+  de vereniging\tClub
+  het lid (mv: leden)\tPersoon
+meerdere leden kunnen lid zijn van één vereniging
+Regel check
+geldig altijd
+De leeftijd van een Persoon moet ongelijk zijn aan de minleeftijd van zijn vereniging.
+`;
+
+  test('resolveModel(strict) binds the subject so a possessive criterion resolves', () => {
+    const model = new AntlrParser().parseModel(source);
+    const result = resolveModel(model, { strict: true });
+    expect(result.success).toBe(true);
+  });
+});

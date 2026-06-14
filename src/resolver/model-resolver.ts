@@ -1075,6 +1075,13 @@ class DomainModelResolver {
         return this.inferBindingFromExpression((result as Kenmerktoekenning).subject);
       case 'ObjectCreation':
         return this.inferBindingFromExpression((result as ObjectCreation).subject);
+      case 'Consistentieregel': {
+        // Bind the subject from the checked attribute ("De leeftijd van een Persoon moet ...") so a
+        // possessive in the criterion ("... van zijn vereniging") resolves against it, like a
+        // gelijkstelling. The same-object form needs no binding, but is unharmed by it.
+        const target = (result as Consistentieregel).target;
+        return target ? this.inferBindingFromExpression(target as Expression) : undefined;
+      }
       case 'MultipleResults':
         for (const nested of (result as MultipleResults).results) {
           const binding = this.inferBindingFromResult(nested);
