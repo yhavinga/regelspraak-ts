@@ -490,6 +490,31 @@ geldig altijd
         });
       });
 
+      test('parses eenzijdige predicaat condition columns (leeg/gevuld/elfproef)', () => {
+        const parser = new AntlrParser();
+        const model = parser.parseModel(`Objecttype de Persoon (mv: personen) (bezield)
+  de correctie Numeriek;
+  het bsn Numeriek;
+  de status Numeriek;
+
+Beslistabel Status
+geldig altijd
+| | de status van een Persoon moet gesteld worden op | indien zijn correctie is leeg | indien zijn bsn voldoet aan de elfproef |
+|---|---|---|---|
+| 1 | 1 | waar | n.v.t. |
+| 2 | 2 | n.v.t. | waar |`);
+
+        const version = model.beslistabels[0].versions![0];
+        expect(version.conditionColumns[0].condition).toMatchObject({
+          isUnaryCheck: true,
+          unaryOperator: 'is leeg'
+        });
+        expect(version.conditionColumns[1].condition).toMatchObject({
+          isUnaryCheck: true,
+          unaryOperator: 'voldoet aan de elfproef'
+        });
+      });
+
       test('should execute every conclusion column for the first matching row', () => {
         const decisionTable = `Beslistabel Test
   geldig altijd

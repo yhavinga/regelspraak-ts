@@ -16,6 +16,8 @@ export interface DecisionTableCondition {
   isDagsoortCheck?: boolean; // Whether this is a dagsoortcontrole (§8.1.5)
   dagsoortName?: string; // Day-type name for a dagsoortcontrole
   dagsoortNegated?: boolean; // "is geen <dagsoort>" rather than "is een"
+  isUnaryCheck?: boolean; // An eenzijdig predicaat column (§8.1.2 leeg/gevuld, §8.1.3 elfproef)
+  unaryOperator?: string; // The unary operator tag: 'is leeg'/'is gevuld'/'voldoet (niet) aan de elfproef'
 }
 
 export interface DecisionTableResult {

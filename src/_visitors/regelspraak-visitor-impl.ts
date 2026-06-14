@@ -7121,6 +7121,27 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     };
   }
 
+  visitBeslistabelUnaryVoorwaardeHeader(ctx: any): DecisionTableCondition {
+    // Grammar: INDIEN beslistabelAttribuutHeader op=(IS_LEEG|IS_GEVULD|VOLDOET_AAN_DE_ELFPROEF|
+    // VOLDOET_NIET_AAN_DE_ELFPROEF). An eenzijdig predicaat (§8.1.2/§8.1.3) as a condition column;
+    // the operator tag matches the rule-condition UnaryExpression so the transpiler reuses one
+    // lowering for both surfaces.
+    const opType = ctx._op?.type;
+    const operator =
+      opType === RegelSpraakLexer.IS_LEEG ? 'is leeg' :
+      opType === RegelSpraakLexer.IS_GEVULD ? 'is gevuld' :
+      opType === RegelSpraakLexer.VOLDOET_AAN_DE_ELFPROEF ? 'voldoet aan de elfproef' :
+      'voldoet niet aan de elfproef';
+    return {
+      type: 'DecisionTableCondition',
+      headerText: '',
+      subjectExpression: this.visitBeslistabelAttribuutHeader(ctx.beslistabelAttribuutHeader()),
+      operator: '==',
+      isUnaryCheck: true,
+      unaryOperator: operator
+    };
+  }
+
   visitBeslistabelAttribuutHeader(ctx: any): AttributeReference | SubselectieExpression | DimensionedAttributeReference | BinaryExpression {
     const attributeNameCtx = ctx.beslistabelAttribuutNaam ? ctx.beslistabelAttribuutNaam() : null;
     if (!attributeNameCtx) {

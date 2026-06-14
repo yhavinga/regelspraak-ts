@@ -65,6 +65,10 @@ beslistabelVoorwaardeHeader
     // kenmerk form (which ends in HEEFT). The day-type name is a kenmerkNaam, so a multi-word name
     // (e.g. "tweede paasdag") parses here. Listed first as the most specific.
     : INDIEN beslistabelAttribuutHeader v=(IS | ZIJN) neg=(EEN | GEEN) dagsoort=kenmerkNaam EOF # BeslistabelDagsoortVoorwaardeHeader
+    // Eenzijdige predicaten (§8.1.2/§8.1.3) as a condition column: "indien <attr> is leeg/gevuld"
+    // and "indien <attr> voldoet (niet) aan de elfproef". The trailing token is a distinct
+    // multiword operator (not a comparisonOperator and not HEEFT), so this is unambiguous.
+    | INDIEN beslistabelAttribuutHeader op=(IS_LEEG | IS_GEVULD | VOLDOET_AAN_DE_ELFPROEF | VOLDOET_NIET_AAN_DE_ELFPROEF) EOF # BeslistabelUnaryVoorwaardeHeader
     | INDIEN beslistabelAttribuutHeader comparisonOperator EOF          # BeslistabelAttribuutVoorwaardeHeader
     | INDIEN onderwerpReferentie (EEN | DE | HET)? kenmerkNaam HEEFT EOF # BeslistabelKenmerkVoorwaardeHeader
     ;
