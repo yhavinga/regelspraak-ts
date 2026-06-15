@@ -2306,6 +2306,11 @@ function resolveLegacyPredicateExpressions(
       if (predicate.onderwerp) resolveExpressionInternal(predicate.onderwerp, context, maps);
       if (predicate.attribuut) resolveExpressionInternal(predicate.attribuut, context, maps);
       if (predicate.waarde) resolveExpressionInternal(predicate.waarde, context, maps);
+      // A predicate criterion evaluates to a Boolean; mark the node resolved so the
+      // tree check passes (its operands were resolved above). Without this a
+      // kenmerk_check criterion like "zijn reis is duurzaam" — whose only operand is
+      // the onderwerp — would leave the node itself untyped.
+      predicate.resolved = { resolvedType: { type: 'Boolean' } };
       return;
     case 'GenesteVoorwaardeInPredicaat':
       resolveLegacyPredicateExpressions(predicate.voorwaarde, context, maps);
