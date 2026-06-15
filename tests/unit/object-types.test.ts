@@ -137,6 +137,19 @@ describe('Engine - Object Type Definitions', () => {
       });
     });
 
+    test('should parse a TAB-separated attribute (the spec layout), same as space-separated', () => {
+      // The spec layout puts a TAB between the attribuut name and its datatype (the same interior
+      // structural tab a feittype role line uses). A space-separated source hides the whitespace, so
+      // both layouts must yield the same AST — real .rs files (TOKA, BRM) are tab-separated.
+      const result = engine.parse(`Objecttype persoon\n\tde leeftijd\tNumeriek (geheel getal);`);
+      expect(result.success).toBe(true);
+      expect(stripLocations(result.ast?.members[0])).toEqual({
+        type: 'AttributeSpecification',
+        name: 'leeftijd',
+        dataType: { type: 'Numeriek', numericSpec: { format: 'geheel getal', signConstraint: undefined, decimals: undefined } }
+      });
+    });
+
     test('should parse list attribute with primitive element type', () => {
       const source = `Objecttype factuur
   bedragen Lijst van Numeriek;`;

@@ -262,9 +262,12 @@ kenmerkSpecificatie
     : (IS? identifier | naamwoordWithNumbers) KENMERK (BIJVOEGLIJK | BEZITTELIJK)? tijdlijn?
     ;
 
-// §13.3.2 Attribuut Specificatie
+// §13.3.2 Attribuut Specificatie. The spec layout uses a TAB between the attribuut name and its
+// datatype (the same interior structural tab a feittype role line uses, §3.11) — so accept it
+// optionally, the way rolDefinition anchors on TAB. A space-separated source hides the whitespace
+// and omits the token, so both layouts parse.
 attribuutSpecificatie
-    : naamwoordWithNumbers ( datatype | domeinRef | objectTypeRef )
+    : naamwoordWithNumbers TAB? ( datatype | domeinRef | objectTypeRef )
       (MET_EENHEID eenheidExpressie)?
       (GEDIMENSIONEERD_MET dimensieRef (EN dimensieRef)*)?
       tijdlijn? 
