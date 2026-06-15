@@ -1105,12 +1105,12 @@ class DomainModelResolver {
 
   private inferBindingFromExpression(expression: Expression): ObjectBinding | undefined {
     if (expression.type === 'VariableReference') {
-      return this.bindingForObjectType((expression as VariableReference).variableName);
+      return this.bindingForSubject((expression as VariableReference).variableName);
     }
 
     if (expression.type === 'AttributeReference') {
       const firstSegment = (expression as AttributeReference).path[0];
-      return firstSegment ? this.bindingForObjectType(firstSegment) : undefined;
+      return firstSegment ? this.bindingForSubject(firstSegment) : undefined;
     }
 
     if (expression.type === 'DimensionedAttributeReference') {
@@ -1122,20 +1122,40 @@ class DomainModelResolver {
     return undefined;
   }
 
-  private bindingForObjectType(name: string): ObjectBinding | undefined {
+  private bindingForSubject(name: string): ObjectBinding | undefined {
     const normalized = name.toLowerCase();
     const objectTypes = this.model.objectTypes || [];
     const objectType = objectTypes.find(candidate =>
       candidate.name.toLowerCase() === normalized
     );
 
-    if (!objectType) {
-      return undefined;
+    if (objectType) {
+      return this.bindingFor(objectType.name);
     }
 
+    // A rule subject may be a rol ("De ... van een passagier moet ..."), not an object type.
+    // Bind it to the object type that fills the rol so a possessive self-reference ("zijn ...")
+    // resolves, mirroring resolveFeitTypeRole's navigation mapping. The rol's relationship scope
+    // is a codegen concern, not part of the self-binding.
+    for (const feitType of new Set(this.maps.feitTypes.values())) {
+      for (const role of feitType.rollen) {
+        if (!role.objectType) continue;
+        if (role.naam.toLowerCase() === normalized || role.meervoud?.toLowerCase() === normalized) {
+          const filler =
+            this.maps.objectTypes.get(role.objectType) ||
+            this.maps.objectTypes.get(role.objectType.toLowerCase());
+          if (filler) return this.bindingFor(filler.name);
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  private bindingFor(objectTypeName: string): ObjectBinding {
     return {
-      objectType: objectType.name,
-      variableName: objectType.name.charAt(0).toLowerCase() + objectType.name.slice(1),
+      objectType: objectTypeName,
+      variableName: objectTypeName.charAt(0).toLowerCase() + objectTypeName.slice(1),
     };
   }
 
