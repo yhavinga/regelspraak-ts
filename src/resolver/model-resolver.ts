@@ -44,7 +44,7 @@ import {
   DecisionTableCondition,
   DecisionTableResult,
 } from '../ast/decision-tables';
-import { DagsoortDefinitie } from '../ast/dagsoort';
+import { DagsoortDefinitie, normalizeDagsoortName } from '../ast/dagsoort';
 import { DimensionedAttributeReference } from '../ast/dimensions';
 import { PeriodDefinition, TimelineExpression } from '../ast/timelines';
 import { ResolvedInfo } from './types';
@@ -753,6 +753,16 @@ class DomainModelResolver {
     path: string
   ): void {
     this.resolveOptionalExpression(condition.subjectExpression, context, `${path}.subjectExpression`);
+    // §8.1.5: a dagsoortcontrole column must name a declared dagsoort — fail fast just like the
+    // equivalent rule-condition predicate (expression-resolver validateDagsoortPredicate).
+    if (condition.isDagsoortCheck && condition.dagsoortName &&
+      !this.maps.dagsoorten.has(normalizeDagsoortName(condition.dagsoortName))) {
+      this.addDiagnostic(
+        `Unknown dagsoort '${condition.dagsoortName}'`,
+        `${path}.dagsoortName`,
+        (condition as any).location,
+      );
+    }
   }
 
   private resolveDecisionTableCellValue(

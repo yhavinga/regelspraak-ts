@@ -374,6 +374,58 @@ export class Context implements RuntimeContext {
       .replace(/\s+/g, '');
   }
 
+  /**
+   * Map a written object-type name — possibly a meervoudsvorm ('Personen', 'Natuurlijke
+   * personen') — to the registered singular type name. Mirrors the resolver's
+   * findObjectTypeByNameOrPlural (declared plural[], else regular -s / -en). The plural
+   * fallback only fires after the exact/singular match fails, so singular lookups are unaffected.
+   * Used by the uniciteit "alle <type>" path (§8.1.6).
+   */
+  resolveObjectTypeName(name: string): string | undefined {
+    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+    const wanted = norm(name);
+    const objectTypes = this.domainModel.objectTypes || [];
+    for (const ot of objectTypes) {
+      if (norm(ot.name) === wanted) {
+        return ot.name;
+      }
+    }
+    for (const ot of objectTypes) {
+      if ((ot.plural || []).some(p => norm(p) === wanted) ||
+        norm(`${ot.name}s`) === wanted ||
+        norm(`${ot.name}en`) === wanted) {
+        return ot.name;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Map a written attribute name — possibly a meervoudsvorm (e.g. 'burgerservicenummers') — to the
+   * declared (singular) attribute name on the given object type. Mirrors the resolver's
+   * findAttributeBySingularOrPlural (name, name+'s', name+'en'). Used by the uniciteit "alle"
+   * path, where the criterion is written in plural but the object record is keyed by the singular.
+   */
+  resolveAttributeName(objectTypeName: string, attrName: string): string | undefined {
+    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+    const wanted = norm(attrName);
+    const canonicalType = norm(this.resolveObjectTypeName(objectTypeName) ?? objectTypeName);
+    const ot = (this.domainModel.objectTypes || []).find(o => norm(o.name) === canonicalType);
+    if (!ot) {
+      return undefined;
+    }
+    for (const m of (ot.members || []) as any[]) {
+      if (m.type !== 'AttributeSpecification') {
+        continue;
+      }
+      const n = norm(m.name);
+      if (n === wanted || norm(`${m.name}s`) === wanted || norm(`${m.name}en`) === wanted) {
+        return m.name;
+      }
+    }
+    return undefined;
+  }
+
   getObjectsByType(type: string): Value[] {
     // Try exact match first
     let typeMap = this.objects.get(type);
@@ -677,6 +729,50 @@ export class Context implements RuntimeContext {
   }
 
   /**
+   * §8.1.7 rolcheck — whether a subject instance fills the given role of any FeitType.
+   * Joins the subject's identity over the stored relationships on the role's FeitType, in BOTH
+   * directions ('hij is een passagier' = subject on the role side; 'de Vlucht heeft een passagier'
+   * = subject on the opposite side of a relation that has that role). The single engine
+   * role-membership implementation, shared by the object_check and SimplePredicate 'rol' paths.
+   */
+  hasRol(subject: Value, roleName: string): boolean {
+    if (subject.type !== 'object') {
+      return false;
+    }
+    const feittype = this.findFeittypeByRole(roleName);
+    if (!feittype || !feittype.rollen) {
+      return false;
+    }
+    const roleIdx = feittype.rollen.findIndex(r => r.naam === roleName || r.meervoud === roleName);
+    if (roleIdx < 0) {
+      return false;
+    }
+    const roleObjType = (feittype.rollen[roleIdx].objectType || '').toLowerCase();
+    const subjType = String((subject as any).objectType || '').toLowerCase();
+    // The engine convention is rollen[0] = subject side, rollen[1] = object side.
+    for (const rel of this.relationships) {
+      if (rel.feittypeNaam !== feittype.naam) {
+        continue;
+      }
+      const onSubjectSide = this.objectsMatch(rel.subject, subject);
+      const onObjectSide = this.objectsMatch(rel.object, subject);
+      // "hij is een <rol>": the subject occupies the role's OWN position.
+      if ((roleIdx === 0 && onSubjectSide) || (roleIdx === 1 && onObjectSide)) {
+        return true;
+      }
+      // "de X heeft een <rol>": the subject is on the OTHER side and relates to a participant
+      // filling the role — only when that role is a different objecttype (so a same-type two-role
+      // feittype, e.g. werkgever/werknemer, does not falsely satisfy "is een <rol>").
+      if (roleObjType && subjType && roleObjType !== subjType) {
+        if ((roleIdx === 0 && onObjectSide) || (roleIdx === 1 && onSubjectSide)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
    * Creates and stores a relationship between two objects
    */
   addRelationship(feittypeNaam: string, subject: Value, object: Value, preposition: string = 'MET'): Relationship {
@@ -746,20 +842,35 @@ export class Context implements RuntimeContext {
 
   // --- Rule Execution Tracking (for regel status conditions) ---
 
+  /**
+   * §8.1.9 regelpredicaat name canonicalization. The producer stores a rule name WITH its
+   * trailing 'is' (maximal-munch tokenization), while the reader's reference is one 'is' short;
+   * collapsing whitespace, stripping a trailing 'is' and lowercasing reconciles both to one key.
+   * Applied symmetrically on store AND lookup so a 'is gevuurd'/'is inconsistent' reference
+   * matches the rule that fired. Mirrors the transpiler's normStripRegelNaam.
+   */
+  private normRuleName(s: string): string {
+    // Strip a trailing "is" (maximal-munch tokenization, §8.1.9) while the space delimiter is
+    // still present, then remove ALL whitespace: the engine's parser stores multi-word rule names
+    // concatenated ("BSN uniekheid check" -> "BSNuniekheidcheck"), so a spaced reference/lookup
+    // must reconcile to the same key. Lowercased for case-insensitive matching.
+    return s.trim().toLowerCase().replace(/\s+is$/i, '').replace(/\s+/g, '');
+  }
+
   markRuleExecuted(regelNaam: string): void {
-    this.executedRules.add(regelNaam);
+    this.executedRules.add(this.normRuleName(regelNaam));
   }
 
   markRuleInconsistent(regelNaam: string): void {
-    this.inconsistentRules.add(regelNaam);
+    this.inconsistentRules.add(this.normRuleName(regelNaam));
   }
 
   isRuleExecuted(regelNaam: string): boolean {
-    return this.executedRules.has(regelNaam);
+    return this.executedRules.has(this.normRuleName(regelNaam));
   }
 
   isRuleInconsistent(regelNaam: string): boolean {
-    return this.inconsistentRules.has(regelNaam);
+    return this.inconsistentRules.has(this.normRuleName(regelNaam));
   }
 
   // --- Dimension Handling ---
@@ -815,6 +926,9 @@ export class Context implements RuntimeContext {
     cloned.objectCounter = this.objectCounter;
     cloned.current_instance = this.current_instance;
     cloned.evaluation_date = this.evaluation_date;
+    // Preserve the (custom) unit registry so unit-aware ops in a cloned/sub-eval context behave
+    // identically to the top-level context (engine attaches it via (context as any).unitRegistry).
+    (cloned as any).unitRegistry = (this as any).unitRegistry;
     cloned.executionTrace = [...this.executionTrace];
     cloned.structuredTrace = [...this.structuredTrace];
 

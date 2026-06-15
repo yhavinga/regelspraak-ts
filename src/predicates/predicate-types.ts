@@ -26,6 +26,10 @@ export interface SimplePredicate extends Predicate {
   dagsoort?: string;  // For dagsoort checks
   digits?: number;    // For numeriek exact checks
   negated?: boolean;  // For negated forms (e.g., "is niet", "voldoet niet aan")
+  // §8.2 "check op volledige periode": the comparison/check must hold at every moment of the
+  // rekendatum's jaar/maand. Only meaningful when an operand is tijdsafhankelijk.
+  gehelePeriode?: 'jaar' | 'maand';
+  gehelePeriodeNegated?: boolean;
 }
 
 // Predicate operators that can be used in SimplePredicate
@@ -34,6 +38,7 @@ export type PredicateOperator =
   | '==' | '!=' | '>' | '<' | '>=' | '<='
   // Special checks
   | 'kenmerk'        // heeft/is kenmerk
+  | 'rol'            // §8.1.7 rolcheck: fills a FeitType role
   | 'dagsoort'       // is een dagsoort
   | 'elfproef'       // voldoet aan de elfproef
   | 'uniek'          // moeten uniek zijn
@@ -61,6 +66,9 @@ export interface AttributePredicate extends Predicate {
   attribute: string;
   operator: ComparisonOperator;
   value: Expression;
+  // §8.2 "check op volledige periode" on a subselectie attribute criterion.
+  gehelePeriode?: 'jaar' | 'maand';
+  gehelePeriodeNegated?: boolean;
 }
 
 export type ComparisonOperator = '==' | '!=' | '>' | '<' | '>=' | '<=';
@@ -93,6 +101,8 @@ export interface LegacyAttributeComparisonPredicaat {
   attribute: string;
   operator: string;
   value: Expression;
+  gehelePeriode?: 'jaar' | 'maand';
+  gehelePeriodeNegated?: boolean;
 }
 
 export function fromLegacyKenmerkPredicaat(legacy: LegacyKenmerkPredicaat): SimplePredicate {
@@ -108,6 +118,8 @@ export function fromLegacyAttributeComparison(legacy: LegacyAttributeComparisonP
     type: 'AttributePredicate',
     attribute: legacy.attribute,
     operator: legacy.operator as ComparisonOperator,
-    value: legacy.value
+    value: legacy.value,
+    gehelePeriode: legacy.gehelePeriode,
+    gehelePeriodeNegated: legacy.gehelePeriodeNegated
   };
 }

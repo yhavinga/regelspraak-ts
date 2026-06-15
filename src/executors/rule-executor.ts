@@ -1,4 +1,4 @@
-import { IRuleExecutor, RuleExecutionResult, RuntimeContext, Value } from '../interfaces';
+import { IRuleExecutor, RuleExecutionResult, RuntimeContext, Value, isLeeg } from '../interfaces';
 import {
   Rule,
   Gelijkstelling,
@@ -39,6 +39,7 @@ import { FeitExecutor } from './feit-executor';
 import { resolveNavigationPath, isObjectScopedRule, setValueAtPath } from '../utils/navigation';
 import { TimelineValueImpl } from '../ast/timelines';
 import { FeitType } from '../ast/feittype';
+import { applyResolvedUnitConversion } from '../units/value-semantics';
 
 interface DistributionResult {
   amounts: number[];
@@ -164,7 +165,8 @@ export class RuleExecutor implements IRuleExecutor {
     targetPath: string[],
     value: Value,
     context: RuntimeContext,
-    skipFirstSegment: boolean = true
+    skipFirstSegment: boolean = true,
+    skipIfFilled: boolean = false
   ): { success: boolean; error?: Error } {
     const ctx = context as Context;
     let currentObj = startObj;
@@ -236,6 +238,12 @@ export class RuleExecutor implements IRuleExecutor {
 
     // Set the attribute on the final object (last element in path)
     const attributeName = targetPath[targetPath.length - 1];
+
+    // §9.6 initialisatieregel: a default-when-empty assignment skips a target that already
+    // holds a value (read exactly where we write, so the guard matches the writer).
+    if (skipIfFilled && !isLeeg((currentObj.value as Record<string, Value>)[attributeName])) {
+      return { success: true };
+    }
 
     if (value.type === 'timeline') {
       // Timeline handling
@@ -458,6 +466,31 @@ export class RuleExecutor implements IRuleExecutor {
     }
   }
 
+  /**
+   * Prepare a Gelijkstelling RHS value for storage, applied before every store path:
+   * (1) §7.3.1 unit conversion — when the target attribute's eenheid differs from the RHS unit the
+   *     resolver records the exact omrekenfactor on target.resolved.unitConversion; fold it in and
+   *     drop the source unit so the assignment re-tags with the target's eenheid (120 €/jr -> 10 €/mnd).
+   * (2) §10.3 temporalCondition clip — restrict the result to the named period.
+   */
+  private prepareResultValue(
+    gelijkstelling: Gelijkstelling,
+    value: Value,
+    context: RuntimeContext
+  ): Value {
+    let v = value;
+    const conv = (gelijkstelling.target as any)?.resolved?.unitConversion as
+      { multiplyBy?: string[]; divideBy?: string[] } | undefined;
+    if (conv && ((conv.multiplyBy && conv.multiplyBy.length) || (conv.divideBy && conv.divideBy.length))) {
+      const converted = applyResolvedUnitConversion(v, { multiplyBy: conv.multiplyBy ?? [], divideBy: conv.divideBy ?? [] });
+      v = { type: converted.type, value: converted.value };
+    }
+    if (gelijkstelling.temporalCondition) {
+      v = this.expressionEvaluator.clipTimelineResult(v, gelijkstelling.temporalCondition, context);
+    }
+    return v;
+  }
+
   private executeGelijkstelling(gelijkstelling: Gelijkstelling, context: RuntimeContext): RuleExecutionResult {
     // The target is an AttributeReference or DimensionedAttributeReference
     if (!gelijkstelling.target) {
@@ -486,6 +519,10 @@ export class RuleExecutor implements IRuleExecutor {
 
     const ctx = context as Context;
 
+    // §9.6 initialisatieregel: an order-independent default-when-empty assignment. When set, each
+    // write site skips a target that already holds a (non-leeg) value.
+    const isInit = gelijkstelling.assignmentKind === 'geinitialiseerd';
+
     // TIGHT GATE: Only use single-instance mode when ALL conditions met:
     // 1. Engine explicitly marked it's controlling iteration
     // 2. current_instance is set and is an object
@@ -498,8 +535,12 @@ export class RuleExecutor implements IRuleExecutor {
         engineInstance.type === 'object' &&
         this.instanceMatchesTarget(engineInstance, targetPath, context)) {
       // Single-instance mode: evaluate once, set on current instance
-      const value = this.expressionEvaluator.evaluate(gelijkstelling.expression, context);
-      const result = this.navigateAndSetAttribute(engineInstance, targetPath, value, context);
+      const value = this.prepareResultValue(
+        gelijkstelling,
+        this.expressionEvaluator.evaluate(gelijkstelling.expression, context),
+        context
+      );
+      const result = this.navigateAndSetAttribute(engineInstance, targetPath, value, context, true, isInit);
       if (!result.success && this.isStrictExecution(context)) {
         return result;
       }
@@ -564,11 +605,15 @@ export class RuleExecutor implements IRuleExecutor {
 
           try {
             // Evaluate expression in the context of this object
-            const value = this.expressionEvaluator.evaluate(gelijkstelling.expression, context);
+            const value = this.prepareResultValue(
+        gelijkstelling,
+        this.expressionEvaluator.evaluate(gelijkstelling.expression, context),
+        context
+      );
             lastValue = value;
 
             // Use shared helper for navigation and assignment
-            const navigationResult = this.navigateAndSetAttribute(obj, targetPath, value, context, true);
+            const navigationResult = this.navigateAndSetAttribute(obj, targetPath, value, context, true, isInit);
             if (!navigationResult.success && this.isStrictExecution(context)) {
               return navigationResult;
             }
@@ -611,11 +656,15 @@ export class RuleExecutor implements IRuleExecutor {
 
             try {
               // Evaluate the expression for this instance
-              const instanceValue = this.expressionEvaluator.evaluate(gelijkstelling.expression, context);
+              const instanceValue = this.prepareResultValue(
+                gelijkstelling,
+                this.expressionEvaluator.evaluate(gelijkstelling.expression, context),
+                context
+              );
               lastValue = instanceValue;
 
               // Use shared helper for navigation and assignment
-              const navigationResult = this.navigateAndSetAttribute(obj, targetPath, instanceValue, context, true);
+              const navigationResult = this.navigateAndSetAttribute(obj, targetPath, instanceValue, context, true, isInit);
               if (!navigationResult.success && this.isStrictExecution(context)) {
                 return navigationResult;
               }
@@ -641,10 +690,17 @@ export class RuleExecutor implements IRuleExecutor {
     }
 
     // Not an object-scoped rule - evaluate the expression once
-    const value = this.expressionEvaluator.evaluate(gelijkstelling.expression, context);
+    const value = this.prepareResultValue(
+      gelijkstelling,
+      this.expressionEvaluator.evaluate(gelijkstelling.expression, context),
+      context
+    );
 
     if (targetPath.length === 1) {
       // Simple attribute name - likely a variable assignment
+      if (isInit && !isLeeg(context.getVariable(targetPath[0]))) {
+        return { success: true, target: targetPath.join('.'), value };
+      }
       context.setVariable(targetPath[0], value);
 
       // Record rule fired with target and value for explainability
@@ -680,9 +736,11 @@ export class RuleExecutor implements IRuleExecutor {
             : new TimelineValueImpl((value as any).value);
           (context as Context).setTimelineAttribute(objType, objId, attributeName, timelineImpl);
         } else {
-          // Regular value - store directly
+          // Regular value - store directly (skip when geinitialiseerd and already filled)
           const objectData = objectValue.value as Record<string, Value>;
-          objectData[attributeName] = this.prepareAttributeValueForObject(objectValue, attributeName, value, context);
+          if (!isInit || isLeeg(objectData[attributeName])) {
+            objectData[attributeName] = this.prepareAttributeValueForObject(objectValue, attributeName, value, context);
+          }
         }
       } else {
         // Fall back to getting all objects of this type
@@ -708,9 +766,11 @@ export class RuleExecutor implements IRuleExecutor {
                 : new TimelineValueImpl((value as any).value);
               (context as Context).setTimelineAttribute(objType, objId, attributeName, timelineImpl);
             } else {
-              // Regular value - store directly
+              // Regular value - store directly (skip when geinitialiseerd and already filled)
               const objectData = obj.value as Record<string, Value>;
-              objectData[attributeName] = this.prepareAttributeValueForObject(obj, attributeName, value, context);
+              if (!isInit || isLeeg(objectData[attributeName])) {
+                objectData[attributeName] = this.prepareAttributeValueForObject(obj, attributeName, value, context);
+              }
             }
           }
         }
@@ -864,6 +924,14 @@ export class RuleExecutor implements IRuleExecutor {
   }
 
   private executeKenmerktoekenning(kenmerktoekenning: Kenmerktoekenning, context: RuntimeContext): RuleExecutionResult {
+    // §10.3: a result-part tijdsafhankelijke voorwaarde scopes the kenmerk to the named period.
+    // The engine stores kenmerken as scalars, so the kenmerk is given at the rekendatum only when
+    // that moment falls inside the period / the condition holds there; outside it gets no value.
+    if (kenmerktoekenning.temporalCondition &&
+        !this.expressionEvaluator.temporalConditionHoldsNow(kenmerktoekenning.temporalCondition, context)) {
+      return { success: true };
+    }
+
     // Evaluate the subject expression to get the object(s)
     const subjectValue = this.expressionEvaluator.evaluate(kenmerktoekenning.subject, context);
 
@@ -1457,6 +1525,14 @@ export class RuleExecutor implements IRuleExecutor {
   private executeVerdelingForInstance(verdeling: Verdeling, context: RuntimeContext): RuleExecutionResult {
     // Evaluate the source amount to get the total to distribute
     const sourceValue = this.expressionEvaluator.evaluate(verdeling.sourceAmount, context);
+
+    // §9.7.6 Tabel 19: a leeg verdeelplafond means the distribution is silently NOT applied —
+    // every receiver's aandeel and the remainder stay leeg, and NO fout is raised. This is the
+    // one verdeling lege-waarde case that is explicitly not an error. A non-leeg, non-numeric
+    // verdeelplafond is still a genuine type error below.
+    if (isLeeg(sourceValue)) {
+      return { success: true };
+    }
 
     if (sourceValue.type !== 'number') {
       throw new Error('Distribution source must be a number');

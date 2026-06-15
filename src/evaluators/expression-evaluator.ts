@@ -1,11 +1,12 @@
-import { IEvaluator, RuntimeContext, Value, isDimensionedValue } from '../interfaces';
+import { IEvaluator, RuntimeContext, Value, isDimensionedValue, isLeeg, resolveEmptySom } from '../interfaces';
 import { Dimension, DimensionCoordinate } from '../ast/dimensions';
 import { Expression, NumberLiteral, StringLiteral, BinaryExpression, UnaryExpression, VariableReference, SelfReference, ParameterReference, FunctionCall, AggregationExpression, SubselectieExpression, RegelStatusExpression, AllAttributesExpression, Predicaat, KenmerkPredicaat, AttributeComparisonPredicaat, AttributeReference, SamengesteldeVoorwaarde, QuantifierType, VergelijkingInPredicaat } from '../ast/expressions';
 import { AggregationEngine } from './aggregation-engine';
 import { TimelineEvaluator } from './timeline-evaluator';
-import { TimelineExpression, TimelineValue, TimelineValueImpl } from '../ast/timelines';
+import { PeriodDefinition, Timeline, TimelineExpression, TimelineValue, TimelineValueImpl } from '../ast/timelines';
 import { PredicateEvaluator } from '../predicates/predicate-evaluator';
 import {
+  Predicate,
   SimplePredicate,
   CompoundPredicate,
   AttributePredicate,
@@ -13,10 +14,51 @@ import {
   fromLegacyAttributeComparison
 } from '../predicates/predicate-types';
 import { UnitRegistry, performUnitArithmetic, UnitValue, createUnitValue } from '../units';
-import { compareRuntimeValues, getValueCompositeUnit } from '../units/value-semantics';
+import { compareRuntimeValues, getValueCompositeUnit, reduceWithReferenceUnit, applyResolvedUnitConversion } from '../units/value-semantics';
 import { Context } from '../context';
 import { stripUnitSuffix } from '../utils/navigation';
 import { evaluateDagsoort } from './dagsoort-evaluator';
+
+/**
+ * §8.1.3 elfproef — the weighted-digit identity-number check (e.g. a BSN). Reading the
+ * digits front-to-back the last digit has weight -1 and each earlier digit its
+ * position-from-the-end as weight; the number is valid exactly when the weighted sum is a
+ * positive multiple of 11. Length-general and digit-only (no stripping): any non-digit
+ * character (or a leeg value handled by the caller) makes it onwaar. Single source of
+ * truth, shared by ExpressionEvaluator, PredicateEvaluator and the decision-table executor.
+ */
+export function checkElfproef(value: string | number): boolean {
+  const digits = typeof value === 'number' ? Math.trunc(value).toString() : String(value);
+  const n = digits.length;
+  if (n === 0) {
+    return false;
+  }
+  let sum = 0;
+  for (let i = 0; i < n; i++) {
+    const c = digits.charCodeAt(i) - 48;
+    if (c < 0 || c > 9) {
+      return false;
+    }
+    const positionFromEnd = n - i;
+    const weight = positionFromEnd === 1 ? -1 : positionFromEnd;
+    sum += c * weight;
+  }
+  return sum > 0 && sum % 11 === 0;
+}
+
+/**
+ * §8.1.4 getalcontrole — "is numeriek met exact <n> cijfers". A digit-count test: the text
+ * must be exactly n characters and every character a digit. Leading zeros count (a BSN keeps
+ * its voorloopnullen), so there is NO stripping. A leeg value or non-positive n is onwaar.
+ * Single source of truth, shared by the binary path, PredicateEvaluator and decision tables.
+ */
+export function isNumeriekExact(value: string | number | null | undefined, digits: number): boolean {
+  if (value === null || value === undefined || digits <= 0) {
+    return false;
+  }
+  const s = String(value);
+  return s.length === digits && /^[0-9]+$/.test(s);
+}
 
 /**
  * Evaluator for expression nodes
@@ -259,13 +301,25 @@ export class ExpressionEvaluator implements IEvaluator {
       }
     }
 
+    // §8.2 "gedurende de/het gehele <periode>": a tijdsafhankelijke comparison collapses to a
+    // scalar boolean that is true only if it holds at EVERY moment of the rekendatum's jaar/maand.
+    // Must run BEFORE the timeline routing (which throws for comparison ops).
+    const comparisonOps = ['==', '!=', '>', '<', '>=', '<='];
+    if (expr.gehelePeriode && comparisonOps.includes(expr.operator)) {
+      return {
+        type: 'boolean',
+        value: this.evaluateGehelePeriodeComparison(
+          left, right, expr.operator, expr.gehelePeriode, !!expr.gehelePeriodeNegated, context
+        )
+      };
+    }
+
     // Check if either operand is a timeline
     if (left.type === 'timeline' || right.type === 'timeline') {
       return this.evaluateTimelineBinaryExpression(expr, left, right, context);
     }
 
     // Check if this is a comparison operator
-    const comparisonOps = ['==', '!=', '>', '<', '>=', '<='];
     if (comparisonOps.includes(expr.operator)) {
       return this.evaluateComparisonExpression(expr, left, right, context);
     }
@@ -273,6 +327,14 @@ export class ExpressionEvaluator implements IEvaluator {
     // Type check - both must be numbers for arithmetic
     // Convert null/non-number to 0 for arithmetic operations (graceful degradation for missing/wrong type attributes)
     // This matches Python's behavior where missing attributes compute as 0 rather than crash
+    // §6.3 Tabel 8 "verminderd met": when the LEFT operand is leeg the result is always
+    // leeg, regardless of the right operand. This must run BEFORE the null->0 coercion
+    // below (and before the unit path) so the left-leeg signal is not destroyed. "min"
+    // (Tabel 7) keeps the leeg-as-0 behaviour for both sides.
+    if (expr.operator === '-' && expr.sourceOperator === 'verminderd met' && isLeeg(left)) {
+      return { type: 'null', value: null };
+    }
+
     let leftVal = left;
     let rightVal = right;
     const arithmeticOps = ['+', '-', '*', '/'];
@@ -480,12 +542,9 @@ export class ExpressionEvaluator implements IEvaluator {
       case 'voldoen aan de elfproef': {
         // Evaluate operand for elfproef
         const operand = this.evaluate(operandExpr, context);
-        // Elfproef validation - handle null/missing values
-        if (operand.type === 'null' || operand.value === null || operand.value === undefined) {
-          return {
-            type: 'boolean',
-            value: false
-          };
+        // Lege waarde (§8.1.2): the control is onwaar.
+        if (isLeeg(operand)) {
+          return { type: 'boolean', value: false };
         }
         // Operand must be string or number
         if (operand.type !== 'string' && operand.type !== 'number') {
@@ -493,7 +552,7 @@ export class ExpressionEvaluator implements IEvaluator {
         }
         return {
           type: 'boolean',
-          value: this.checkElfproef(operand.value)
+          value: checkElfproef(operand.value)
         };
       }
 
@@ -501,12 +560,9 @@ export class ExpressionEvaluator implements IEvaluator {
       case 'voldoen niet aan de elfproef': {
         // Evaluate operand for negative elfproef
         const operand = this.evaluate(operandExpr, context);
-        // Negative elfproef validation - handle null/missing values
-        if (operand.type === 'null' || operand.value === null || operand.value === undefined) {
-          return {
-            type: 'boolean',
-            value: true  // null/missing doesn't meet elfproef, so "not meets" is true
-          };
+        // Lege waarde (§8.1.2): the control is onwaar, so "voldoet niet" is waar.
+        if (isLeeg(operand)) {
+          return { type: 'boolean', value: true };
         }
         // Operand must be string or number
         if (operand.type !== 'string' && operand.type !== 'number') {
@@ -514,8 +570,29 @@ export class ExpressionEvaluator implements IEvaluator {
         }
         return {
           type: 'boolean',
-          value: !this.checkElfproef(operand.value)
+          value: !checkElfproef(operand.value)
         };
+      }
+
+      // §8.1.2 emptiness predicates. is/zijn is pure number agreement — the same null test.
+      // It is a TOTAL predicate: it never throws on a lege waarde (that is what it tests).
+      // An absent 1:N relation surfaces as an empty array/list, which reads as leeg too.
+      case 'is leeg':
+      case 'zijn leeg': {
+        const operand = this.evaluate(operandExpr, context);
+        if (expr.gehelePeriode) {
+          return this.reduceEmptinessGehelePeriode(operand, expr, true, context);
+        }
+        return { type: 'boolean', value: this.isEmptyOperand(operand) };
+      }
+
+      case 'is gevuld':
+      case 'zijn gevuld': {
+        const operand = this.evaluate(operandExpr, context);
+        if (expr.gehelePeriode) {
+          return this.reduceEmptinessGehelePeriode(operand, expr, false, context);
+        }
+        return { type: 'boolean', value: !this.isEmptyOperand(operand) };
       }
 
       case 'moeten uniek zijn':
@@ -524,6 +601,154 @@ export class ExpressionEvaluator implements IEvaluator {
       default:
         throw new Error(`Unknown unary operator: ${operator}`);
     }
+  }
+
+  /**
+   * §8.2 — THE single whole-period comparison entry point. Lifts the comparison pointwise
+   * over the timeline operand(s) into a boolean mask, then reduces it to a scalar boolean that
+   * is true iff the comparison holds on every day of the rekendatum's jaar/maand. Reused by the
+   * BinaryExpression carrier, the SimplePredicate path and the subselectie AttributePredicate
+   * path so the calendar-period reduction lives in ONE place. Fails fast (§3310) when neither
+   * operand is tijdsafhankelijk.
+   */
+  public evaluateGehelePeriodeComparison(
+    left: Value,
+    right: Value,
+    operator: string,
+    period: 'jaar' | 'maand',
+    negated: boolean,
+    context: RuntimeContext
+  ): boolean {
+    if (left.type !== 'timeline' && right.type !== 'timeline') {
+      throw new Error('Een check op de volledige periode (§8.2) kan alleen op een tijdsafhankelijk onderwerp');
+    }
+    const mask = this.timelineEvaluator.compareTimelinePointwise(left, right, operator, context);
+    const rekendatum = this.getRekendatum(context);
+    return this.timelineEvaluator.reduceGehelePeriode(mask.value, period, rekendatum, negated);
+  }
+
+  /**
+   * §8.2 whole-period reduction for the eenzijdige emptiness check (is leeg / is gevuld).
+   * Lifts the emptiness test pointwise over the timeline operand into a boolean mask, then
+   * reduces via the shared reducer. wantLeeg=true => mask is "is leeg per period".
+   */
+  private reduceEmptinessGehelePeriode(
+    operand: Value,
+    expr: UnaryExpression,
+    wantLeeg: boolean,
+    context: RuntimeContext
+  ): Value {
+    if (operand.type !== 'timeline') {
+      throw new Error('Een check op de volledige periode (§8.2) kan alleen op een tijdsafhankelijk onderwerp');
+    }
+    const timeline = (operand as any as TimelineValue).value;
+    const mask: Timeline = {
+      granularity: timeline.granularity,
+      periods: timeline.periods.map(p => {
+        const periodEmpty = this.isEmptyOperand(p.value ?? { type: 'null', value: null });
+        return {
+          startDate: p.startDate,
+          endDate: p.endDate,
+          value: { type: 'boolean', value: wantLeeg ? periodEmpty : !periodEmpty } as Value
+        };
+      })
+    };
+    const value = this.timelineEvaluator.reduceGehelePeriode(
+      mask, expr.gehelePeriode!, this.getRekendatum(context), !!expr.gehelePeriodeNegated
+    );
+    return { type: 'boolean', value };
+  }
+
+  private getRekendatum(context: RuntimeContext): Date | undefined {
+    const ctx = context as any;
+    return ctx.getEvaluationDate ? ctx.getEvaluationDate() : ctx.evaluation_date;
+  }
+
+  /** Normalize a kenmerk/rol name for comparison: drop "is"/article prefixes, lowercase. */
+  private normalizeMemberName(name: string): string {
+    return name.toLowerCase().replace(/^is\s+/, '').replace(/^(de|het|een)\s+/, '').trim();
+  }
+
+  /** Whether `naam` is a kenmerk declared on the given object type (§8.1.8 disambiguation). */
+  private isDeclaredKenmerk(objectTypeName: string, naam: string, context: RuntimeContext): boolean {
+    const target = this.normalizeMemberName(objectTypeName);
+    const wanted = this.normalizeMemberName(naam);
+    const objectTypes = (context.domainModel?.objectTypes || []) as any[];
+    const ot = objectTypes.find(o => this.normalizeMemberName(o.name) === target);
+    if (!ot) {
+      return false;
+    }
+    return (ot.members || []).some((m: any) =>
+      m.type === 'KenmerkSpecification' && this.normalizeMemberName(m.name) === wanted
+    );
+  }
+
+  /** Whether `naam` is a rol of any feittype (§8.1.7 disambiguation). */
+  private isDeclaredRol(naam: string, context: RuntimeContext): boolean {
+    return (context as Context).findFeittypeByRole?.(naam) !== undefined;
+  }
+
+  /**
+   * §10.3 — Clip a tijdsafhankelijk result to the period named by a result-part
+   * temporalCondition. A timeline result is restricted (PeriodDefinition clamps the bounds;
+   * an Expression masks to its true sub-periods). A scalar result with a PeriodDefinition is
+   * lifted to a constant timeline over that period. Fails fast otherwise (§10.3 requires a
+   * tijdsafhankelijk result).
+   */
+  public clipTimelineResult(
+    value: Value,
+    temporalCondition: PeriodDefinition | Expression,
+    context: RuntimeContext
+  ): Value {
+    if (value.type === 'timeline') {
+      const timeline = (value as any as TimelineValue).value;
+      return new TimelineValueImpl(
+        this.timelineEvaluator.restrictTimelineToCondition(timeline, temporalCondition, context)
+      );
+    }
+    if ((temporalCondition as PeriodDefinition).type === 'PeriodDefinition') {
+      const { start, end } = this.timelineEvaluator.evaluatePeriodDefinition(temporalCondition as PeriodDefinition, context);
+      const timeline: Timeline = { granularity: 'dag', periods: [{ startDate: start, endDate: end, value }] };
+      return new TimelineValueImpl(timeline);
+    }
+    throw new Error('Een tijdsafhankelijke voorwaarde op een resultaatdeel (§10.3) vereist een tijdsafhankelijk resultaat');
+  }
+
+  /**
+   * §10.3 — Whether a result-part temporalCondition holds at the rekendatum. Used for boolean
+   * kenmerk results (the engine stores kenmerken as scalars, so a kenmerk is given at the
+   * rekendatum only when that moment falls inside the named period / the condition holds there).
+   */
+  public temporalConditionHoldsNow(
+    temporalCondition: PeriodDefinition | Expression,
+    context: RuntimeContext
+  ): boolean {
+    if ((temporalCondition as PeriodDefinition).type === 'PeriodDefinition') {
+      const rekendatum = this.getRekendatum(context);
+      if (!rekendatum) {
+        return false;
+      }
+      const { start, end } = this.timelineEvaluator.evaluatePeriodDefinition(temporalCondition as PeriodDefinition, context);
+      return rekendatum >= start && rekendatum < end;
+    }
+    const r = this.evaluate(temporalCondition as Expression, context);
+    return r.type === 'boolean' && r.value === true;
+  }
+
+  /**
+   * §8.1.2 lege-waarde test for the emptiness predicates. A scalar is leeg per isLeeg;
+   * a 1:N relation that materialised to an empty array/list is leeg too (it has no value).
+   * A non-empty collection is gevuld regardless of its elements (the plural verb is number
+   * agreement, NOT a per-element "collection of empties" test — §8.1.2).
+   */
+  private isEmptyOperand(value: Value): boolean {
+    if (isLeeg(value)) {
+      return true;
+    }
+    if ((value.type === 'array' || value.type === 'list') && Array.isArray(value.value)) {
+      return value.value.length === 0;
+    }
+    return false;
   }
 
   private evaluateTimelineBinaryExpression(
@@ -544,7 +769,8 @@ export class ExpressionEvaluator implements IEvaluator {
         leftTimeline,
         rightTimeline,
         expr.operator as ('+' | '-' | '*' | '/' | '==' | '!=' | '>' | '<' | '>=' | '<=' | '&&' | '||'),
-        context
+        context,
+        expr.sourceOperator
       );
     } else if (left.type === 'timeline' && right.type === 'number' && isArithmeticOp) {
       // Timeline × scalar
@@ -553,7 +779,8 @@ export class ExpressionEvaluator implements IEvaluator {
         leftTimeline,
         right,
         expr.operator as ('+' | '-' | '*' | '/'),
-        context
+        context,
+        expr.sourceOperator
       );
     } else if (left.type === 'number' && right.type === 'timeline' && isArithmeticOp) {
       // Scalar × timeline
@@ -562,7 +789,8 @@ export class ExpressionEvaluator implements IEvaluator {
         left,
         rightTimeline,
         expr.operator as ('+' | '-' | '*' | '/'),
-        context
+        context,
+        expr.sourceOperator
       );
     } else {
       // Unsupported combination
@@ -802,8 +1030,12 @@ export class ExpressionEvaluator implements IEvaluator {
         const previousInstance = (context as any).current_instance;
         (context as any).current_instance = item;
         try {
-          // Use evaluatePredicaat which properly handles KenmerkPredicaat, AttributeComparisonPredicaat
-          const matches = this.evaluatePredicaat(subselectie.predicaat as Predicaat, item, context);
+          // Route through the unified predicate (compound quantifiers, rolcheck, elfproef, ...)
+          // when available; only fall back to the legacy predicaat for the simple shapes.
+          const unified = this.resolveSubselectiePredicate(subselectie);
+          const matches = unified
+            ? this.predicateEvaluator.evaluate(unified, item, context)
+            : this.evaluatePredicaat(subselectie.predicaat as Predicaat, item, context);
           if (matches) {
             count++;
           }
@@ -959,7 +1191,8 @@ export class ExpressionEvaluator implements IEvaluator {
       // If collection is a single object, wrap it in an array
       const items = collectionValue.type === 'object' ? [collectionValue] : [];
       if (items.length === 0) {
-        return { type: 'number', value: 0 };
+        // §5.8.2: no instances => leeg by default, 0 only with the "of 0 als die er niet zijn" opt-out.
+        return resolveEmptySom(expr.defaultZeroWhenEmpty);
       }
     }
 
@@ -979,8 +1212,9 @@ export class ExpressionEvaluator implements IEvaluator {
       throw new Error(`som_van expects AttributeReference or VariableReference as first arg, got ${attrArg.type}`);
     }
 
-    // Sum the attribute values from each item
-    let sum = 0;
+    // Collect the attribute value from each item; the shared reducer skips lege waarden, carries
+    // the selector attribute's unit (§6), and converts compatible members to the reference unit.
+    const attrValues: Value[] = [];
     for (const item of items) {
       if (item.type === 'object') {
         const objData = item.value as Record<string, Value>;
@@ -988,22 +1222,21 @@ export class ExpressionEvaluator implements IEvaluator {
 
         // Try alternate names (with underscores, normalized)
         if (attrValue === undefined) {
-          const altName = attrName.replace(/\s+/g, '_');
-          attrValue = objData[altName];
+          attrValue = objData[attrName.replace(/\s+/g, '_')];
         }
         if (attrValue === undefined) {
-          const altName = attrName.replace(/_/g, ' ');
-          attrValue = objData[altName];
+          attrValue = objData[attrName.replace(/_/g, ' ')];
         }
 
-        if (attrValue !== undefined && attrValue.type === 'number') {
-          sum += attrValue.value as number;
+        if (attrValue !== undefined) {
+          attrValues.push(attrValue);
         }
-        // If attribute is null/undefined, treat as 0 (graceful handling)
       }
     }
 
-    return { type: 'number', value: sum };
+    // §5.8.2: all-empty (nothing contributed) => leeg by default, 0 only with the opt-out.
+    const reduced = reduceWithReferenceUnit(attrValues, nums => nums.reduce((acc, n) => acc + n, 0), context);
+    return isLeeg(reduced) ? resolveEmptySom(expr.defaultZeroWhenEmpty) : reduced;
   }
 
   /**
@@ -1039,8 +1272,9 @@ export class ExpressionEvaluator implements IEvaluator {
       throw new Error(`Aggregation expects AttributeReference or VariableReference as first arg, got ${attrArg.type}`);
     }
 
-    // Aggregate the attribute values from each item
-    let result = initialValue;
+    // Collect the attribute value from each item; the shared reducer skips lege waarden and
+    // carries the selector attribute's unit (§6). An empty selection yields leeg, not 0.
+    const attrValues: Value[] = [];
     for (const item of items) {
       if (item.type === 'object') {
         const objData = item.value as Record<string, Value>;
@@ -1048,16 +1282,13 @@ export class ExpressionEvaluator implements IEvaluator {
 
         // Try alternate names (with underscores, normalized)
         if (attrValue === undefined) {
-          const altName = attrName.replace(/\s+/g, '_');
-          attrValue = objData[altName];
+          attrValue = objData[attrName.replace(/\s+/g, '_')];
         }
         if (attrValue === undefined) {
-          const altName = attrName.replace(/_/g, ' ');
-          attrValue = objData[altName];
+          attrValue = objData[attrName.replace(/_/g, ' ')];
         }
 
-        // Try singular form (Dutch plural endings: -en, -s)
-        // e.g., "leeftijden" → "leeftijd"
+        // Try singular form (Dutch plural endings: -en, -s) e.g. "leeftijden" → "leeftijd"
         if (attrValue === undefined) {
           const singularName = this.singularize(attrName);
           if (singularName !== attrName) {
@@ -1065,17 +1296,13 @@ export class ExpressionEvaluator implements IEvaluator {
           }
         }
 
-        if (attrValue !== undefined && attrValue.type === 'number') {
-          result = reducer(result, attrValue.value as number);
+        if (attrValue !== undefined) {
+          attrValues.push(attrValue);
         }
       }
     }
 
-    // Return 0 if no values found
-    return {
-      type: 'number',
-      value: result === initialValue ? 0 : result
-    };
+    return reduceWithReferenceUnit(attrValues, nums => reducer(...nums), context);
   }
 
   /**
@@ -1746,21 +1973,32 @@ export class ExpressionEvaluator implements IEvaluator {
 
     // Check if this is the special "alle" pattern for uniqueness checks
     if (expr.path.length === 3 && expr.path[1] === 'alle') {
-      // Pattern: ["objectType", "alle", "attributeName"] (object-first order)
-      const objectType = expr.path[0];
-      const attributeName = expr.path[2];
+      // Pattern: ["attributeName", "alle", "objectTypeName"] — attribute-first, matching what
+      // the visitor and resolver produce (§8.1.6 uniciteit). The object-type name may be a
+      // written meervoudsvorm, so resolve it to the registered singular type first.
+      const attributeName = expr.path[0];
+      const objectTypeName = expr.path[2];
 
       // Get all objects of the specified type from context
       const ctx = context as any;  // Cast to access implementation-specific methods
       if (ctx.getObjectsByType) {
-        const objects = ctx.getObjectsByType(objectType);
+        const resolvedType = ctx.resolveObjectTypeName
+          ? (ctx.resolveObjectTypeName(objectTypeName) ?? objectTypeName)
+          : objectTypeName;
+        const objects = ctx.getObjectsByType(resolvedType);
+
+        // The criterion is written in plural ('burgerservicenummers') but the object record is
+        // keyed by the declared singular ('burgerservicenummer'); resolve plural -> singular.
+        const resolvedAttr = ctx.resolveAttributeName
+          ? (ctx.resolveAttributeName(resolvedType, attributeName) ?? attributeName)
+          : attributeName;
 
         // Extract the specified attribute from each object
         const values: Value[] = [];
         for (const obj of objects) {
           if (obj.type === 'object') {
             const objectData = obj.value as Record<string, Value>;
-            const attrValue = objectData[attributeName];
+            const attrValue = objectData[resolvedAttr];
             if (attrValue !== undefined) {
               values.push(attrValue);
             }
@@ -2092,6 +2330,16 @@ export class ExpressionEvaluator implements IEvaluator {
     throw new Error(`Unsupported AttributeReference pattern: ${expr.path.join(' -> ')}`);
   }
 
+  /**
+   * The unified Predicate for a subselectie: the directly-attached one, else the sidecar the
+   * visitor hangs on the legacy predicaat. Routing all filter sites through this + the capable
+   * PredicateEvaluator.evaluateCompound is what makes quantified ("aan alle/geen/ten minste ...")
+   * subselectie criteria work instead of throwing in the legacy evaluatePredicaat.
+   */
+  private resolveSubselectiePredicate(expr: SubselectieExpression): Predicate | undefined {
+    return expr.predicate ?? (expr.predicaat as any)?.predicate;
+  }
+
   private evaluateSubselectieExpression(expr: SubselectieExpression, context: RuntimeContext): Value {
     // Handle projection case: when collection is AttributeReference with multi-segment path
     // e.g., path=["personen", "belasting"] means: get "personen", filter them, project "belasting"
@@ -2116,12 +2364,7 @@ export class ExpressionEvaluator implements IEvaluator {
       const items = collectionValue.value as Value[];
 
       // Filter the items based on the predicaat
-      const filteredItems = items.filter(item => {
-        if (expr.predicate) {
-          return this.predicateEvaluator.evaluate(expr.predicate, item, context);
-        }
-        return this.evaluatePredicaat(expr.predicaat, item, context);
-      });
+      const filteredItems = items.filter(item => this.matchesSubselectiePredicate(expr, item, context));
 
       // Project: extract the attribute value from each filtered object
       const projectedValues: Value[] = [];
@@ -2154,19 +2397,32 @@ export class ExpressionEvaluator implements IEvaluator {
     const items = collectionValue.value as Value[];
 
     // Filter the items based on the predicaat
-    const filteredItems = items.filter(item => {
-      // Use unified predicate if available
-      if (expr.predicate) {
-        return this.predicateEvaluator.evaluate(expr.predicate, item, context);
-      }
-      // Fallback to legacy evaluation
-      return this.evaluatePredicaat(expr.predicaat, item, context);
-    });
+    const filteredItems = items.filter(item => this.matchesSubselectiePredicate(expr, item, context));
 
     return {
       type: 'array',
       value: filteredItems
     };
+  }
+
+  /**
+   * Evaluate a subselectie criterion against one element. Binds current_instance to the element
+   * so a bare-form rolcheck/kenmerkcheck (onderwerp omitted) resolves to it (§8.1.7/§8.1.8),
+   * then routes through the unified PredicateEvaluator (all quantifiers), falling back to the
+   * legacy predicaat only when no unified predicate is present.
+   */
+  private matchesSubselectiePredicate(expr: SubselectieExpression, item: Value, context: RuntimeContext): boolean {
+    const prevInstance = (context as any).current_instance;
+    (context as any).current_instance = item;
+    try {
+      const unified = this.resolveSubselectiePredicate(expr);
+      if (unified) {
+        return this.predicateEvaluator.evaluate(unified, item, context);
+      }
+      return this.evaluatePredicaat(expr.predicaat, item, context);
+    } finally {
+      (context as any).current_instance = prevInstance;
+    }
   }
 
   private evaluatePredicaat(predicaat: Predicaat, item: Value, context: RuntimeContext): boolean {
@@ -2250,12 +2506,15 @@ export class ExpressionEvaluator implements IEvaluator {
       return false;
     }
 
-    // Create a comparison expression and evaluate it
+    // Create a comparison expression and evaluate it, carrying the §8.2 whole-period prefix
+    // (dropped before this fix) so the subselectie criterion reuses the binary §8.2 reduction.
     const comparisonExpr: BinaryExpression = {
       type: 'BinaryExpression',
       operator: predicaat.operator as any,
       left: { type: 'VariableReference', variableName: '_temp' } as Expression,
-      right: predicaat.value
+      right: predicaat.value,
+      gehelePeriode: (predicaat as any).gehelePeriode,
+      gehelePeriodeNegated: (predicaat as any).gehelePeriodeNegated
     };
 
     // Create temporary context with the attribute value
@@ -2268,33 +2527,6 @@ export class ExpressionEvaluator implements IEvaluator {
     (tempContext as any).setVariable('_temp', undefined);
 
     return result.type === 'boolean' && result.value === true;
-  }
-
-  private checkElfproef(value: string | number): boolean {
-    // Convert to string if number
-    const bsn = value.toString();
-
-    // BSN must be exactly 9 digits
-    if (!/^\d{9}$/.test(bsn)) {
-      return false;
-    }
-
-    // Check if all digits are the same (not allowed)
-    if (/^(\d)\1{8}$/.test(bsn)) {
-      return false;
-    }
-
-    // Apply the elfproef algorithm
-    // Weights are: 9, 8, 7, 6, 5, 4, 3, 2, -1
-    const weights = [9, 8, 7, 6, 5, 4, 3, 2, -1];
-    let sum = 0;
-
-    for (let i = 0; i < 9; i++) {
-      sum += parseInt(bsn[i]) * weights[i];
-    }
-
-    // Valid if sum is divisible by 11
-    return sum % 11 === 0;
   }
 
   private evaluateDagsoortExpression(expr: BinaryExpression, context: RuntimeContext): Value {
@@ -2315,15 +2547,12 @@ export class ExpressionEvaluator implements IEvaluator {
     // Evaluate the value expression (left side)
     const valueToCheck = this.evaluate(expr.left, context);
 
-    // Handle null/missing values
-    if (valueToCheck.type === 'null' || valueToCheck.value === null || valueToCheck.value === undefined) {
-      // For positive checks, null returns false
-      // For negative checks, null returns true
-      const isNegativeCheck = expr.operator.includes('niet');
-      return {
-        type: 'boolean',
-        value: isNegativeCheck
-      };
+    const isPositiveCheck = expr.operator === 'is numeriek met exact' || expr.operator === 'zijn numeriek met exact';
+
+    // Lege waarde (§8, transpiler parity `left != null && [!]getalcontrole(...)`): a leeg
+    // operand makes BOTH the positive and the negated getalcontrole onwaar.
+    if (isLeeg(valueToCheck)) {
+      return { type: 'boolean', value: false };
     }
 
     // Get the expected digit count from the right side
@@ -2333,23 +2562,8 @@ export class ExpressionEvaluator implements IEvaluator {
     }
     const digitCount = (digitCountExpr as NumberLiteral).value;
 
-    // Convert value to string for digit checking
-    const strValue = String(valueToCheck.value);
-
-    // Check if all characters are digits
-    const isAllDigits = /^\d+$/.test(strValue);
-
-    // Check exact digit count
-    const hasExactDigits = isAllDigits && strValue.length === digitCount;
-
-    // Apply negation if needed
-    const isPositiveCheck = expr.operator === 'is numeriek met exact' || expr.operator === 'zijn numeriek met exact';
-    const result = isPositiveCheck ? hasExactDigits : !hasExactDigits;
-
-    return {
-      type: 'boolean',
-      value: result
-    };
+    const hasExactDigits = isNumeriekExact(valueToCheck.value, digitCount);
+    return { type: 'boolean', value: isPositiveCheck ? hasExactDigits : !hasExactDigits };
   }
 
   // Date extraction functions
@@ -2784,22 +2998,34 @@ export class ExpressionEvaluator implements IEvaluator {
         throw new Error('AttributeReference in dimensional context must have at least 2 path elements');
       }
 
-      // Extract attribute name and object path (object-first order)
-      attributeName = path[path.length - 1];  // Last element is the attribute
+      // Prefer the resolver's label-free cleanedPath (handles adjectival + prepositional +
+      // non-leaf + dangling-preposition uniformly). Fall back to the ad-hoc adjectival strip only
+      // when it is absent (unresolved standalone eval).
+      const cleanedPath: string[] | undefined = (baseAttribute as any).resolved?.cleanedPath;
+      if (cleanedPath && cleanedPath.length >= 2) {
+        attributeName = cleanedPath[cleanedPath.length - 1];
+        const objPath = cleanedPath.slice(0, -1);
+        targetObject = objPath.length === 1
+          ? (context.getVariable(objPath[0]) || { type: 'null', value: null })
+          : this.evaluateAttributeReference({ type: 'AttributeReference', path: objPath } as AttributeReference, context);
+      } else {
+        // Extract attribute name and object path (object-first order)
+        attributeName = path[path.length - 1];  // Last element is the attribute
 
-      // Use dimension registry to identify and remove adjectival dimension labels from attribute name
-      const registry = context.dimensionRegistry;
-      for (const label of expr.dimensionLabels) {
-        const axisName = registry.findAxisForLabel(label);
-        if (axisName && registry.isAdjectival(axisName)) {
-          // Remove adjectival dimension labels from the attribute name
-          attributeName = attributeName.replace(label, '').trim();
+        // Use dimension registry to identify and remove adjectival dimension labels from attribute name
+        const registry = context.dimensionRegistry;
+        for (const label of expr.dimensionLabels) {
+          const axisName = registry.findAxisForLabel(label);
+          if (axisName && registry.isAdjectival(axisName)) {
+            // Remove adjectival dimension labels from the attribute name
+            attributeName = attributeName.replace(label, '').trim();
+          }
         }
-      }
 
-      // Get the target object - with object-first order, first element is the object
-      const objectName = path[0];
-      targetObject = context.getVariable(objectName) || { type: 'null', value: null };
+        // Get the target object - with object-first order, first element is the object
+        const objectName = path[0];
+        targetObject = context.getVariable(objectName) || { type: 'null', value: null };
+      }
     } else if (baseAttribute.type === 'SubselectieExpression') {
       // Handle SubselectieExpression with dimensions
       // First evaluate the subselectie to get the filtered collection
@@ -3166,20 +3392,45 @@ export class ExpressionEvaluator implements IEvaluator {
           return { type: 'boolean', value: false };
         }
 
-        // Reuse comparison logic from BinaryExpression
+        // Reuse comparison logic from BinaryExpression, carrying the §8.2 whole-period prefix.
         const comparisonExpr: BinaryExpression = {
           type: 'BinaryExpression',
           operator,
           left: expr.attribuut!,
-          right: expr.waarde!
+          right: expr.waarde!,
+          gehelePeriode: expr.gehelePeriode,
+          gehelePeriodeNegated: expr.gehelePeriodeNegated
         };
         return this.evaluateBinaryExpression(comparisonExpr, context);
       }
 
       case 'object_check': {
-        // Check if object exists
-        const subjectValue = expr.onderwerp ? this.evaluate(expr.onderwerp, context) : null;
-        const exists = subjectValue !== null && subjectValue.value !== null && subjectValue.value !== undefined;
+        // Bare form (no onderwerp) binds to the element being filtered (§8.1.7/§8.1.8).
+        const subjectValue = expr.onderwerp
+          ? this.evaluate(expr.onderwerp, context)
+          : ((context as any).current_instance ?? null);
+        const naam = expr.kenmerkNaam;
+
+        if (naam) {
+          // §8.1.8 kenmerkcheck / §8.1.7 rolcheck — disambiguate by the subject type's members.
+          if (!subjectValue || subjectValue.type !== 'object') {
+            return { type: 'boolean', value: false };
+          }
+          const objectType = (subjectValue as any).objectType || '';
+          if (this.isDeclaredKenmerk(objectType, naam, context)) {
+            const objectId = (subjectValue as any).objectId || '';
+            const has = (context as Context).getKenmerk(objectType, objectId, naam);
+            return { type: 'boolean', value: has ?? false };
+          }
+          if (this.isDeclaredRol(naam, context)) {
+            return { type: 'boolean', value: (context as Context).hasRol(subjectValue, naam) };
+          }
+          throw new Error(`'${naam}' is geen kenmerk of rol op objecttype '${objectType}'`);
+        }
+
+        // No kenmerk/rol name: a plain object-existence check.
+        const exists = subjectValue !== null && subjectValue !== undefined &&
+          subjectValue.value !== null && subjectValue.value !== undefined;
         return { type: 'boolean', value: exists };
       }
 

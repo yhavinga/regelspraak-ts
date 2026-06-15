@@ -68,28 +68,33 @@ export class UnitRegistry {
       baseUnitName: "seconde"
     });
 
+    // §3.7: calendar units (maand/kwartaal/jaar) form a SEPARATE base from seconde. A month is
+    // not a fixed number of seconds/days, so maand/jaar/kwartaal must NOT convert to dagen/seconden
+    // via an average. They convert exactly among themselves via the genuine omrekenfactoren
+    // (1 jaar = 12 maanden, 1 kwartaal = 3 maanden); cross-base conversion (e.g. maand<->dagen)
+    // reports incompatible. Exact day/second proportioning is the job of tijdsevenredig (§7.3.2).
     timeSystem.addUnit({
       name: "maand",
       plural: "maanden",
       abbreviation: "mnd",
-      toBaseFactor: 2629746,  // Average month (30.44 days)
-      baseUnitName: "seconde"
+      toBaseFactor: 1,  // calendar base
+      baseUnitName: "maand"
     });
 
     timeSystem.addUnit({
       name: "kwartaal",
       plural: "kwartalen",
       abbreviation: "kw",
-      toBaseFactor: 7889238,  // 3 months
-      baseUnitName: "seconde"
+      toBaseFactor: 3,  // 1 kwartaal = 3 maanden
+      baseUnitName: "maand"
     });
 
     timeSystem.addUnit({
       name: "jaar",
       plural: "jaren",
       abbreviation: "jr",
-      toBaseFactor: 31556952,  // Average year (365.25 days)
-      baseUnitName: "seconde"
+      toBaseFactor: 12,  // 1 jaar = 12 maanden
+      baseUnitName: "maand"
     });
 
     this.systems.set("Tijd", timeSystem);

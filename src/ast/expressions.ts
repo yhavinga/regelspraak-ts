@@ -113,6 +113,10 @@ export interface UnaryExpression extends Expression {
   'voldoet aan de elfproef' | 'voldoen aan de elfproef' |
   'voldoet niet aan de elfproef' | 'voldoen niet aan de elfproef' | 'moeten uniek zijn';
   operand: Expression;
+  /** §8.2 "check op volledige periode" — see BinaryExpression.gehelePeriode. Set on the
+   * eenzijdige emptiness check (is leeg / is gevuld) when the operand is tijdsafhankelijk. */
+  gehelePeriode?: 'jaar' | 'maand';
+  gehelePeriodeNegated?: boolean;
 }
 
 export interface AggregationExpression extends Expression {
@@ -120,6 +124,8 @@ export interface AggregationExpression extends Expression {
   aggregationType: 'som' | 'aantal' | 'maximum' | 'minimum' | 'eerste' | 'laatste';
   target: Expression | Expression[];
   dimensionSelection?: DimensionAggregationSelection;
+  /** §5.8.2 "of 0 als die er niet zijn": an empty/all-empty sommatie yields 0, not leeg. */
+  defaultZeroWhenEmpty?: boolean;
   /**
    * @deprecated Use dimensionSelection. Kept for compatibility with older
    * tests/callers that constructed range aggregations manually.
@@ -195,6 +201,9 @@ export interface VergelijkingInPredicaat {
   operator?: string;
   waarde?: Expression;
   kenmerkNaam?: string;
+  /** §8.2 "check op volledige periode" — see BinaryExpression.gehelePeriode. */
+  gehelePeriode?: 'jaar' | 'maand';
+  gehelePeriodeNegated?: boolean;
   location?: SourceLocation;
 }
 

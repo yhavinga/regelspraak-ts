@@ -1,4 +1,4 @@
-import { Value, RuntimeContext } from '../interfaces';
+import { Value, RuntimeContext, isLeeg } from '../interfaces';
 import { Timeline, Period, TimelineValue, TimelineExpression, PeriodDefinition, TimelineValueImpl } from '../ast/timelines';
 import { Expression } from '../ast/expressions';
 import { ExpressionEvaluator } from './expression-evaluator';
@@ -11,13 +11,157 @@ import {
   nextPeriod
 } from '../utils/timeline-utils';
 import { Context } from '../context';
+import { UnitRegistry } from '../units/unit-registry';
+import { compareRuntimeValues } from '../units/value-semantics';
 import Decimal from 'decimal.js';
 
 /**
  * Evaluator for timeline expressions and operations
  */
 export class TimelineEvaluator {
+  private unitRegistry = new UnitRegistry();
+
   constructor(private expressionEvaluator: ExpressionEvaluator) {}
+
+  /**
+   * §8.2 — Lift a comparison/emptiness check pointwise into a boolean mask timeline,
+   * WITHOUT throwing (unlike evaluateTimelineBinaryOp which rejects comparison ops).
+   * At least one operand must be a timeline; scalar operands are broadcast. A leeg
+   * value on either side makes that sub-period's mask false (the check is "not waar"),
+   * never leeg — per §8.2 a moment that is empty is not a "waar" moment.
+   */
+  compareTimelinePointwise(
+    left: Value,
+    right: Value,
+    operator: string,
+    context: RuntimeContext
+  ): TimelineValue {
+    const registry = (context as any).unitRegistry || this.unitRegistry;
+    const leftTL = left.type === 'timeline' ? (left as any as TimelineValue).value : null;
+    const rightTL = right.type === 'timeline' ? (right as any as TimelineValue).value : null;
+    const timelines = [leftTL, rightTL].filter((t): t is Timeline => t !== null);
+    if (timelines.length === 0) {
+      throw new Error('compareTimelinePointwise requires at least one timeline operand');
+    }
+
+    const knips = this.mergeKnips(...timelines);
+    const periods: Period[] = [];
+    for (let i = 0; i < knips.length - 1; i++) {
+      const startDate = knips[i];
+      const endDate = knips[i + 1];
+      const lv = leftTL ? this.getValueAtDate(leftTL, startDate) : left;
+      const rv = rightTL ? this.getValueAtDate(rightTL, startDate) : right;
+      const result = (lv == null || rv == null || isLeeg(lv) || isLeeg(rv))
+        ? false
+        : compareRuntimeValues(lv, operator, rv, registry);
+      periods.push({ startDate, endDate, value: { type: 'boolean', value: result } });
+    }
+
+    const granularity = timelines.reduce<'dag' | 'maand' | 'jaar'>(
+      (finest, tl) => this.getFinestGranularity(finest, tl.granularity),
+      timelines[0].granularity
+    );
+    return { type: 'timeline', value: { periods, granularity } };
+  }
+
+  /**
+   * §8.2 — THE single whole-period reducer. Collapses a boolean mask timeline to a
+   * scalar boolean that is true only if the mask is true on EVERY day of the calendar
+   * jaar/maand containing the rekendatum (L3318). Reuses alignDate/nextPeriod so the
+   * calendar-period definition (§3.8) lives in one place. An empty period counts as
+   * "not waar" (=> false). Returns false when the rekendatum is absent (unanchored
+   * period — mirrors transpiler TimelineOps.trueGehelePeriode). Negation is applied last.
+   */
+  reduceGehelePeriode(
+    mask: Timeline,
+    period: 'jaar' | 'maand',
+    rekendatum: Date | undefined,
+    negated: boolean
+  ): boolean {
+    let all: boolean;
+    if (!rekendatum) {
+      all = false;
+    } else {
+      const start = alignDate(rekendatum, period);
+      const end = nextPeriod(start, period);
+      all = true;
+      const cursor = new Date(start);
+      while (cursor < end) {
+        const v = this.getValueAtDate(mask, cursor);
+        if (!(v && v.type === 'boolean' && v.value === true)) {
+          all = false;
+          break;
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+    return negated ? !all : all;
+  }
+
+  /**
+   * §10.3 — THE single result-clipping helper. Restricts a timeline to the part covered
+   * by a tijdsafhankelijke voorwaarde. A PeriodDefinition (van dd. / vanaf / tot (en met))
+   * CLAMPS each kept period to [start,end) so a mid-period boundary cuts cleanly. An
+   * Expression ("gedurende de tijd dat ...") keeps only the sub-periods where the
+   * condition holds. Reuses the (now public) evaluatePeriodDefinition / filterPeriodsWithCondition.
+   */
+  restrictTimelineToCondition(
+    timeline: Timeline,
+    temporalCondition: PeriodDefinition | Expression,
+    context: RuntimeContext
+  ): Timeline {
+    if ((temporalCondition as PeriodDefinition).type === 'PeriodDefinition') {
+      const { start, end } = this.evaluatePeriodDefinition(temporalCondition as PeriodDefinition, context);
+      const clamped: Period[] = [];
+      for (const p of timeline.periods) {
+        const startDate = p.startDate > start ? p.startDate : start;
+        const endDate = p.endDate < end ? p.endDate : end;
+        if (startDate < endDate) {
+          clamped.push({ startDate, endDate, value: p.value });
+        }
+      }
+      return { periods: clamped, granularity: timeline.granularity };
+    }
+    // Expression form ("gedurende de tijd dat ..."): keep only the sub-periods where the condition
+    // holds, SPLITTING a result period at the condition's interior knips (§10.3 para 3 / §8.4.2) —
+    // not the whole-period keep/drop of filterPeriodsWithCondition.
+    return {
+      periods: this.maskTimelineByCondition(timeline, temporalCondition as Expression, context),
+      granularity: timeline.granularity
+    };
+  }
+
+  /**
+   * Walk each period day-by-day, evaluating the condition at each day, and emit the maximal
+   * sub-periods where it is true. This carries a knip at every point the condition flips, so a
+   * result period whose condition turns false mid-period is cut at exactly that day.
+   */
+  private maskTimelineByCondition(timeline: Timeline, condition: Expression, context: RuntimeContext): Period[] {
+    const masked: Period[] = [];
+    const ctx = context as any;
+    for (const period of timeline.periods) {
+      let segmentStart: Date | null = null;
+      const cursor = new Date(period.startDate);
+      while (cursor < period.endDate) {
+        const savedDate = ctx.evaluation_date;
+        ctx.evaluation_date = new Date(cursor);
+        const r = this.expressionEvaluator.evaluate(condition, context);
+        ctx.evaluation_date = savedDate;
+        const isTrue = r.type === 'boolean' && r.value === true;
+        if (isTrue && segmentStart === null) {
+          segmentStart = new Date(cursor);
+        } else if (!isTrue && segmentStart !== null) {
+          masked.push({ startDate: segmentStart, endDate: new Date(cursor), value: period.value });
+          segmentStart = null;
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      if (segmentStart !== null) {
+        masked.push({ startDate: segmentStart, endDate: new Date(period.endDate), value: period.value });
+      }
+    }
+    return masked;
+  }
 
   /**
    * Evaluate a timeline expression
@@ -79,7 +223,8 @@ export class TimelineEvaluator {
     leftTimeline: Timeline,
     rightTimeline: Timeline,
     operator: '+' | '-' | '*' | '/' | '==' | '!=' | '>' | '<' | '>=' | '<=' | '&&' | '||',
-    context: RuntimeContext
+    context: RuntimeContext,
+    sourceOperator?: string
   ): TimelineValue {
     // Check if operator is valid for timeline operations
     if (['==', '!=', '>', '<', '>=', '<=', '&&', '||'].includes(operator)) {
@@ -88,19 +233,26 @@ export class TimelineEvaluator {
     // Get all knips from both timelines
     const knips = this.mergeKnips(leftTimeline, rightTimeline);
     const periods: Period[] = [];
-    
+
     // Create evaluation periods between consecutive knips
     for (let i = 0; i < knips.length - 1; i++) {
       const startDate = knips[i];
       const endDate = knips[i + 1];
-      
+
       // Get values from both timelines at this period's start
       const leftValue = this.getValueAtDate(leftTimeline, startDate);
       const rightValue = this.getValueAtDate(rightTimeline, startDate);
-      
-      if (leftValue && rightValue) {
-        // Perform the operation
-        const resultValue = this.performBinaryOp(leftValue, rightValue, operator);
+
+      // For subtraction a leeg operand is meaningful (§6.3 Tabel 7/8), so combine when EITHER
+      // side is present; other operators still require both.
+      const isSub = operator === '-';
+      if ((leftValue && rightValue) || (isSub && (leftValue || rightValue))) {
+        const resultValue = this.performBinaryOp(
+          leftValue ?? { type: 'null', value: null },
+          rightValue ?? { type: 'null', value: null },
+          operator,
+          sourceOperator
+        );
         periods.push({
           startDate,
           endDate,
@@ -463,7 +615,7 @@ export class TimelineEvaluator {
   /**
    * Filter periods based on a temporal condition.
    */
-  private filterPeriodsWithCondition(
+  public filterPeriodsWithCondition(
     timeline: Timeline,
     condition: Expression,
     context: RuntimeContext
@@ -490,7 +642,7 @@ export class TimelineEvaluator {
   /**
    * Evaluate a period definition to get start and end dates.
    */
-  private evaluatePeriodDefinition(
+  public evaluatePeriodDefinition(
     periodDef: PeriodDefinition,
     context: RuntimeContext
   ): { start: Date; end: Date } {
@@ -565,11 +717,27 @@ export class TimelineEvaluator {
     return null;
   }
 
-  private performBinaryOp(left: Value, right: Value, operator: string): Value {
+  private performBinaryOp(left: Value, right: Value, operator: string, sourceOperator?: string): Value {
+    // §6.3 Tabel 7/8 lege-waarde for subtraction, applied pointwise on timelines (so a leeg
+    // per-period operand does not crash, and "min" vs "verminderd met" differ correctly).
+    if (operator === '-' && (isLeeg(left) || isLeeg(right))) {
+      if (sourceOperator === 'verminderd met') {
+        // Tabel 8: left leeg => leeg; a leeg right counts as 0.
+        if (isLeeg(left)) {
+          return { type: 'null', value: null };
+        }
+        return { type: 'number', value: left.value as number, unit: left.unit };
+      }
+      // Tabel 7 ("min"): a lege waarde counts as 0 on either side.
+      const l = isLeeg(left) ? 0 : (left.value as number);
+      const r = isLeeg(right) ? 0 : (right.value as number);
+      return { type: 'number', value: l - r, unit: isLeeg(left) ? right.unit : left.unit };
+    }
+
     if (left.type !== 'number' || right.type !== 'number') {
       throw new Error(`Cannot apply ${operator} to ${left.type} and ${right.type}`);
     }
-    
+
     const leftVal = left.value as number;
     const rightVal = right.value as number;
     let result: number;
@@ -617,15 +785,16 @@ export class TimelineEvaluator {
     timeline: Timeline,
     scalar: Value,
     operator: '+' | '-' | '*' | '/',
-    context: RuntimeContext
+    context: RuntimeContext,
+    sourceOperator?: string
   ): TimelineValue {
     const periods: Period[] = [];
-    
+
     // Apply the operation to each period in the timeline
     for (const period of timeline.periods) {
       if (period.value) {
         // Apply binary operation between timeline value and scalar
-        const resultValue = this.performBinaryOp(period.value, scalar, operator);
+        const resultValue = this.performBinaryOp(period.value, scalar, operator, sourceOperator);
         
         periods.push({
           startDate: period.startDate,
@@ -664,15 +833,16 @@ export class TimelineEvaluator {
     scalar: Value,
     timeline: Timeline,
     operator: '+' | '-' | '*' | '/',
-    context: RuntimeContext
+    context: RuntimeContext,
+    sourceOperator?: string
   ): TimelineValue {
     const periods: Period[] = [];
-    
+
     // Apply the operation to each period in the timeline
     for (const period of timeline.periods) {
       if (period.value) {
         // Apply binary operation between scalar and timeline value (order matters!)
-        const resultValue = this.performBinaryOp(scalar, period.value, operator);
+        const resultValue = this.performBinaryOp(scalar, period.value, operator, sourceOperator);
         
         periods.push({
           startDate: period.startDate,

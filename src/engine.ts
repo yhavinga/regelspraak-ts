@@ -7,7 +7,8 @@ import { AntlrParser } from './parser';
 import { UnitSystemDefinition } from './ast/unit-systems';
 import { UnitRegistry } from './units/unit-registry';
 import { UnitSystem, BaseUnit } from './units/base-unit';
-import { ModelResolutionDiagnostic, ModelResolutionOptions } from './resolver';
+import { ModelResolutionDiagnostic, ModelResolutionOptions, resolveModel } from './resolver';
+import { DomainModel } from './ast/domain-model';
 
 type RuleConditionEvaluation =
   | { success: true; skipped: boolean }
@@ -643,7 +644,34 @@ export class Engine implements IEngine {
       }
     }
 
+    // RC1: execute the RESOLVED AST. resolveModel annotates the AST in place with
+    // ResolvedInfo (exact unit factors, dimension coordinates, cleaned paths) that the
+    // executor consumes. Best-effort: resolution diagnostics must never block a model
+    // that previously ran, so strict:false / throwOnError:false and any throw is swallowed.
+    this.resolveOnce(parseResult.ast);
+
     return this.execute(parseResult.ast!, ctx, options);
+  }
+
+  /**
+   * Best-effort resolution pass that populates ResolvedInfo onto the AST the executor walks.
+   * Only applies to full DomainModel ASTs; lone-definition string evals execute unresolved
+   * (their consumers fall back to the ad-hoc/float paths).
+   */
+  private resolveOnce(ast: any): void {
+    if (!ast || typeof ast !== 'object') {
+      return;
+    }
+    const looksLikeModel = ast.type === 'Model' ||
+      ast.regels || ast.regelGroepen || ast.objectTypes || ast.beslistabels;
+    if (!looksLikeModel) {
+      return;
+    }
+    try {
+      resolveModel(ast as DomainModel, { strict: false, throwOnError: false });
+    } catch {
+      // Resolution only enriches runtime metadata; never block execution on it.
+    }
   }
 
   runStrict(source: string, context?: RuntimeContext): ExecutionResult {

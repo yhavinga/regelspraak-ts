@@ -119,6 +119,22 @@ export function classifyOperands(
   if (left === undefined) return { kind: 'one-unit', unit: right! };
   if (right === undefined) return { kind: 'one-unit', unit: left };
 
+  // Composite (rate) units like '€/jr' vs '€/mnd' (§7.3.1): decompose into numerator/denominator
+  // and combine. A unit in the DENOMINATOR converts inversely (1/jr -> 1/mnd divides by the
+  // jr->mnd factor), so €/jr -> €/mnd yields divideBy:['12'] => 120 €/jr stored as 10 €/mnd.
+  if (left.includes('/') || right.includes('/')) {
+    return classifyComposite(reg, left, right);
+  }
+
+  return classifyScalar(reg, left, right);
+}
+
+/** Classify two single (non-composite) unit tokens, converting right into left's unit. */
+function classifyScalar(
+  reg: UnitRegistry,
+  left: string,
+  right: string,
+): UnitClassification {
   const leftChain = chainToBase(reg, left);
   const rightChain = chainToBase(reg, right);
 
@@ -144,6 +160,55 @@ export function classifyOperands(
     multiplyBy: rightChain.factors,
     divideBy: leftChain.factors,
   };
+}
+
+/** Split a composite unit string "a/b" into a single numerator and optional single denominator. */
+function splitComposite(u: string): { num: string; den?: string } | undefined {
+  const parts = u.split('/').map(s => s.trim()).filter(Boolean);
+  if (parts.length === 1) return { num: parts[0] };
+  if (parts.length === 2) return { num: parts[0], den: parts[1] };
+  return undefined; // unsupported multi-slash shape
+}
+
+function classifyComposite(
+  reg: UnitRegistry,
+  left: string,
+  right: string,
+): UnitClassification {
+  const L = splitComposite(left);
+  const R = splitComposite(right);
+  if (!L || !R) {
+    return left.toLowerCase() === right.toLowerCase()
+      ? { kind: 'equal', unit: left }
+      : { kind: 'incompatible', left, right };
+  }
+
+  const multiplyBy: string[] = [];
+  const divideBy: string[] = [];
+
+  // Numerator: convert right into left (same orientation as a scalar).
+  const num = classifyScalar(reg, L.num, R.num);
+  if (num.kind === 'incompatible') return { kind: 'incompatible', left, right };
+  if (num.kind === 'convertible') {
+    multiplyBy.push(...num.multiplyBy);
+    divideBy.push(...num.divideBy);
+  }
+
+  // Denominator: a unit in the denominator converts inversely (swap multiplyBy/divideBy).
+  if (L.den || R.den) {
+    if (!L.den || !R.den) return { kind: 'incompatible', left, right };
+    const den = classifyScalar(reg, L.den, R.den);
+    if (den.kind === 'incompatible') return { kind: 'incompatible', left, right };
+    if (den.kind === 'convertible') {
+      multiplyBy.push(...den.divideBy);
+      divideBy.push(...den.multiplyBy);
+    }
+  }
+
+  if (multiplyBy.length === 0 && divideBy.length === 0) {
+    return { kind: 'equal', unit: left };
+  }
+  return { kind: 'convertible', unit: left, multiplyBy, divideBy };
 }
 
 /**

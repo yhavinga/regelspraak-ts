@@ -1,7 +1,8 @@
-import { DimensionedRuntimeValue, RuntimeContext, Value, isDimensionedValue } from '../interfaces';
+import { DimensionedRuntimeValue, RuntimeContext, Value, isDimensionedValue, isLeeg, resolveEmptySom } from '../interfaces';
 import { AggregationExpression, Expression } from '../ast/expressions';
 import { ExpressionEvaluator } from './expression-evaluator';
 import { Dimension, DimensionAggregationSelection, DimensionCoordinate } from '../ast/dimensions';
+import { reduceWithReferenceUnit } from '../units/value-semantics';
 
 /**
  * Engine for evaluating aggregation expressions in RegelSpraak
@@ -28,7 +29,7 @@ export class AggregationEngine {
     const values = this.collectValues(expr.target, context);
 
     // Perform aggregation
-    return this.aggregate(values, expr.aggregationType);
+    return this.aggregate(values, expr.aggregationType, expr.defaultZeroWhenEmpty, context);
   }
 
   private collectValues(target: Expression | Expression[], context: RuntimeContext): Value[] {
@@ -66,7 +67,7 @@ export class AggregationEngine {
     const { dimension, labels } = this.resolveRuntimeSelection(selection, context);
     const fixedCoordinates = this.resolveRuntimeFixedCoordinates(selection, dimension, context);
     const selected = this.selectDimensionedCells(value, dimension.name, labels, fixedCoordinates);
-    return this.aggregate(selected, expr.aggregationType);
+    return this.aggregate(selected, expr.aggregationType, expr.defaultZeroWhenEmpty, context);
   }
 
   private resolveRuntimeSelection(
@@ -275,20 +276,22 @@ export class AggregationEngine {
       .trim();
   }
 
-  private aggregate(values: Value[], type: string): Value {
+  private aggregate(values: Value[], type: string, defaultZeroWhenEmpty: boolean | undefined, context: RuntimeContext): Value {
     if (values.length === 0) {
-      throw new Error('Cannot aggregate empty collection');
+      // §5.8.2: an empty sommatie is leeg (or 0 with the opt-out); other reductions of an empty
+      // collection are leeg too — never an error.
+      return type === 'som' ? resolveEmptySom(defaultZeroWhenEmpty) : { type: 'null', value: null };
     }
 
     switch (type) {
       case 'som':
-        return this.sum(values);
+        return this.sum(values, defaultZeroWhenEmpty, context);
       case 'aantal':
         return this.count(values);
       case 'maximum':
-        return this.maximum(values);
+        return this.maximum(values, context);
       case 'minimum':
-        return this.minimum(values);
+        return this.minimum(values, context);
       case 'eerste':
         return this.first(values);
       case 'laatste':
@@ -298,29 +301,11 @@ export class AggregationEngine {
     }
   }
 
-  private sum(values: Value[]): Value {
-    // Filter out null/undefined values first (Python parity - see engine.py:6954)
-    const validValues = values.filter(v =>
-      v.type !== 'null' && v.value !== null && v.value !== undefined
-    );
-
-    if (validValues.length === 0) {
-      // Python returns 0 for all-null (engine.py:6976)
-      return { type: 'number', value: 0 };
-    }
-
-    // Ensure remaining values are numbers
-    const numbers = validValues.map(v => {
-      if (v.type !== 'number') {
-        throw new Error(`Cannot sum ${v.type} values`);
-      }
-      return v.value as number;
-    });
-
-    return {
-      type: 'number',
-      value: numbers.reduce((acc, n) => acc + n, 0)
-    };
+  private sum(values: Value[], defaultZeroWhenEmpty: boolean | undefined, context: RuntimeContext): Value {
+    // §5.8.2: lege attribuutwaarden are skipped; the unit of the selector attribute travels with
+    // the result (§6). All-empty => leeg by default, 0 only with the "of 0 als die er niet zijn".
+    const reduced = reduceWithReferenceUnit(values, nums => nums.reduce((acc, n) => acc + n, 0), context);
+    return isLeeg(reduced) ? resolveEmptySom(defaultZeroWhenEmpty) : reduced;
   }
 
   private count(values: Value[]): Value {
@@ -330,50 +315,12 @@ export class AggregationEngine {
     };
   }
 
-  private maximum(values: Value[]): Value {
-    // Filter out null/undefined values (Python parity)
-    const validValues = values.filter(v =>
-      v.type !== 'null' && v.value !== null && v.value !== undefined
-    );
-
-    if (validValues.length === 0) {
-      return { type: 'null', value: null };
-    }
-
-    const numbers = validValues.map(v => {
-      if (v.type !== 'number') {
-        throw new Error(`Cannot find maximum of ${v.type} values`);
-      }
-      return v.value as number;
-    });
-
-    return {
-      type: 'number',
-      value: Math.max(...numbers)
-    };
+  private maximum(values: Value[], context: RuntimeContext): Value {
+    return reduceWithReferenceUnit(values, nums => Math.max(...nums), context);
   }
 
-  private minimum(values: Value[]): Value {
-    // Filter out null/undefined values (Python parity)
-    const validValues = values.filter(v =>
-      v.type !== 'null' && v.value !== null && v.value !== undefined
-    );
-
-    if (validValues.length === 0) {
-      return { type: 'null', value: null };
-    }
-
-    const numbers = validValues.map(v => {
-      if (v.type !== 'number') {
-        throw new Error(`Cannot find minimum of ${v.type} values`);
-      }
-      return v.value as number;
-    });
-
-    return {
-      type: 'number',
-      value: Math.min(...numbers)
-    };
+  private minimum(values: Value[], context: RuntimeContext): Value {
+    return reduceWithReferenceUnit(values, nums => Math.min(...nums), context);
   }
 
   private first(values: Value[]): Value {

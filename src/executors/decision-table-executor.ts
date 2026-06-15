@@ -1,4 +1,4 @@
-import { RuntimeContext, Value } from '../interfaces';
+import { RuntimeContext, Value, isLeeg } from '../interfaces';
 import {
   DecisionTable,
   DecisionTableCondition,
@@ -8,7 +8,7 @@ import {
   DecisionTableRow,
   DecisionTableVersion
 } from '../ast/decision-tables';
-import { ExpressionEvaluator } from '../evaluators/expression-evaluator';
+import { ExpressionEvaluator, isNumeriekExact } from '../evaluators/expression-evaluator';
 import { Expression } from '../ast/expressions';
 import type { RuleVersion } from '../ast/rules';
 import { UnitRegistry } from '../units/unit-registry';
@@ -217,14 +217,70 @@ export class DecisionTableExecutor {
         continue;
       }
 
+      // §12 — a condition column whose header is an §8.1 predicate must evaluate EXACTLY like
+      // that predicate. Synthesize the equivalent rule-condition node and reuse the one evaluator,
+      // then compare the predicate's boolean to the cell's boolean ONCE (the negated forms are
+      // already encoded in the operator, so no double negation). MUST run before the subject
+      // null-guard below (an empty subject legitimately MATCHES an "is leeg" column).
+
+      // §8.1.2 leeg/gevuld + §8.1.3 elfproef (eenzijdig predicaat column)
+      if (condition.isUnaryCheck && condition.unaryOperator) {
+        if (!condition.subjectExpression) {
+          throw new Error(`Decision table condition has no subject expression: ${condition.headerText}`);
+        }
+        const predicateBool = this.expressionEvaluator.evaluate({
+          type: 'UnaryExpression',
+          operator: condition.unaryOperator,
+          operand: condition.subjectExpression
+        } as Expression, context);
+        const cellBool = this.expressionEvaluator.evaluate(cellValue as Expression, context);
+        if (!this.compareValues(predicateBool, cellBool, '==', context)) {
+          return false;
+        }
+        continue;
+      }
+
+      // §8.1.4 getalcontrole column ("is (niet) numeriek met exact N cijfers")
+      if (condition.isGetalcontroleCheck) {
+        if (!condition.subjectExpression) {
+          throw new Error(`Decision table condition has no subject expression: ${condition.headerText}`);
+        }
+        const subj = this.expressionEvaluator.evaluate(condition.subjectExpression, context);
+        const ok = isNumeriekExact(subj.value as string | number, condition.getalcontroleDigits ?? 0);
+        const passes = condition.getalcontroleNegated ? (!isLeeg(subj) && !ok) : ok;
+        const cellBool = this.expressionEvaluator.evaluate(cellValue as Expression, context);
+        if (!this.compareValues({ type: 'boolean', value: passes }, cellBool, '==', context)) {
+          return false;
+        }
+        continue;
+      }
+
+      // §8.1.5 dagsoortcontrole column ("is (geen) <dagsoort>")
+      if (condition.isDagsoortCheck) {
+        if (!condition.subjectExpression) {
+          throw new Error(`Decision table condition has no subject expression: ${condition.headerText}`);
+        }
+        const membership = this.expressionEvaluator.evaluate({
+          type: 'BinaryExpression',
+          operator: condition.dagsoortNegated ? 'is geen dagsoort' : 'is een dagsoort',
+          left: condition.subjectExpression,
+          right: { type: 'StringLiteral', value: condition.dagsoortName }
+        } as Expression, context);
+        const cellBool = this.expressionEvaluator.evaluate(cellValue as Expression, context);
+        if (!this.compareValues(membership, cellBool, '==', context)) {
+          return false;
+        }
+        continue;
+      }
+
       // Evaluate the subject expression
       if (!condition.subjectExpression) {
         throw new Error(`Decision table condition has no subject expression: ${condition.headerText}`);
       }
       const subjectValue = this.expressionEvaluator.evaluate(condition.subjectExpression, context);
 
-      if (!subjectValue || subjectValue.type === 'null') {
-        return false; // Subject not found or null
+      if (isLeeg(subjectValue)) {
+        return false; // Subject not found or leeg (a plain comparison against leeg is onwaar)
       }
 
       // Evaluate the condition value

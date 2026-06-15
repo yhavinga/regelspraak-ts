@@ -244,7 +244,7 @@ geldig altijd
   });
 
   describe('Edge cases', () => {
-    test('Kenmerktoekenning does NOT fire when all objects fail evaluation (missing attribute)', () => {
+    test('Kenmerktoekenning with a missing attribute: comparison is onwaar (§8.1.1), kenmerk becomes false', () => {
       const kenmerkRuleSource = `
 Objecttype de Persoon (bezield)
     is minderjarig kenmerk (bijvoeglijk);
@@ -257,7 +257,7 @@ geldig altijd
 `;
 
       const context = new Context();
-      // Create person WITHOUT leeftijd - condition evaluation will fail
+      // Create person WITHOUT leeftijd - the comparison operand is leeg.
       const personId = context.generateObjectId('Persoon');
       context.createObject('Persoon', personId, {});
 
@@ -272,12 +272,13 @@ geldig altijd
           return match ? match[1] : t;
         });
 
-      // Rule should NOT fire because condition can't be evaluated (missing leeftijd)
-      expect(firedRules).not.toContain('Minderjarigheid');
+      // §8.1.1: "leeg < 18" is onwaar (NOT an evaluation failure / throw). The conditional
+      // kenmerktoekenning therefore evaluates the condition to false and assigns the kenmerk
+      // false, so the rule does fire.
+      expect(firedRules).toContain('Minderjarigheid');
 
-      // Verify no kenmerk was set
       const persons = context.getObjectsByType('Persoon');
-      expect(persons[0].kenmerken['is minderjarig']).toBeUndefined();
+      expect(persons[0].kenmerken['is minderjarig']).toBe(false);
     });
   });
 

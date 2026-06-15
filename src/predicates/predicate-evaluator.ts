@@ -15,9 +15,9 @@ import {
   isAttributePredicate
 } from './predicate-types';
 import { QuantifierType } from '../ast/expressions';
-import { Value, RuntimeContext } from '../interfaces';
+import { Value, RuntimeContext, isLeeg } from '../interfaces';
 import { Expression } from '../ast/expressions';
-import { ExpressionEvaluator } from '../evaluators/expression-evaluator';
+import { ExpressionEvaluator, checkElfproef, isNumeriekExact } from '../evaluators/expression-evaluator';
 import { UnitRegistry } from '../units/unit-registry';
 import { compareRuntimeValues } from '../units/value-semantics';
 import { evaluateDagsoort as evaluateDagsoortValue } from '../evaluators/dagsoort-evaluator';
@@ -77,15 +77,34 @@ export class PredicateEvaluator {
         result = this.evaluateKenmerk(predicate, value, context);
         break;
 
+      // Rolcheck (§8.1.7): the subject fills a FeitType role.
+      case 'rol':
+        if (!predicate.kenmerk) {
+          throw new Error('Rol predicate requires the role name in `kenmerk`');
+        }
+        result = (context as any).hasRol ? (context as any).hasRol(value, predicate.kenmerk) : false;
+        break;
+
       // Dagsoort check (is een dagsoort)
       case 'dagsoort':
         result = this.evaluateDagsoort(predicate, value, context);
         break;
 
-      // Elfproef validation
-      case 'elfproef':
-        result = this.evaluateElfproef(value);
+      // Elfproef validation (§8.1.3) — evaluate the operand, not the filtered item.
+      case 'elfproef': {
+        if (!predicate.left) {
+          throw new Error('Elfproef predicate requires a left operand');
+        }
+        const operand = this.expressionEvaluator.evaluate(predicate.left, context);
+        if (isLeeg(operand)) {
+          result = false;
+        } else if (operand.type === 'string' || operand.type === 'number') {
+          result = checkElfproef(operand.value as string | number);
+        } else {
+          result = false;
+        }
         break;
+      }
 
       // Uniqueness check
       case 'uniek':
@@ -94,7 +113,7 @@ export class PredicateEvaluator {
 
       // Numeric exact digits check
       case 'numeriek_exact':
-        result = this.evaluateNumeriekExact(predicate, value);
+        result = this.evaluateNumeriekExact(predicate, value, context);
         break;
 
       // Rule status checks
@@ -191,8 +210,10 @@ export class PredicateEvaluator {
       return false;
     }
 
-    // Get the attribute value
-    const attrValue = value.value[predicate.attribute];
+    // Get the attribute value. The visitor lowers a possessive criterion ("zijn leeftijd is ...")
+    // to a 'self'-prefixed / dotted key, so strip a leading self/pronoun segment before the lookup
+    // instead of doing a flat record read of "self.leeftijd" (which is never a key).
+    const attrValue = this.readSubselectieAttribute(value, predicate.attribute, context);
     if (!attrValue) {
       return false;
     }
@@ -200,8 +221,41 @@ export class PredicateEvaluator {
     // Evaluate the comparison value
     const compValue = this.expressionEvaluator.evaluate(predicate.value, context);
 
+    // §8.2 whole-period check on a subselectie attribute criterion — reuse the shared reducer
+    // (it fails fast when the attribute is not tijdsafhankelijk, per §3310).
+    if (predicate.gehelePeriode) {
+      return this.expressionEvaluator.evaluateGehelePeriodeComparison(
+        attrValue, compValue, predicate.operator, predicate.gehelePeriode, !!predicate.gehelePeriodeNegated, context
+      );
+    }
+
     // Perform comparison
     return this.compareValues(attrValue, predicate.operator, compValue, context);
+  }
+
+  /**
+   * Read a subselectie attribute criterion's value off the element. The attribute key may be a
+   * 'self'-prefixed / dotted path (e.g. "self.leeftijd") from the visitor's lowering; strip a
+   * leading self/pronoun segment, then read the single attribute directly or navigate a deeper
+   * dotted path via the engine's one navigation authority.
+   */
+  private readSubselectieAttribute(value: Value, attribute: string, context: RuntimeContext): Value | undefined {
+    let segs = attribute.split('.');
+    if (segs.length > 1 && ['self', 'hij', 'zij', 'hem', 'haar'].includes(segs[0].toLowerCase())) {
+      segs = segs.slice(1);
+    }
+    if (segs.length === 1) {
+      return (value.value as Record<string, Value>)[segs[0]];
+    }
+    const prev = (context as any).current_instance;
+    (context as any).current_instance = value;
+    try {
+      return this.expressionEvaluator.evaluate({ type: 'AttributeReference', path: ['self', ...segs] } as Expression, context);
+    } catch {
+      return undefined;
+    } finally {
+      (context as any).current_instance = prev;
+    }
   }
 
   /**
@@ -214,6 +268,13 @@ export class PredicateEvaluator {
 
     const leftValue = this.expressionEvaluator.evaluate(predicate.left, context);
     const rightValue = this.expressionEvaluator.evaluate(predicate.right, context);
+
+    // §8.2 whole-period check on a lowered comparison predicate — reuse the one shared reducer.
+    if (predicate.gehelePeriode) {
+      return this.expressionEvaluator.evaluateGehelePeriodeComparison(
+        leftValue, rightValue, predicate.operator, predicate.gehelePeriode, !!predicate.gehelePeriodeNegated, context
+      );
+    }
 
     return this.compareValues(leftValue, predicate.operator, rightValue, context);
   }
@@ -237,6 +298,40 @@ export class PredicateEvaluator {
   ): boolean {
     if (!predicate.kenmerk) {
       throw new Error('Kenmerk predicate requires kenmerk property');
+    }
+
+    // §8.1.8 navigated kenmerk-check ("zijn reis is duurzaam"): the kenmerk lives on a related
+    // object reached via a rol hop, not on the element itself. navigation.path = [...hop, kenmerk];
+    // navigate the hop (reusing the engine's one navigation authority), then read the kenmerk on
+    // the reached object.
+    const navigation = predicate.navigation as any;
+    if (navigation && navigation.type === 'AttributeReference' && Array.isArray(navigation.path) && navigation.path.length >= 2) {
+      // navigation.path = [maybe 'self'/pronoun, ...rol hop, kenmerkName]. Drop the leading pronoun
+      // and the trailing kenmerk; navigate the rol hop via the possessive form so the engine walks
+      // the FeitType relation store (not the element's own fields), then read the kenmerk there.
+      let hop = navigation.path.slice(0, -1) as string[];
+      if (hop.length && ['self', 'hij', 'zij', 'hem', 'haar'].includes(String(hop[0]).toLowerCase())) {
+        hop = hop.slice(1);
+      }
+      if (hop.length >= 1) {
+        const navPath = ['zijn ' + hop[0], ...hop.slice(1)];
+        const prev = (context as any).current_instance;
+        (context as any).current_instance = value;
+        let reached: Value | undefined;
+        try {
+          reached = this.expressionEvaluator.evaluate({ type: 'AttributeReference', path: navPath } as Expression, context);
+        } catch {
+          reached = undefined;
+        } finally {
+          (context as any).current_instance = prev;
+        }
+        const target = reached && reached.type === 'array' ? (reached.value as Value[])[0] : reached;
+        if (!target || target.type !== 'object') {
+          return false;
+        }
+        const has = context.getKenmerk((target as any).objectType || '', (target as any).objectId || '', predicate.kenmerk);
+        return has ?? false;
+      }
     }
 
     if (value.type !== 'object') {
@@ -268,6 +363,12 @@ export class PredicateEvaluator {
       return directValue.value === true;
     }
 
+    // §8.1.7: a subselectie rolcheck lowers to a kenmerk SimplePredicate. If the name is a
+    // declared rol (not a kenmerk on this object), test role membership instead of reading a field.
+    if ((context as any).findFeittypeByRole?.(predicate.kenmerk) && (context as any).hasRol) {
+      return (context as any).hasRol(value, predicate.kenmerk);
+    }
+
     return false;
   }
 
@@ -286,39 +387,6 @@ export class PredicateEvaluator {
       context,
       this.expressionEvaluator
     );
-  }
-
-  /**
-   * Helper: Evaluate elfproef (Dutch bank account validation)
-   */
-  private evaluateElfproef(value: Value): boolean {
-    if (value.type !== 'string' && value.type !== 'number') {
-      return false;
-    }
-
-    const str = String(value.value).replace(/\D/g, '');
-    
-    if (str.length !== 9 && str.length !== 10) {
-      return false;
-    }
-
-    const digits = str.split('').map(Number);
-    let sum = 0;
-
-    if (digits.length === 9) {
-      // 9-digit account number
-      for (let i = 0; i < 9; i++) {
-        sum += digits[i] * (9 - i);
-      }
-      return sum % 11 === 0;
-    } else {
-      // 10-digit account (BSN)
-      for (let i = 0; i < 9; i++) {
-        sum += digits[i] * (10 - i);
-      }
-      sum -= digits[9];
-      return sum % 11 === 0;
-    }
   }
 
   /**
@@ -344,46 +412,47 @@ export class PredicateEvaluator {
   /**
    * Helper: Evaluate numeric exact digits
    */
-  private evaluateNumeriekExact(predicate: SimplePredicate, value: Value): boolean {
+  private evaluateNumeriekExact(predicate: SimplePredicate, value: Value, context: RuntimeContext): boolean {
     if (!predicate.digits) {
       throw new Error('Numeriek exact predicate requires digits property');
     }
 
-    if (value.type !== 'number' && value.type !== 'string') {
+    // §8.1.4: the operand is the predicate's left expression (like elfproef), not the filtered
+    // item; fall back to the passed value only when no operand is set. NO stripping (leading
+    // zeros count). Shared helper with the binary path and the decision-table column.
+    const operand = predicate.left ? this.expressionEvaluator.evaluate(predicate.left, context) : value;
+    if (isLeeg(operand)) {
       return false;
     }
-
-    const str = String(value.value).replace(/[^\d]/g, '');
-    return str.length === predicate.digits;
+    return isNumeriekExact(operand.value as string | number, predicate.digits);
   }
 
   /**
    * Helper: Check if rule has been executed
    */
   private evaluateRegelGevuurd(predicate: SimplePredicate, context: RuntimeContext): boolean {
-    // For regel status predicates, the rule name should be in left expression
-    if (predicate.left && predicate.left.type === 'Literal') {
-      const literal = predicate.left as any;
-      if (literal.literalType === 'string' || literal.valueType === 'text') {
-        const regelNaam = literal.value as string;
-        return (context as any).isRuleExecuted?.(regelNaam) || false;
-      }
-    }
-    return false;
+    const regelNaam = this.regelNaamFromPredicate(predicate);
+    return regelNaam ? ((context as any).isRuleExecuted?.(regelNaam) ?? false) : false;
   }
 
   /**
    * Helper: Check if rule is inconsistent
    */
   private evaluateRegelInconsistent(predicate: SimplePredicate, context: RuntimeContext): boolean {
-    // For regel status predicates, the rule name should be in left expression
-    if (predicate.left && predicate.left.type === 'Literal') {
-      const literal = predicate.left as any;
-      if (literal.literalType === 'string' || literal.valueType === 'text') {
-        const regelNaam = literal.value as string;
-        return (context as any).isRuleInconsistent?.(regelNaam) || false;
-      }
+    const regelNaam = this.regelNaamFromPredicate(predicate);
+    return regelNaam ? ((context as any).isRuleInconsistent?.(regelNaam) ?? false) : false;
+  }
+
+  /**
+   * The referenced rule name carried on a regelpredicaat. The visitor emits a StringLiteral
+   * (the older 'Literal' shape is still accepted). Name reconciliation (trailing 'is', case,
+   * whitespace) happens in Context.isRuleExecuted/isRuleInconsistent (§8.1.9).
+   */
+  private regelNaamFromPredicate(predicate: SimplePredicate): string | undefined {
+    const left = predicate.left as any;
+    if (left && (left.type === 'StringLiteral' || left.type === 'Literal') && typeof left.value === 'string') {
+      return left.value;
     }
-    return false;
+    return undefined;
   }
 }

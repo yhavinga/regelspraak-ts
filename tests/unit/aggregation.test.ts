@@ -254,19 +254,42 @@ describe('Aggregation', () => {
       expect(result.value).toBe(3);
     });
 
-    test('should throw error for empty collection', () => {
+    test('empty som is leeg by default, 0 with the "of 0 als die er niet zijn" opt-out (§5.8.2)', () => {
       context.setVariable('empty', { type: 'list', value: [] });
 
-      const expr = {
+      // Default: an empty sommatie is leeg (null), NOT 0 and NOT an error.
+      const leegExpr = {
         type: 'AggregationExpression' as const,
         aggregationType: 'som' as const,
         target: { type: 'VariableReference', variableName: 'empty' }
       };
+      expect(evaluator.evaluate(leegExpr, context)).toEqual({ type: 'null', value: null });
 
-      expect(() => evaluator.evaluate(expr, context)).toThrow('Cannot aggregate empty collection');
+      // Opt-out present: the empty sommatie yields the number 0.
+      const nulExpr = {
+        type: 'AggregationExpression' as const,
+        aggregationType: 'som' as const,
+        target: { type: 'VariableReference', variableName: 'empty' },
+        defaultZeroWhenEmpty: true
+      };
+      const nul = evaluator.evaluate(nulExpr, context);
+      expect(nul.type).toBe('number');
+      expect(nul.value).toBe(0);
     });
 
-    test('should throw error for non-numeric sum', () => {
+    test('maximum/minimum of an empty collection is leeg, not an error (§5.8)', () => {
+      context.setVariable('empty', { type: 'list', value: [] });
+
+      const expr = {
+        type: 'AggregationExpression' as const,
+        aggregationType: 'maximum' as const,
+        target: { type: 'VariableReference', variableName: 'empty' }
+      };
+
+      expect(evaluator.evaluate(expr, context)).toEqual({ type: 'null', value: null });
+    });
+
+    test('should throw error for a non-numeric member', () => {
       context.setVariable('strings', {
         type: 'list',
         value: [
@@ -281,7 +304,7 @@ describe('Aggregation', () => {
         target: { type: 'VariableReference', variableName: 'strings' }
       };
 
-      expect(() => evaluator.evaluate(expr, context)).toThrow('Cannot sum string values');
+      expect(() => evaluator.evaluate(expr, context)).toThrow('Cannot aggregate string values');
     });
   });
 });

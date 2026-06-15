@@ -40,29 +40,28 @@ describe('Units and Dimensions', () => {
       expect(registry.convert(30, 'minuut', 'uur')).toBe(0.5);
     });
 
-    test('should convert across multiple hops (hub-and-spoke)', () => {
-      // jaar → seconde requires traversing the entire time chain
-      expect(registry.convert(1, 'jaar', 'seconde')).toBe(31556952);
+    test('should convert across the seconde-based chain', () => {
       // week → uur (7 days * 24 hours = 168)
       expect(registry.convert(1, 'week', 'uur')).toBe(168);
       // dag → milliseconde (86400 * 1000 = 86400000)
       expect(registry.convert(1, 'dag', 'milliseconde')).toBe(86400000);
-      // seconde → jaar (inverse of year → second)
-      expect(registry.convert(31556952, 'seconde', 'jaar')).toBeCloseTo(1, 5);
     });
 
-    test('should convert between any time units via hub-and-spoke', () => {
-      // maand → dag (avg 30.44 days per month)
-      expect(registry.convert(1, 'maand', 'dag')).toBeCloseTo(30.44, 1);
-      // kwartaal → maand (3 months)
-      expect(registry.convert(1, 'kwartaal', 'maand')).toBeCloseTo(3, 1);
-      // jaar → maand (12 months)
-      expect(registry.convert(1, 'jaar', 'maand')).toBeCloseTo(12, 1);
+    test('§3.7: calendar units convert exactly among themselves but NOT to seconde/dagen', () => {
+      // kwartaal → maand (exactly 3) and jaar → maand (exactly 12)
+      expect(registry.convert(1, 'kwartaal', 'maand')).toBe(3);
+      expect(registry.convert(1, 'jaar', 'maand')).toBe(12);
+      expect(registry.convert(1, 'jaar', 'kwartaal')).toBe(4);
+      // A month is not a fixed number of seconds/days, so these are incompatible (no average).
+      expect(registry.convert(1, 'maand', 'dag')).toBeUndefined();
+      expect(registry.convert(1, 'jaar', 'seconde')).toBeUndefined();
     });
 
     test('should check unit compatibility', () => {
       expect(registry.areUnitsCompatible('uur', 'minuut')).toBe(true);
-      expect(registry.areUnitsCompatible('dag', 'jaar')).toBe(true);
+      // §3.7: calendar units share a base with each other, but not with seconde-based units.
+      expect(registry.areUnitsCompatible('maand', 'jaar')).toBe(true);
+      expect(registry.areUnitsCompatible('dag', 'jaar')).toBe(false);
       expect(registry.areUnitsCompatible('euro', 'EUR')).toBe(true);
       expect(registry.areUnitsCompatible('uur', 'euro')).toBe(false);
     });

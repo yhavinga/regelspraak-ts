@@ -1,11 +1,89 @@
 import Decimal from 'decimal.js';
-import { Value } from '../interfaces/value';
+import { Value, isLeeg } from '../interfaces/value';
+import type { RuntimeContext } from '../interfaces/runtime';
 import { UnitRegistry } from './unit-registry';
 import type { UnitValue } from './unit-arithmetic';
 import { CompositeUnit } from './composite-unit';
 import { unitExpressionToCompositeUnit } from './unit-expression';
 
 export type ComparisonOperator = '==' | '!=' | '>' | '<' | '>=' | '<=';
+
+/**
+ * §3.7 — Apply the resolver-computed exact unit-conversion factor chain to a value:
+ * result = value × Π(multiplyBy) ÷ Π(divideBy), each factor an exact decimal string from
+ * the eenheidsysteem's omrekenspecificatie. Leeg / non-numeric passes through unchanged.
+ * THE single source of truth for exact-factor conversion (assignment §7.3.1, binary §8.1.1,
+ * tijdsevenredig eenheidsysteem step), consumed only when ResolvedInfo.unitConversion is present
+ * so it never double-converts with the float convertComposite path.
+ */
+export function applyResolvedUnitConversion(
+  value: Value,
+  conv: { multiplyBy: string[]; divideBy: string[] }
+): Value {
+  if (isLeeg(value) || value.type !== 'number') {
+    return value;
+  }
+  let d = new Decimal(value.value as number);
+  for (const factor of conv.multiplyBy) {
+    d = d.mul(new Decimal(factor));
+  }
+  for (const factor of conv.divideBy) {
+    d = d.div(new Decimal(factor));
+  }
+  return { ...value, value: d.toNumber() };
+}
+
+/**
+ * Unit-carrying reduction over a value list (§5.8 aggregations). Skips leeg members,
+ * takes the first valid member as the unit reference, converts every other member into
+ * that reference unit, reduces, and returns {...reference, value} so the unit travels.
+ * Returns leeg when no valid members remain; the sommatie caller maps that to 0-or-leeg
+ * via resolveEmptySom. Extracted from selectExtremeNumericValue so som/maximum/minimum
+ * share the already-correct 1-arg min/max unit handling.
+ */
+export function reduceWithReferenceUnit(
+  values: Value[],
+  reduce: (nums: number[]) => number,
+  context: RuntimeContext
+): Value {
+  // Skip lege waarden (§5.8.2); a non-leeg, non-numeric member is a genuine type error (fail fast).
+  const valid = values.filter(v => !isLeeg(v));
+  if (valid.length === 0) {
+    return { type: 'null', value: null };
+  }
+  for (const v of valid) {
+    if (v.type !== 'number') {
+      throw new Error(`Cannot aggregate ${v.type} values`);
+    }
+  }
+
+  const registry: UnitRegistry = (context as any).unitRegistry || new UnitRegistry();
+  const reference = valid[0];
+  const referenceUnit = getValueCompositeUnit(reference);
+  const nums: number[] = [reference.value as number];
+
+  for (const value of valid.slice(1)) {
+    const valueUnit = getValueCompositeUnit(value);
+    let n = value.value as number;
+    if (referenceUnit || valueUnit) {
+      if (!referenceUnit || !valueUnit) {
+        throw new Error('Cannot reduce unit-bearing and unitless numbers');
+      }
+      // Identical units need no conversion — and must NOT consult the registry, which may not
+      // know a custom/opaque unit (that would wrongly throw on an otherwise-valid same-unit sum).
+      if (!referenceUnit.equals(valueUnit)) {
+        const converted = registry.convertComposite(n, valueUnit, referenceUnit);
+        if (converted === undefined) {
+          throw new Error(`Cannot convert from ${valueUnit.toString()} to ${referenceUnit.toString()}`);
+        }
+        n = converted;
+      }
+    }
+    nums.push(n);
+  }
+
+  return { ...reference, value: reduce(nums) };
+}
 
 export function compareRuntimeValues(
   left: Value,
@@ -23,6 +101,17 @@ export function compareRuntimeValues(
       return false;
     }
     return values.some(value => compareRuntimeValues(left, operator, value, registry));
+  }
+
+  // §8.1.1 datum-ordening / numeric ordering lege-waarde rule: an ordinal comparison with an
+  // empty operand does NOT throw. Exactly one empty => onwaar (false). Both empty => a
+  // foutmelding for Datum (the spec's stricter rule, L3148/L3154) but onwaar for numeric (L3146).
+  const isOrdinal = operator === '>' || operator === '<' || operator === '>=' || operator === '<=';
+  if (isOrdinal && (isLeeg(left) || isLeeg(right))) {
+    if (isLeeg(left) && isLeeg(right) && (left.type === 'date' || right.type === 'date')) {
+      throw new Error('Kan twee lege datums niet ordenen (foutmelding)');
+    }
+    return false;
   }
 
   if (left.type === 'number' && right.type === 'number') {

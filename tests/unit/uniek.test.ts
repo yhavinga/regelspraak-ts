@@ -84,6 +84,8 @@ describe('Uniek Predicate', () => {
             // Consistency rules don't set kenmerken on objects - they just validate
             expect(persons[0].value['burgerservicenummer']).toEqual({ type: 'string', value: '123456789' });
             expect(persons[1].value['burgerservicenummer']).toEqual({ type: 'string', value: '123456789' });
+            // §8.1.6: the duplicate BSN must make the consistentieregel inconsistent.
+            expect(context.isRuleInconsistent('BSN uniekheid check')).toBe(true);
         });
 
         test('should pass when all values are unique', () => {

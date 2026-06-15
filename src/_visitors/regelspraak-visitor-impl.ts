@@ -2575,7 +2575,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         type: 'AggregationExpression',
         aggregationType: functionName.replace('_van', ''),
         target: attrRef,
-        dimensionSelection
+        dimensionSelection,
+        ...(hasOfNul ? { defaultZeroWhenEmpty: true } : {})
       } as any;
       this.setLocation(node, ctx);
       return node;

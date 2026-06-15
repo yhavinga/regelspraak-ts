@@ -100,21 +100,17 @@ describe('Unified Predicate Evaluator', () => {
       expect(result).toBe(true);
     });
 
-    it('should evaluate elfproef validation', () => {
+    it('should evaluate elfproef validation on the operand (predicate.left)', () => {
+      // §8.1.3: the operand is the predicate's left expression, not the filtered item.
       const predicate: SimplePredicate = {
         type: 'SimplePredicate',
-        operator: 'elfproef'
+        operator: 'elfproef',
+        left: { type: 'StringLiteral', value: '111222333' } as any
       };
 
-      // Test that elfproef evaluator runs without error
-      // Actual validation logic is tested elsewhere
-      const account: Value = {
-        type: 'string',
-        value: '123456789'
-      };
-
-      const result = predicateEvaluator.evaluate(predicate, account, context);
-      expect(typeof result).toBe('boolean');
+      // 111222333: weighted sum 66, a positive multiple of 11 => valid.
+      const result = predicateEvaluator.evaluate(predicate, { type: 'null', value: null }, context);
+      expect(result).toBe(true);
     });
 
     it('should handle negated predicates', () => {

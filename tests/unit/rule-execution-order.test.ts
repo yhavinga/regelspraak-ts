@@ -81,7 +81,7 @@ Regel Bereken ouderenkorting onder grens
     });
   });
 
-  describe('Document the bug (wrong order)', () => {
+  describe('Initialisatie is order-independent (§9.6)', () => {
     // This documents what happens with WRONG order
     // If the engine changes to NOT execute in file order, this test
     // documents the expected behavior change needed
@@ -105,7 +105,7 @@ Regel Initialiseer ouderenkorting
         De ouderenkorting van een Scenario moet geïnitialiseerd worden op 0.
 `;
 
-    test('wrong order: initialization overwrites conditional result', () => {
+    test('initialisatie is order-independent: it does NOT overwrite a prior conditional result (§9.6)', () => {
       const context = new Context();
       context.setVariable('OK maximum', { type: 'number', value: 2010 });
       context.setVariable('OK afbouwgrens', { type: 'number', value: 44770 });
@@ -116,14 +116,14 @@ Regel Initialiseer ouderenkorting
       const result = engine.run(wrongOrderCode, context);
       expect(result.success).toBe(true);
 
-      // With wrong order, this will be 0 (bug behavior)
-      // This test DOCUMENTS the bug, not validates correctness
+      // §9.6: an initialisatieregel is a default-when-empty assignment. Even though it appears
+      // LAST in file order, it must not overwrite the value the conditional rule already set —
+      // ouderenkorting stays 2010, not 0.
       const scenarios = context.getObjectsByType('Scenario');
       const ouderenkorting = (scenarios[0] as any).attributes?.ouderenkorting?.value
         ?? (scenarios[0] as any).value?.ouderenkorting?.value;
 
-      // The engine executes in file order, so init comes last and overwrites
-      expect(ouderenkorting).toBe(0);
+      expect(ouderenkorting).toBe(2010);
     });
   });
 
