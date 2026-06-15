@@ -6212,6 +6212,13 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const navigationParts: string[] = [];
     let attributeEnd = parts.length;
     for (let i = prepositions.length - 1; i >= 0; i--) {
+      // Stop peeling once the attribute side is itself a declared attribute: a long name
+      // like "leeftijd van de oudste passagier" is one attribute, not a leeftijd<-passagier
+      // navigation. Without this the "van"-split heuristic over-splits every attribute whose
+      // own name contains "van de".
+      if (this.isKnownAttribute(this.reconstructNounPart(parts, prepositions, 0, attributeEnd))) {
+        break;
+      }
       const subject = this.reconstructNounPart(parts, prepositions, i + 1, attributeEnd);
       if (
         prepositions[i] === 'van' &&
@@ -6301,6 +6308,32 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     }
 
     return false;
+  }
+
+  private isKnownAttribute(name: string | undefined): boolean {
+    if (!name) {
+      return false;
+    }
+    // Compare with internal articles dropped on both sides: the navigation parts have already
+    // had de/het/een stripped, so the candidate is "leeftijd van oudste passagier" while the
+    // declared name keeps them ("leeftijd van de oudste passagier").
+    const normalized = this.stripInternalArticles(name);
+    for (const attributeNames of this.objectTypeAttributes.values()) {
+      for (const attribute of attributeNames) {
+        if (this.stripInternalArticles(attribute) === normalized) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private stripInternalArticles(name: string): string {
+    return name
+      .split(/\s+/)
+      .filter(token => !['de', 'het', 'een'].includes(token.toLowerCase()))
+      .join(' ')
+      .toLowerCase();
   }
 
   private reconstructNounPart(
