@@ -393,8 +393,10 @@ De uitkomst van een Dagcheck moet berekend worden als zijn datum is een onbekend
 `);
 
     expect(result.success).toBe(false);
+    // "X is een <noun>" is a dagsoortcontrole, a kenmerkcheck, or a rolcheck depending on the noun;
+    // an unknown noun is none of the three, and the diagnostic now names all three readings.
     expect(result.diagnostics.some(diagnostic =>
-      diagnostic.message.includes("Unknown dagsoort 'onbekende'")
+      diagnostic.message.includes("Unknown dagsoort, kenmerk or rol 'onbekende'")
     )).toBe(true);
   });
 

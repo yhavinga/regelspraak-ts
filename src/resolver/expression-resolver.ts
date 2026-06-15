@@ -1664,7 +1664,7 @@ function resolveBinaryExpression(
   // Resolve operands
   resolveExpressionInternal(expr.left, context, maps);
   resolveExpressionInternal(expr.right, context, maps);
-  validateDagsoortPredicate(expr, maps);
+  classifyMembershipPredicate(expr, maps);
 
   // Determine result type based on operator
   const comparisonOps = ['==', '!=', '>', '<', '>=', '<='];
@@ -1675,6 +1675,14 @@ function resolveBinaryExpression(
     'zijn een dagsoort',
     'is geen dagsoort',
     'zijn geen dagsoort',
+    'is een kenmerk',
+    'zijn een kenmerk',
+    'is geen kenmerk',
+    'zijn geen kenmerk',
+    'is een rol',
+    'zijn een rol',
+    'is geen rol',
+    'zijn geen rol',
     'is numeriek met exact',
     'is niet numeriek met exact',
     'zijn numeriek met exact',
@@ -1785,7 +1793,7 @@ function resolveBinaryExpression(
   return expr;
 }
 
-function validateDagsoortPredicate(
+function classifyMembershipPredicate(
   expr: BinaryExpression,
   maps: ResolutionMaps
 ): void {
@@ -1799,13 +1807,49 @@ function validateDagsoortPredicate(
     return;
   }
 
-  const dagsoortName = extractDagsoortName(expr.right);
-  if (!dagsoortName) {
+  const name = extractDagsoortName(expr.right);
+  if (!name) {
     throw new Error(`Dagsoort predicate requires a dagsoort name`);
   }
-  if (!maps.dagsoorten.has(normalizeDagsoortName(dagsoortName))) {
-    throw new Error(`Unknown dagsoort '${dagsoortName}'`);
+  // A declared dagsoort keeps the §8.1.5 dagsoortcontrole reading.
+  if (maps.dagsoorten.has(normalizeDagsoortName(name))) {
+    return;
   }
+
+  // The "X is een <noun>" surface is a kenmerkcheck or a §8.1.7 rolcheck when <noun> is a kenmerk
+  // or a rol rather than a dagsoort — the three share the article, so the grammar routes all to the
+  // dagsoortcontrole and the kind is decided here from the left operand's type. Re-tag the operator
+  // (and the unified predicate) so the rest of the pipeline reads the right kind of check.
+  const resolvedType = expr.left.resolved?.resolvedType as any;
+  const leftType: string | undefined =
+    resolvedType?.type === 'ObjectType' ? resolvedType.name : undefined;
+  const kenmerkMap = leftType
+    ? maps.kenmerken.get(leftType) ?? maps.kenmerken.get(leftType.toLowerCase())
+    : undefined;
+  const isKenmerk = !!(kenmerkMap?.get(name) ?? kenmerkMap?.get(name.toLowerCase()));
+  const isRol = findFeitTypesForRole(name, maps).length > 0;
+
+  if (isKenmerk) {
+    retagMembership(expr, 'kenmerk', name);
+  } else if (isRol) {
+    retagMembership(expr, 'rol', name);
+  } else {
+    throw new Error(
+      `Unknown dagsoort, kenmerk or rol '${name}'` + (leftType ? ` on '${leftType}'` : '')
+    );
+  }
+}
+
+function retagMembership(expr: BinaryExpression, kind: 'kenmerk' | 'rol', name: string): void {
+  expr.operator = expr.operator.replace('dagsoort', kind) as BinaryExpression['operator'];
+  const negated = expr.operator.includes('geen');
+  (expr as any).predicate = {
+    type: 'SimplePredicate',
+    operator: kind,
+    left: expr.left,
+    negated,
+    ...(kind === 'kenmerk' ? { kenmerk: name } : { rol: name }),
+  };
 }
 
 function extractDagsoortName(expr: Expression): string | undefined {
