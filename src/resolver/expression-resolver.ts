@@ -1089,7 +1089,11 @@ function resolveSegmentCandidates(
     kenmerk = kenmerkMap.get(canonicalName) || kenmerkMap.get(canonicalName.toLowerCase());
   }
 
-  if (kenmerk) {
+  // When an attribute and a kenmerk share a name (the casus declares both
+  // "bereikbaar per trein" forms on Vlucht), a value/navigation position reads the
+  // attribute; the kenmerk is reached through the kenmerk-check predicate, not here.
+  // Suppressing the duplicate kenmerk candidate resolves the otherwise-ambiguous segment.
+  if (kenmerk && !attr) {
     candidates.push({
       segment: {
         sourceName: segment,
