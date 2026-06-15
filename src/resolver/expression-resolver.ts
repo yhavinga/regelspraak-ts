@@ -378,6 +378,10 @@ function resolveExpressionInternal(
     case 'SamengesteldeVoorwaarde':
       return resolveSamengesteldeVoorwaarde(expr as SamengesteldeVoorwaarde, context, maps);
 
+    case 'VergelijkingInPredicaat':
+      resolveVergelijkingInPredicaat(expr, context, maps);
+      return expr;
+
     case 'ConjunctionExpression':
       return resolveConjunctionExpression(expr as ConjunctionExpression, context, maps);
 
@@ -2303,14 +2307,7 @@ function resolveLegacyPredicateExpressions(
       if (predicate.value) resolveExpressionInternal(predicate.value, context, maps);
       return;
     case 'VergelijkingInPredicaat':
-      if (predicate.onderwerp) resolveExpressionInternal(predicate.onderwerp, context, maps);
-      if (predicate.attribuut) resolveExpressionInternal(predicate.attribuut, context, maps);
-      if (predicate.waarde) resolveExpressionInternal(predicate.waarde, context, maps);
-      // A predicate criterion evaluates to a Boolean; mark the node resolved so the
-      // tree check passes (its operands were resolved above). Without this a
-      // kenmerk_check criterion like "zijn reis is duurzaam" — whose only operand is
-      // the onderwerp — would leave the node itself untyped.
-      predicate.resolved = { resolvedType: { type: 'Boolean' } };
+      resolveVergelijkingInPredicaat(predicate, context, maps);
       return;
     case 'GenesteVoorwaardeInPredicaat':
       resolveLegacyPredicateExpressions(predicate.voorwaarde, context, maps);
@@ -2625,4 +2622,25 @@ function resolveSamengesteldeVoorwaarde(
     resolvedType: { type: 'Boolean' },
   };
   return expr;
+}
+
+/**
+ * Resolve a VergelijkingInPredicaat criterion (a §5.6/§8.3 bullet). Its operands are resolved
+ * and the node is typed as the Boolean a predicate evaluates to. A kenmerk/rol check written
+ * with an article ("hij is een passagier jonger dan 18 jaar") keeps that article in the captured
+ * name; it is stripped so the name matches the declared kenmerk or rol — both for resolution and
+ * for the field/relation the transpiler then generates.
+ */
+function resolveVergelijkingInPredicaat(
+  node: any,
+  context: ResolutionContext,
+  maps: ResolutionMaps
+): void {
+  if (node.onderwerp) resolveExpressionInternal(node.onderwerp, context, maps);
+  if (node.attribuut) resolveExpressionInternal(node.attribuut, context, maps);
+  if (node.waarde) resolveExpressionInternal(node.waarde, context, maps);
+  if (typeof node.kenmerkNaam === 'string') {
+    node.kenmerkNaam = node.kenmerkNaam.replace(/^(een|de|het)\s+/i, '');
+  }
+  node.resolved = { resolvedType: { type: 'Boolean' } };
 }
