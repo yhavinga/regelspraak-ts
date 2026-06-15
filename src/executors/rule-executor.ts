@@ -157,6 +157,21 @@ export class RuleExecutor implements IRuleExecutor {
   }
 
   /**
+   * §9.6 — the canonical "is this target attribute currently leeg" test for the initialisatie
+   * guard. An attribute is leeg only when neither its plain slot nor its (separately stored)
+   * timeline holds a value, so an initialisatieregel never clobbers a value another rule produced
+   * — whether that value is scalar or a timeline — independent of execution order.
+   */
+  private isAttributeLeeg(obj: Value, attributeName: string, context: Context): boolean {
+    if (!isLeeg((obj.value as Record<string, Value>)[attributeName])) {
+      return false;
+    }
+    const objType = (obj as any).objectType || obj.type;
+    const objId = (obj.value as any).instance_id || (obj as any).objectId || 'unknown';
+    return !context.hasTimelineAttribute(objType, objId, attributeName);
+  }
+
+  /**
    * Navigate through an object graph and set an attribute value.
    * Handles both Feittype role navigation and direct attribute access.
    */
@@ -240,8 +255,8 @@ export class RuleExecutor implements IRuleExecutor {
     const attributeName = targetPath[targetPath.length - 1];
 
     // §9.6 initialisatieregel: a default-when-empty assignment skips a target that already
-    // holds a value (read exactly where we write, so the guard matches the writer).
-    if (skipIfFilled && !isLeeg((currentObj.value as Record<string, Value>)[attributeName])) {
+    // holds a value (scalar OR timeline — this method writes both branches below).
+    if (skipIfFilled && !this.isAttributeLeeg(currentObj, attributeName, ctx)) {
       return { success: true };
     }
 
@@ -724,21 +739,21 @@ export class RuleExecutor implements IRuleExecutor {
       const objectValue = context.getVariable(objectName);
 
       if (objectValue && objectValue.type === 'object') {
-        // Set the attribute on the specific object
-        // Check if this is a timeline value
-        if (value.type === 'timeline') {
-          // Store as timeline attribute
-          const objType = (objectValue as any).objectType || objectValue.type || objectName;
-          const objId = (objectValue.value as any).instance_id || (objectValue as any).objectId || 'unknown';
-          // Wrap in TimelineValueImpl if not already
-          const timelineImpl = value instanceof TimelineValueImpl
-            ? value
-            : new TimelineValueImpl((value as any).value);
-          (context as Context).setTimelineAttribute(objType, objId, attributeName, timelineImpl);
-        } else {
-          // Regular value - store directly (skip when geinitialiseerd and already filled)
-          const objectData = objectValue.value as Record<string, Value>;
-          if (!isInit || isLeeg(objectData[attributeName])) {
+        // Set the attribute on the specific object (skip when geinitialiseerd and already filled).
+        if (!isInit || this.isAttributeLeeg(objectValue, attributeName, context as Context)) {
+          // Check if this is a timeline value
+          if (value.type === 'timeline') {
+            // Store as timeline attribute
+            const objType = (objectValue as any).objectType || objectValue.type || objectName;
+            const objId = (objectValue.value as any).instance_id || (objectValue as any).objectId || 'unknown';
+            // Wrap in TimelineValueImpl if not already
+            const timelineImpl = value instanceof TimelineValueImpl
+              ? value
+              : new TimelineValueImpl((value as any).value);
+            (context as Context).setTimelineAttribute(objType, objId, attributeName, timelineImpl);
+          } else {
+            // Regular value - store directly
+            const objectData = objectValue.value as Record<string, Value>;
             objectData[attributeName] = this.prepareAttributeValueForObject(objectValue, attributeName, value, context);
           }
         }
@@ -752,9 +767,9 @@ export class RuleExecutor implements IRuleExecutor {
           objects = (context as Context).getObjectsByType(objectName);
         }
 
-        // Set attribute on all objects of this type
+        // Set attribute on all objects of this type (skip when geinitialiseerd and already filled).
         for (const obj of objects) {
-          if (obj.type === 'object') {
+          if (obj.type === 'object' && (!isInit || this.isAttributeLeeg(obj, attributeName, context as Context))) {
             // Check if this is a timeline value
             if (value.type === 'timeline') {
               // Store as timeline attribute
@@ -766,11 +781,9 @@ export class RuleExecutor implements IRuleExecutor {
                 : new TimelineValueImpl((value as any).value);
               (context as Context).setTimelineAttribute(objType, objId, attributeName, timelineImpl);
             } else {
-              // Regular value - store directly (skip when geinitialiseerd and already filled)
+              // Regular value - store directly
               const objectData = obj.value as Record<string, Value>;
-              if (!isInit || isLeeg(objectData[attributeName])) {
-                objectData[attributeName] = this.prepareAttributeValueForObject(obj, attributeName, value, context);
-              }
+              objectData[attributeName] = this.prepareAttributeValueForObject(obj, attributeName, value, context);
             }
           }
         }
@@ -788,8 +801,8 @@ export class RuleExecutor implements IRuleExecutor {
         value
       };
     } else {
-      // Complex path - use navigation resolver
-      const result = setValueAtPath(targetPath, value, context);
+      // Complex path - use navigation resolver (skip when geinitialiseerd and already filled)
+      const result = setValueAtPath(targetPath, value, context, isInit);
 
       if (!result.success) {
         throw new Error(`Failed to set value at path ${targetPath.join('.')}: ${result.error}`);

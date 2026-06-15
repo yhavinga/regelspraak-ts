@@ -6,7 +6,6 @@ import {
   mergeKnips,
   getEvaluationPeriods,
   removeRedundantKnips,
-  calculateProportionalValue,
   alignDate,
   nextPeriod
 } from '../utils/timeline-utils';
@@ -407,211 +406,120 @@ export class TimelineEvaluator {
   }
   
   /**
-   * Evaluate tijdsevenredig deel per maand (time-proportional per month).
+   * §7.3.2 — the tijdsevenredig deel per maand. A plain scalar source has no broken period, so
+   * it passes through (factor 1); the eenheidsysteem omrekening (e.g. €/jr → €/mnd) is applied
+   * once at assignment from the resolver's unitConversion (§7.3.1), never a hardcoded /12 here.
    */
   private evaluateTijdsevenredigPerMaand(expr: TimelineExpression, context: RuntimeContext): Value | TimelineValue {
     const targetValue = this.expressionEvaluator.evaluate(expr.target, context);
-    
+
     if (targetValue.type === 'timeline') {
-      // Apply tijdsevenredig to a timeline
       return this.applyTijdsevenredigToTimeline(
-        targetValue as any as TimelineValue,
-        'maand',
-        expr.condition,
-        context
+        targetValue as any as TimelineValue, 'maand', expr.condition, context
       );
     } else if (targetValue.type === 'number') {
-      // Simple scalar value - convert yearly to monthly if needed
-      const value = targetValue.value as number;
-      // Assume the value is per year and convert to per month
-      return {
-        type: 'number',
-        value: value / 12,
-        unit: targetValue.unit
-      };
+      return targetValue;
     }
-    
+
     throw new Error('tijdsevenredig_deel_per_maand requires numeric or timeline value');
   }
-  
+
   /**
-   * Evaluate tijdsevenredig deel per jaar (time-proportional per year).
+   * §7.3.2 — the tijdsevenredig deel per jaar. See evaluateTijdsevenredigPerMaand.
    */
   private evaluateTijdsevenredigPerJaar(expr: TimelineExpression, context: RuntimeContext): Value | TimelineValue {
     const targetValue = this.expressionEvaluator.evaluate(expr.target, context);
-    
+
     if (targetValue.type === 'timeline') {
-      // Apply tijdsevenredig to a timeline
       return this.applyTijdsevenredigToTimeline(
-        targetValue as any as TimelineValue,
-        'jaar',
-        expr.condition,
-        context
+        targetValue as any as TimelineValue, 'jaar', expr.condition, context
       );
     } else if (targetValue.type === 'number') {
-      // Simple scalar value - already per year
       return targetValue;
     }
-    
+
     throw new Error('tijdsevenredig_deel_per_jaar requires numeric or timeline value');
   }
   
   /**
-   * Apply tijdsevenredig calculation to a timeline.
+   * §7.3.2 — derive a value per calendar maand/jaar from a source timeline. For each aligned
+   * calendar period the omrekenfactor is (days the conditiebijexpressie holds) ÷ (calendar days
+   * of that maand/jaar), and the result is the source value of that period times the factor —
+   * applied to the WHOLE period because values are derived per maand/jaar (spec voorbeeld 1:
+   * Feb 2025 has 28 days, 7 covered → 7/28 × 18 = 4,5 for the whole month). A period the
+   * condition never covers yields no value (leeg). The source unit is preserved; any
+   * eenheidsysteem omrekening between source and target units is the assignment's job (§7.3.1),
+   * so a €/jr source assigned to a €/mnd attribute is divided by 12 exactly once. Without a
+   * condition every period is full (factor 1), re-expressing a coarser source onto the maand/jaar
+   * grid.
    */
-  applyTijdsevenredigToTimeline(
+  public applyTijdsevenredigToTimeline(
     timelineValue: TimelineValue,
     periodType: 'maand' | 'jaar',
     condition: Expression | undefined,
     context: RuntimeContext
   ): TimelineValue {
-    const timeline = timelineValue.value;
+    const source = timelineValue.value;
     const resultPeriods: Period[] = [];
-    
-    // When converting granularities, we need to expand periods
-    if (timeline.granularity !== periodType) {
-      // Expand each period into the target granularity
-      for (const period of timeline.periods) {
-        if (!period.value) {
-          // Skip empty periods
-          continue;
-        }
-        
-        // Generate periods at the target granularity
-        const expandedPeriods = this.expandPeriodToGranularity(
-          period,
-          periodType,
-          condition,
-          context
-        );
-        resultPeriods.push(...expandedPeriods);
-      }
-    } else {
-      // Same granularity - check for partial periods and apply proportional calculation
-      for (const period of timeline.periods) {
-        if (condition) {
-          // Evaluate condition at the start of this period
-          const savedDate = context.evaluation_date;
-          context.evaluation_date = period.startDate;
-          const conditionResult = this.expressionEvaluator.evaluate(condition, context);
-          context.evaluation_date = savedDate;
-          
-          const includeperiod = conditionResult.type === 'boolean' && conditionResult.value === true;
-          if (!includeperiod) {
-            // Skip periods where condition is false
-            continue;
+
+    if (source.periods.length > 0) {
+      const rangeStart = source.periods.reduce(
+        (min, p) => (p.startDate < min ? p.startDate : min), source.periods[0].startDate);
+      const rangeEnd = source.periods.reduce(
+        (max, p) => (p.endDate > max ? p.endDate : max), source.periods[0].endDate);
+
+      let cursor = alignDate(rangeStart, periodType);
+      while (cursor < rangeEnd) {
+        const periodEnd = nextPeriod(cursor, periodType);
+        // Sample inside the source's defined range: the first aligned period may start before the
+        // source does (alignDate snaps back to the 1st), so sampling at `cursor` would read null and
+        // drop a period the source actually covers. max(cursor, rangeStart) reads the value that is
+        // genuinely present during this calendar period (one value per period, per §7.3.2).
+        const sourceValue = this.getValueAtDate(source, cursor > rangeStart ? cursor : rangeStart);
+        if (sourceValue && sourceValue.type === 'number') {
+          // One day-by-day walk yields both the calendar length and the condition coverage, so the
+          // factor (e.g. 7/28) is exact and DST-safe (setDate advances exactly one calendar day).
+          let totalDays = 0;
+          let conditionDays = 0;
+          const day = new Date(cursor);
+          while (day < periodEnd) {
+            totalDays++;
+            if (!condition) {
+              conditionDays++;
+            } else {
+              const saved = context.evaluation_date;
+              context.evaluation_date = new Date(day);
+              const r = this.expressionEvaluator.evaluate(condition, context);
+              context.evaluation_date = saved;
+              if (r.type === 'boolean' && r.value === true) conditionDays++;
+            }
+            day.setDate(day.getDate() + 1);
+          }
+          if (conditionDays > 0) {
+            const factor = new Decimal(conditionDays).div(new Decimal(totalDays));
+            const proportioned = new Decimal(sourceValue.value as number).mul(factor).toNumber();
+            resultPeriods.push({
+              startDate: new Date(cursor),
+              endDate: periodEnd,
+              value: { type: 'number', value: proportioned, unit: sourceValue.unit },
+            });
           }
         }
-        
-        // Check if this is a partial period
-        const periodStart = alignDate(period.startDate, periodType);
-        const periodEnd = nextPeriod(periodStart, periodType);
-        
-        if (period.value && (period.startDate > periodStart || period.endDate < periodEnd)) {
-          // Partial period - calculate proportional value
-          const proportionalValue = calculateProportionalValue(
-            period.value,
-            period.startDate,
-            period.endDate,
-            periodType
-          );
-          
-          resultPeriods.push({
-            startDate: period.startDate,
-            endDate: period.endDate,
-            value: proportionalValue
-          });
-        } else {
-          // Full period - keep as-is
-          resultPeriods.push(period);
-        }
+        cursor = periodEnd;
       }
     }
-    
+
     return {
       type: 'timeline',
       value: {
-        periods: resultPeriods,
-        granularity: periodType
-      }
+        // Adjacent periods carrying the same value collapse, so full maanden/jaren read as one
+        // span (spec voorbeeld 1: "12 €/mnd van 1-1-2024 tot 1-1-2025").
+        periods: removeRedundantKnips(resultPeriods, periodType),
+        granularity: periodType,
+      },
     };
   }
-  
-  /**
-   * Expand a period to a different granularity, applying tijdsevenredig conversion.
-   */
-  private expandPeriodToGranularity(
-    period: Period,
-    targetGranularity: 'maand' | 'jaar',
-    condition: Expression | undefined,
-    context: RuntimeContext
-  ): Period[] {
-    const results: Period[] = [];
-    const sourceGranularity = period.endDate.getTime() - period.startDate.getTime() > 32 * 24 * 60 * 60 * 1000 ? 'jaar' : 'maand';
-    
-    if (sourceGranularity === 'jaar' && targetGranularity === 'maand') {
-      // Expand year to months
-      const yearValue = period.value?.type === 'number' ? period.value.value as number : 0;
-      const monthlyValue = yearValue / 12;
-      
-      // Generate monthly periods within this year period
-      let currentDate = new Date(period.startDate);
-      
-      while (currentDate < period.endDate) {
-        const monthStart = new Date(currentDate);
-        const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
-        
-        // Don't go beyond the period end
-        const actualEnd = monthEnd > period.endDate ? period.endDate : monthEnd;
-        
-        if (condition) {
-          // Evaluate condition for this month
-          const savedDate = context.evaluation_date;
-          context.evaluation_date = monthStart;
-          const conditionResult = this.expressionEvaluator.evaluate(condition, context);
-          context.evaluation_date = savedDate;
-          
-          if (conditionResult.type === 'boolean' && conditionResult.value === true) {
-            // Include this month with the calculated value
-            results.push({
-              startDate: monthStart,
-              endDate: actualEnd,
-              value: {
-                type: 'number',
-                value: monthlyValue,
-                unit: period.value?.unit
-              }
-            });
-          }
-          // If condition is false, we don't add a period (results in null when queried)
-        } else {
-          // No condition - always include
-          results.push({
-            startDate: monthStart,
-            endDate: actualEnd,
-            value: {
-              type: 'number',
-              value: monthlyValue,
-              unit: period.value?.unit
-            }
-          });
-        }
-        
-        // Move to next month
-        currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
-      }
-    } else if (sourceGranularity === 'maand' && targetGranularity === 'jaar') {
-      // Aggregate months to year - would need to handle this case
-      // For now, just return the original period
-      results.push(period);
-    } else {
-      // Same granularity
-      results.push(period);
-    }
-    
-    return results;
-  }
-  
+
   /**
    * Filter periods based on a temporal condition.
    */

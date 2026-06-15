@@ -124,6 +124,29 @@ de jaar jr = 12 mnd
     expect(result.diagnostics.some(d => /Unit mismatch.*'dg'.*'mnd'/.test(d.message))).toBe(true);
   });
 
+  it('uses the standard built-in Tijd eenheidsysteem without a declaration (§3.7): €/jr → €/mnd ÷12', () => {
+    // Only an afstand system is declared; jr/mnd come from the built-in standard Tijd system, so
+    // the resolver records the exact ÷12 omrekenfactor on the assignment even though the model
+    // never declares Tijd (spec §7.3.1: "gedeeld door de omrekenfactor 12 uit het eenheidssysteem").
+    const { model, result } = resolve(objectBody(
+      `  de a Numeriek met eenheid € / jr;\n  de totaal Numeriek met eenheid € / mnd;`,
+      `De totaal van een B moet berekend worden als de a van de B.`));
+    expect(result.success).toBe(true);
+    const target = findNode(model.regels, (n: any) =>
+      n?.type === 'AttributeReference' && n.resolved?.unitConversion);
+    expect(target.resolved.unitConversion).toEqual({ multiplyBy: [], divideBy: ['12'] });
+  });
+
+  it('keeps the standard Tijd components disconnected: jr is not convertible to dg (§3.7)', () => {
+    // jr/mnd/kw reach the maand base; s/…/dg/wk reach the clock base — no edge between them, so a
+    // month/year can never be converted to days, exactly as the spec forbids (no omrekenfactor).
+    const { result } = resolve(objectBody(
+      `  de a Numeriek met eenheid jr;\n  de b Numeriek met eenheid dg;\n  de t Numeriek met eenheid jr;`,
+      `De t van een B moet berekend worden als de a van de B plus de b van de B.`));
+    expect(result.success).toBe(false);
+    expect(result.diagnostics.some(d => /Unit mismatch.*'jr'.*'dg'/.test(d.message))).toBe(true);
+  });
+
   it('does not restrict multiplicative operators; unit × scalar keeps the unit', () => {
     const { model, result } = resolve(objectBody(
       `  de a Numeriek met eenheid km;\n  de t Numeriek met eenheid km;`,

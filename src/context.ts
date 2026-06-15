@@ -657,6 +657,16 @@ export class Context implements RuntimeContext {
   }
 
   /**
+   * §9.6 — does a non-empty timeline value already exist for this attribute? Timelines live in a
+   * separate store from plain attributes, so the initialisatie leeg-guard must consult both before
+   * deciding a target is empty; otherwise it would clobber a timeline produced by another rule.
+   */
+  hasTimelineAttribute(type: string, id: string, attrName: string): boolean {
+    const tl = this.timelineAttributes.get(type)?.get(id)?.get(attrName);
+    return !!tl && tl.value.periods.length > 0;
+  }
+
+  /**
    * Get a timeline parameter value.
    */
   getTimelineParameter(name: string): TimelineValueImpl | undefined {

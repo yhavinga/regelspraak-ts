@@ -20,6 +20,16 @@ export function applyResolvedUnitConversion(
   value: Value,
   conv: { multiplyBy: string[]; divideBy: string[] }
 ): Value {
+  // A timeline value (e.g. the §7.3.2 tijdsevenredig result) converts per period, so the
+  // assignment-time §7.3.1 omrekening (120 €/jr → 10 €/mnd) reaches every period uniformly.
+  if (value.type === 'timeline') {
+    const tl = (value as any).value;
+    const periods = (tl.periods as Array<{ value?: Value }>).map(p => ({
+      ...p,
+      value: p.value ? applyResolvedUnitConversion(p.value, conv) : p.value,
+    }));
+    return { ...(value as any), value: { ...tl, periods } } as Value;
+  }
   if (isLeeg(value) || value.type !== 'number') {
     return value;
   }

@@ -1,4 +1,4 @@
-import { Value, RuntimeContext } from '../interfaces';
+import { Value, RuntimeContext, isLeeg } from '../interfaces';
 import { Context } from '../context';
 
 export interface NavigationResult {
@@ -324,7 +324,8 @@ export function isObjectScopedRule(path: string[]): boolean {
 export function setValueAtPath(
   path: string[],
   value: Value,
-  context: RuntimeContext
+  context: RuntimeContext,
+  skipIfFilled: boolean = false
 ): { success: boolean; error?: string } {
   // Use current instance as the starting point if available
   const ctx = context as Context;
@@ -347,6 +348,12 @@ export function setValueAtPath(
 
   // Set the attribute value
   const objectData = navigationResult.targetObject.value as Record<string, Value>;
+
+  // §9.6 initialisatieregel: a default-when-empty write skips a target that already holds a value
+  // (read exactly where we write — this path writes the plain attribute slot).
+  if (skipIfFilled && !isLeeg(objectData[navigationResult.attributeName])) {
+    return { success: true };
+  }
   const objectType = (navigationResult.targetObject as any).objectType ||
     (navigationResult.targetObject.value as any).__type;
   objectData[navigationResult.attributeName] = objectType

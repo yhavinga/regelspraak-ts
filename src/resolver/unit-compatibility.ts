@@ -44,11 +44,40 @@ export interface UnitRegistry {
   byToken: Map<string, UnitNode>;
 }
 
+/**
+ * The standard Tijd eenheidsysteem (§3.7), which GegevensSpraak provides built-in —
+ * a model may use jr/mnd/kw/wk/dg/u/… without declaring it. Two disconnected
+ * components, exactly as the spec table specifies: a calendar component
+ * (maand ← kwartaal ←jaar) and a clock component (seconde ← … ← week). They share
+ * no edge, so §3.7's "maanden niet direct omrekenen in dagen" falls out of the
+ * connectivity check rather than a special case. Factors are kept exact (the clock
+ * edges fold to whole seconds; ms is the one exact decimal) so the resolver folds
+ * them in exact decimal arithmetic. A model's own declaration overrides these,
+ * because declared systems are layered on top (later writes win).
+ */
+const STANDARD_TIJD_SYSTEM: UnitSystemDefinition = {
+  type: 'UnitSystemDefinition',
+  name: 'Tijd',
+  units: [
+    { name: 'seconde', plural: 'seconden', abbreviation: 's' },
+    { name: 'milliseconde', plural: 'milliseconden', abbreviation: 'ms', conversion: { factor: 0.001, toUnit: 's' } },
+    { name: 'minuut', plural: 'minuten', abbreviation: 'minuut', conversion: { factor: 60, toUnit: 's' } },
+    { name: 'uur', plural: 'uren', abbreviation: 'u', conversion: { factor: 3600, toUnit: 's' } },
+    { name: 'dag', plural: 'dagen', abbreviation: 'dg', conversion: { factor: 86400, toUnit: 's' } },
+    { name: 'week', plural: 'weken', abbreviation: 'wk', conversion: { factor: 604800, toUnit: 's' } },
+    { name: 'maand', plural: 'maanden', abbreviation: 'mnd' },
+    { name: 'kwartaal', plural: 'kwartalen', abbreviation: 'kw', conversion: { factor: 3, toUnit: 'mnd' } },
+    { name: 'jaar', plural: 'jaren', abbreviation: 'jr', conversion: { factor: 12, toUnit: 'mnd' } },
+  ],
+};
+
 export function buildUnitRegistry(
   systems: UnitSystemDefinition[] | undefined,
 ): UnitRegistry {
   const byToken = new Map<string, UnitNode>();
-  for (const sys of systems ?? []) {
+  // Built-in standard systems first; a model's declared systems are layered on
+  // top so a re-declared token (e.g. its own Tijd) overrides the standard one.
+  for (const sys of [STANDARD_TIJD_SYSTEM, ...(systems ?? [])]) {
     for (const u of sys.units ?? []) {
       const node: UnitNode = {
         canonical: (u.abbreviation ?? u.name).toLowerCase(),

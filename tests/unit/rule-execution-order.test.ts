@@ -14,6 +14,8 @@
  */
 
 import { Engine, Context } from '../../src';
+import { TimelineValueImpl } from '../../src/ast/timelines';
+import { setValueAtPath } from '../../src/utils/navigation';
 
 describe('Rule execution order', () => {
   let engine: Engine;
@@ -190,6 +192,60 @@ Regel Set b
       const highB = (high as any)?.attributes?.['korting b']?.value ?? (high as any)?.value?.['korting b']?.value;
       expect(highA).toBe(0);
       expect(highB).toBe(200);
+    });
+  });
+
+  describe('Initialisatie leeg-guard covers the latent write paths (§9.6)', () => {
+    // The canonical object-attribute write was already guarded; these cover the two paths the
+    // guard previously missed: a timeline-valued write, and a navigated (setValueAtPath) write.
+
+    test('a timeline initialisatie does NOT overwrite a timeline already produced for the attribute', () => {
+      // toeslag already holds a timeline (99 € throughout 2024). The initialisatieregel would set
+      // it from a default timeline parameter — but the target is not leeg, so it must be skipped.
+      const code = `
+Objecttype de Passagier
+    de toeslag Numeriek met eenheid € voor elke maand;
+
+Parameter de DEFAULT_TOESLAG : Numeriek met eenheid € voor elk jaar
+
+Regel Initialiseer toeslag
+    geldig altijd
+        De toeslag van een passagier moet geïnitialiseerd worden op de DEFAULT_TOESLAG.
+`;
+      const context = new Context();
+      context.createObject('Passagier', 'p1', {});
+      context.setTimelineAttribute('Passagier', 'p1', 'toeslag', new TimelineValueImpl({
+        periods: [{ startDate: new Date(2024, 0, 1), endDate: new Date(2025, 0, 1),
+          value: { type: 'number', value: 99, unit: { name: '€' } } }],
+        granularity: 'jaar',
+      }));
+      context.setTimelineParameter('DEFAULT_TOESLAG', new TimelineValueImpl({
+        periods: [{ startDate: new Date(2024, 0, 1), endDate: new Date(2025, 0, 1),
+          value: { type: 'number', value: 5, unit: { name: '€' } } }],
+        granularity: 'jaar',
+      }));
+
+      const result = new Engine().run(code, context);
+      expect(result.success).toBe(true);
+
+      context.evaluation_date = new Date(2024, 5, 15);
+      expect(context.getTimelineAttribute('Passagier', 'p1', 'toeslag')?.value).toBe(99);
+    });
+
+    test('setValueAtPath skips a filled target when skipIfFilled, but writes when not', () => {
+      const context = new Context();
+      context.createObject('Doos', 'd1', { inhoud: { type: 'number', value: 7 } });
+      const doos = context.getObjectsByType('Doos')[0];
+      context.current_instance = doos;
+
+      // skipIfFilled (the initialisatie case): a non-leeg target is left untouched.
+      const skipped = setValueAtPath(['Doos', 'inhoud'], { type: 'number', value: 99 }, context, true);
+      expect(skipped.success).toBe(true);
+      expect((doos.value as any).inhoud.value).toBe(7);
+
+      // Without the guard (a normal gelijkstelling), the write goes through.
+      setValueAtPath(['Doos', 'inhoud'], { type: 'number', value: 99 }, context, false);
+      expect((doos.value as any).inhoud.value).toBe(99);
     });
   });
 });
