@@ -84,7 +84,7 @@ export function buildUnitRegistry(
         system: sys.name,
         conversion: u.conversion,
       };
-      for (const token of [u.name, u.abbreviation, u.symbol]) {
+      for (const token of [u.name, u.plural, u.abbreviation, u.symbol]) {
         if (token) byToken.set(token.toLowerCase(), node);
       }
     }

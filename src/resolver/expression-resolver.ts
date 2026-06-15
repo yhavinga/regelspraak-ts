@@ -1112,6 +1112,35 @@ function resolveSegmentCandidates(
   return candidates;
 }
 
+/**
+ * A navigation segment may carry a unit projection: "afstand tot bestemming in kilometers"
+ * names the attribute "afstand tot bestemming" expressed in kilometers. The naamwoord parser
+ * leaves the "in <eenheid>" glued to the attribute name, so the plain segment lookup misses it.
+ * Strip a trailing "in <known-unit>" and resolve the base attribute — but accept only when the
+ * projection is identity (the projected unit is the attribute's own unit), so a value-changing
+ * conversion is never silently dropped here; a genuine cast falls through to the original error.
+ */
+function resolveUnitProjectionSegment(
+  segment: string,
+  currentType: string,
+  maps: ResolutionMaps
+): NavigationCandidate[] {
+  const match = segment.match(/^(.+) in (\S+)$/i);
+  if (!match) {
+    return [];
+  }
+  const [, base, unitToken] = match;
+  const projected = maps.units.byToken.get(unitToken.toLowerCase());
+  if (!projected) {
+    return [];
+  }
+  const canonicalOf = (unit: string): string =>
+    maps.units.byToken.get(unit.toLowerCase())?.canonical ?? unit.toLowerCase();
+  return resolveSegmentCandidates(base, currentType, maps).filter(
+    candidate => candidate.unit !== undefined && canonicalOf(candidate.unit) === projected.canonical
+  );
+}
+
 function resolveFinalType(
   finalType: string,
   maps: ResolutionMaps
@@ -1201,7 +1230,10 @@ function resolveAttributeReference(
       );
     }
 
-    const segmentCandidates = resolveSegmentCandidates(segment, currentType, maps);
+    let segmentCandidates = resolveSegmentCandidates(segment, currentType, maps);
+    if (segmentCandidates.length === 0) {
+      segmentCandidates = resolveUnitProjectionSegment(segment, currentType, maps);
+    }
     const candidate = selectSingleCandidate(
       segmentCandidates,
       segmentCandidates.length > 1
