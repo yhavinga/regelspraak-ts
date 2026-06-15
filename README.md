@@ -39,6 +39,10 @@ engine runtime is a fallible cross-check — fix the parser/resolver when it div
 - **Multiword operators lex as single tokens** (`IS_GELIJK_AAN`, `GROTER_IS_DAN`, `IS_LEEG`), so a
   bare `IS` in a rule alternative never collides with them. Names that span words use `naamwoord`
   (multi-word), not `identifier` (one token) — a day-type/kenmerk like "tweede paasdag".
+- **A fused operator *de-fuses* when a token intervenes.** `is groter dan` is one `IS_GROTER_DAN`
+  token only while contiguous; insert a qualifier (`is gedurende het gehele jaar groter dan`) and
+  it lexes as `IS` + `GROTER_DAN`. So an inserted prefix (the §8.2 whole-period check) needs a
+  grammar alternative over the *bare* operator, not new lexer tokens — no lexer surgery.
 - **Disambiguate semantically at resolution, structurally at parse where you can.** `X is een
   <noun>` is dagsoort-vs-kenmerk only by whether `<noun>` is a declared dagsoort — a resolution-
   time fact. Where the grammar *can* discriminate (an article `een`/`geen`, a trailing `heeft`),
