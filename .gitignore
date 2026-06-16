@@ -24,4 +24,4 @@ npm-debug.log*
 lib/
 
 # Spec-conversion scratch (page renders + text layers); regenerable from the PDFs
-specification/v2.3.0/_work/
+specification/*/_work/

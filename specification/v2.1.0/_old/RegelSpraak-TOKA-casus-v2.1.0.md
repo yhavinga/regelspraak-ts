@@ -1,4 +1,4 @@
-# RegelSpraak TOKA Casus - Corrected Syntax
+# RegelSpraak TOKA Casus (v2.1.0)
 
 **Objective:** Provide the complete TOKA case study with **proper RegelSpraak syntax** as it appears in the specification, not documentation-style descriptions.
 
@@ -264,7 +264,7 @@ Regel Paaskorting
         indien de vluchtdatum van de vlucht gelijk is aan de eerste paasdag van (het jaar uit (de vluchtdatum van de vlucht)).
 ```
 
-### 3.9 Object Creation (CORRECTED SYNTAX)
+### 3.9 Object Creation
 
 ```regelspraak
 Regel vastgestelde contingent treinmiles
