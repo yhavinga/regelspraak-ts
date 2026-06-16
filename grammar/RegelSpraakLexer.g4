@@ -62,6 +62,19 @@ NIEUWE: 'nieuwe';  // Still used in naamPhrase for rule names
 ER_AAN: [Ee]'r aan';
 
 // --- Comparison Phrase Tokens ---
+// KNOWN GAP — spec Tabel 16 (§8.1) / EBNF §13.4.11 in "RegelSpraak-specificatie - syntaxdiagrammen
+// v2.3.0.md" (see ../specification/). The predicaten table lists four variants per comparison:
+// vragende/stellende × enkelvoud/meervoud. We tokenize stellende-enkelvoud (IS_*), stellende-
+// meervoud (ZIJN_*) and vragende-enkelvoud (*_IS_*), but NOT the vragende-meervoud forms
+// "gelijk zijn aan", "groter zijn dan", "kleiner of gelijk zijn aan", "later zijn dan",
+// "eerder zijn dan", … — only ONGELIJK_ZIJN_AAN (below) exists, added when the TOKA
+// "moet ongelijk zijn aan" rule hit the gap. This is deliberate, not an oversight: none of the
+// other vragende-meervoud forms occur in any rule/example/test, so they are added on demand (the
+// same add-when-hit pattern that produced the vragende-enkelvoud tokens). If a real rule gets
+// stuck on one, the fix is cheap and semantics-free: add the token here, add the alternative to
+// `comparisonOperator` in RegelSpraak.g4, and reuse the existing comparison visitor label — no
+// resolver/transpiler change (mood/number is surface syntax only). ONGELIJK_ZIJN_AAN is the
+// worked template.
 GELIJK_IS_AAN: 'gelijk is aan';
 // Vragende (verb-in-middle) operators completing §13.4.11 forms 23 (getal) and 29 (datum), the
 // siblings of GROTER_IS_DAN / GELIJK_IS_AAN: the verb "is" sits inside the operator phrase. Without
@@ -94,6 +107,13 @@ ZIJN_EERDER_DAN: 'zijn eerder dan';
 ZIJN_EERDER_OF_GELIJK_AAN: 'zijn eerder of gelijk aan';
 
 // --- Condition Phrase Tokens ---
+// KNOWN GAP — spec Tabel 16 (§8.1). The verb-last vragende forms of the unary predicates are not
+// tokenized: "aan de elfproef voldoen" (only VOLDOEN_/VOLDOET_AAN_DE_ELFPROEF, verb-first),
+// "numeriek met exact <n> cijfers is" (only IS_/ZIJN_NUMERIEK_MET_EXACT), and the Resultaat-Regel
+// "gevuurd is" / "inconsistent is" (only IS_GEVUURD / IS_INCONSISTENT). Same rationale as the
+// comparison gap above: none occur in any rule/example/test, so add on demand — token here, plus
+// an alternative on the existing unaryCondition / regelStatusCondition rules in RegelSpraak.g4,
+// reusing the same visitor label.
 IS_LEEG: 'is leeg';
 IS_GEVULD: 'is gevuld';
 ZIJN_LEEG: 'zijn leeg';
