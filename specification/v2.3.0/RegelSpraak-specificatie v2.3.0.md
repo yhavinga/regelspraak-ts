@@ -3240,10 +3240,9 @@ Zoals al eerder gezegd hebben predicaten een vragende en een stellende vorm, die
 <table>
 <tbody>
 <tr><td colspan="7"><em>(vervolg)</em></td></tr>
-<tr><td>zijn/hebben</td><td>&lt;rolnaam&gt;</td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td colspan="7"><strong>Kenmerkcheck <sup>27</sup></strong></td></tr>
 <tr><td>is/heeft/is een &lt;kenmerknaam&gt;<br>zijn/hebben/zijn een &lt;kenmerknaam&gt;</td><td>is/heeft/ is een &lt;kenmerknaam&gt;<br>zijn/hebben/zijn een &lt;kenmerknaam&gt;</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>geen &lt;kenmerknaam&gt; is /heeft / is geen &lt;kenmerknaam&gt; zijn /hebben /zijn</td><td>is niet/heeft niet/is niet een &lt;kenmerknaam&gt; zijn geen/hebben geen/zijn geen &lt;kenmerknaam&gt;</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>geen &lt;kenmerknaam&gt; is /heeft / is<br>geen &lt;kenmerknaam&gt; zijn /hebben /zijn</td><td>is niet/heeft niet/is niet een &lt;kenmerknaam&gt;<br>zijn geen/hebben geen/zijn geen &lt;kenmerknaam&gt;</td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td colspan="7"><strong>Resultaat Regel <sup>28</sup></strong></td></tr>
 <tr><td>gevuurd is</td><td>is gevuurd</td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>inconsistent is</td><td>is inconsistent</td><td></td><td></td><td></td><td></td><td></td></tr>
