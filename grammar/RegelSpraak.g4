@@ -543,16 +543,22 @@ resultaatDeel
     | verdelingResultaat                                                               # Verdeling
     ;
 
+// §13.4.8 <enkelvoudigeconsistentieregel>: after "moet", a getal/datum/tekst/object
+// comparison in its meervoud surface (e.g. the §9.4 example "moet kleiner zijn dan", or
+// "moet groter of gelijk zijn aan"). Every surface folds onto one symbol via the visitor's
+// mapComparisonOperatorText, so enumerating all forms is semantics-free. Mirrors the
+// comparison tokens (minus IS/IN/NIET, which are not consistency comparators).
 consistencyOperator
-    : ONGELIJK_ZIJN_AAN
-    | ONGELIJK_AAN
-    | IS_ONGELIJK_AAN
-    | GELIJK_AAN
-    | IS_GELIJK_AAN
-    | GROTER_DAN
-    | IS_GROTER_DAN
-    | KLEINER_DAN
-    | IS_KLEINER_DAN
+    : GELIJK_AAN | GELIJK_IS_AAN | IS_GELIJK_AAN | ZIJN_GELIJK_AAN | GELIJK_ZIJN_AAN
+    | ONGELIJK_AAN | ONGELIJK_IS_AAN | IS_ONGELIJK_AAN | ZIJN_ONGELIJK_AAN | ONGELIJK_ZIJN_AAN
+    | GROTER_DAN | GROTER_IS_DAN | IS_GROTER_DAN | ZIJN_GROTER_DAN | GROTER_ZIJN_DAN
+    | GROTER_OF_GELIJK_AAN | GROTER_OF_GELIJK_IS_AAN | IS_GROTER_OF_GELIJK_AAN | ZIJN_GROTER_OF_GELIJK_AAN | GROTER_OF_GELIJK_ZIJN_AAN
+    | KLEINER_DAN | KLEINER_IS_DAN | IS_KLEINER_DAN | ZIJN_KLEINER_DAN | KLEINER_ZIJN_DAN
+    | KLEINER_OF_GELIJK_AAN | KLEINER_OF_GELIJK_IS_AAN | IS_KLEINER_OF_GELIJK_AAN | ZIJN_KLEINER_OF_GELIJK_AAN | KLEINER_OF_GELIJK_ZIJN_AAN
+    | LATER_DAN | LATER_IS_DAN | IS_LATER_DAN | ZIJN_LATER_DAN | LATER_ZIJN_DAN
+    | LATER_OF_GELIJK_AAN | LATER_OF_GELIJK_IS_AAN | IS_LATER_OF_GELIJK_AAN | ZIJN_LATER_OF_GELIJK_AAN | LATER_OF_GELIJK_ZIJN_AAN
+    | EERDER_DAN | EERDER_IS_DAN | IS_EERDER_DAN | ZIJN_EERDER_DAN | EERDER_ZIJN_DAN
+    | EERDER_OF_GELIJK_AAN | EERDER_OF_GELIJK_IS_AAN | IS_EERDER_OF_GELIJK_AAN | ZIJN_EERDER_OF_GELIJK_AAN | EERDER_OF_GELIJK_ZIJN_AAN
     ;
 
 // FeitCreatie pattern - parse the whole pattern as one unit

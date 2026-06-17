@@ -6981,22 +6981,11 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       throw new Error('Failed to parse consistency check target or expression');
     }
 
-    // Map consistency operators to comparison operators
-    const operatorCtx = ctx.consistencyOperator ? ctx.consistencyOperator() : null;
-    let operator = '!='; // default to not equal
-
-    if (operatorCtx) {
-      const operatorText = operatorCtx.getText().toLowerCase();
-      if (operatorText.includes('ongelijk')) {
-        operator = '!=';
-      } else if (operatorText.includes('kleiner')) {
-        operator = '<';
-      } else if (operatorText.includes('groter')) {
-        operator = '>';
-      } else if (operatorText.includes('gelijk')) {
-        operator = '==';
-      }
-    }
+    // Map the consistency operator to its comparison symbol. Fold every meervoud surface
+    // (incl. "of gelijk" -> >=/<= and the §9.4 "kleiner zijn dan") through the shared helper,
+    // which fails fast on an unknown operator instead of silently mis-mapping "groter of
+    // gelijk" to ">" the way a substring check would.
+    const operator = this.mapComparisonOperatorText(ctx.consistencyOperator().getText().toLowerCase());
 
     // Create a Consistentieregel node
     const node: Consistentieregel = {

@@ -814,3 +814,28 @@ De leeftijd van een Persoon moet ongelijk zijn aan de minleeftijd van zijn veren
     expect(result.success).toBe(true);
   });
 });
+
+describe('consistentieregel comparison operators (§13.4.8 meervoud surface)', () => {
+  // The operator after "moet" folds onto a comparison symbol. "of gelijk" must become >=/<=,
+  // not the strict >/< a substring check yields, and the §9.4 verb-medial "kleiner zijn dan"
+  // must parse. Pins the consistencyOperator surface expansion + mapComparisonOperatorText folding.
+  const conditionOperator = (op: string): string | undefined => {
+    const model = new AntlrParser().parseModel(
+      `Objecttype de Belastingaangifte (mv: aangiften)\n  de leeftijd Numeriek;\n` +
+      `Regel check\ngeldig altijd\nDe leeftijd van een Belastingaangifte moet ${op} 0.\n`,
+    );
+    const node = findNode(model, (n: any) => n.type === 'Consistentieregel');
+    return node?.condition?.operator;
+  };
+
+  test.each([
+    ['groter of gelijk zijn aan', '>='],
+    ['kleiner of gelijk zijn aan', '<='],
+    ['groter zijn dan', '>'],
+    ['kleiner zijn dan', '<'],
+    ['gelijk zijn aan', '=='],
+    ['ongelijk zijn aan', '!='],
+  ])('"moet %s" folds to %s', (op, symbol) => {
+    expect(conditionOperator(op)).toBe(symbol);
+  });
+});
