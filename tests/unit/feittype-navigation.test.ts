@@ -1,4 +1,4 @@
-import { Engine, Context, Value } from '../../src';
+import { Engine, Context, Value, AntlrParser } from '../../src';
 
 describe('Feittype Relationship Navigation', () => {
   let engine: Engine;
@@ -327,6 +327,35 @@ geldig altijd
       // Check age calculation
       const updatedPersoon = context.getObject('Natuurlijk persoon', 'persoon1');
       expect(updatedPersoon.leeftijd.value).toBe(34); // 2024 - 1990 = 34 years
+    });
+  });
+
+  // §5.5.5 onderwerpketen lists <objecttypenaam> before <rolnaam>, so a navigation-root word
+  // that is BOTH an objecttype and a same-named feittype role resolves to the objecttype — it
+  // must not raise "Ambiguous navigation root". Regression pin for the resolveRootCandidates
+  // objecttype-first precedence fix (a rol 'de bestelling' filled by objecttype Bestelling).
+  describe('object-type-named role resolves objecttype-first (§5.5.5)', () => {
+    const code = `
+Feittype artikelen van bestelling
+  de bestelling\tBestelling
+  het artikel (mv: artikelen)\tArtikel
+één bestelling bevat meerdere artikelen
+
+Objecttype de Bestelling
+  het totaal aantal Numeriek (geheel getal);
+
+Objecttype het Artikel
+  de prijs Numeriek;
+
+Regel tel_artikelen
+geldig altijd
+  Het totaal aantal van een Bestelling moet berekend worden als het aantal artikelen van de bestelling.
+`;
+
+    test('does not raise "Ambiguous navigation root" and resolves cleanly', () => {
+      const resolved = new AntlrParser().parseResolvedModel(code);
+      expect(resolved.diagnostics.some(d => /Ambiguous navigation root/.test(d.message))).toBe(false);
+      expect(resolved.diagnostics).toEqual([]);
     });
   });
 });

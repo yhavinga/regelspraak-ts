@@ -1065,7 +1065,13 @@ function resolveRootCandidates(
     });
   }
 
-  candidates.push(...resolveFeitTypeRole(segment, maps.feitTypes, maps.objectTypes));
+  // §5.5.5 onderwerpketen lists <objecttypenaam> before <rolnaam>, so a root word that is
+  // both an objecttype (or a bound scope variable) and a feittype role is not ambiguous —
+  // the objecttype/variable reading wins. Only fall back to role candidates when neither
+  // already matched, mirroring resolveOnderwerpketenSubject and bindingForSubject.
+  if (candidates.length === 0) {
+    candidates.push(...resolveFeitTypeRole(segment, maps.feitTypes, maps.objectTypes));
+  }
   return candidates;
 }
 
