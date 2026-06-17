@@ -4,7 +4,6 @@ export { Engine } from './engine';
 export { Context } from './context';
 export type { StructuredTraceEntry } from './context';
 export { AntlrParser } from './parser';
-export { SemanticAnalyzer } from './semantic-analyzer';
 export * from './ast';
 export * from './resolver';
 

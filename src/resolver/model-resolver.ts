@@ -329,6 +329,62 @@ class DomainModelResolver {
   ): void {
     this.resolveExpression(result.subject, context, `${path}.subject`);
     this.resolveOptionalExpression(result.temporalCondition, context, `${path}.temporalCondition`);
+    this.validateKenmerkExists(result, `${path}.subject`);
+  }
+
+  /**
+   * Validate that a kenmerktoekenning assigns a kenmerk the subject's ObjectType actually declares.
+   * Left unchecked, a typo'd kenmerk reaches the transpiler as a setter for a field that does not
+   * exist, surfacing as a Java compile error rather than a model diagnostic. The subject's terminal
+   * resolved targetType names the bearing ObjectType; the lookup mirrors the expression resolver's
+   * own (registry-aware, so a declared variant label still matches), and only a *known* ObjectType is
+   * judged — an unresolved subject carries its own diagnostic and is left alone here.
+   */
+  private validateKenmerkExists(result: Kenmerktoekenning, path: string): void {
+    const subject = result.subject as Expression;
+    const name = result.characteristic;
+    if (!name) {
+      return;
+    }
+    const resolvedPath = subject.resolved?.resolvedPath as Array<{ targetType?: string }> | undefined;
+    let objectTypeName: string | undefined;
+    if (Array.isArray(resolvedPath)) {
+      for (let i = resolvedPath.length - 1; i >= 0; i--) {
+        if (resolvedPath[i]?.targetType) {
+          objectTypeName = resolvedPath[i].targetType;
+          break;
+        }
+      }
+    }
+    const subjectPath = (subject as unknown as { path?: string[] }).path;
+    if (!objectTypeName && subjectPath?.length === 1) {
+      objectTypeName = subjectPath[0];
+    }
+    if (!objectTypeName) {
+      return;
+    }
+    const objectType =
+      this.maps.objectTypes.get(objectTypeName) || this.maps.objectTypes.get(objectTypeName.toLowerCase());
+    if (!objectType) {
+      return;
+    }
+    const canonicalType = objectType.name;
+    const kenmerkMap =
+      this.maps.kenmerken.get(canonicalType) || this.maps.kenmerken.get(canonicalType.toLowerCase());
+    const registry =
+      this.maps.kenmerkRegistries.get(canonicalType) || this.maps.kenmerkRegistries.get(canonicalType.toLowerCase());
+    let kenmerk = kenmerkMap?.get(name) || kenmerkMap?.get(name.toLowerCase());
+    if (!kenmerk && registry && kenmerkMap) {
+      const canonical = registry.getCanonicalLabel(name);
+      kenmerk = kenmerkMap.get(canonical) || kenmerkMap.get(canonical.toLowerCase());
+    }
+    if (!kenmerk) {
+      this.addDiagnostic(
+        `Kenmerk '${name}' not defined for object type '${canonicalType}'`,
+        path,
+        (subject as { location?: SourceLocation }).location,
+      );
+    }
   }
 
   private resolveObjectCreation(
@@ -337,6 +393,19 @@ class DomainModelResolver {
     path: string
   ): void {
     this.resolveExpression(result.subject, context, `${path}.subject`);
+
+    // The created role must be backed by a FeitType (the same gate FeitCreatie applies, §9.3): an
+    // ObjectCreation creates an instance of a relation role, so an unbacked role is a model error that
+    // would otherwise reach the transpiler as a missing relation. Mirrors the dead semantic-analyzer's
+    // check, now in the live resolution path.
+    if (result.role && findFeitTypesForRole(result.role, this.maps).length === 0) {
+      this.addDiagnostic(
+        `ObjectCreation references unknown role '${result.role}'. No FeitType defines this role.`,
+        `${path}.role`,
+        (result as { location?: SourceLocation }).location,
+      );
+    }
+
     result.attributeInits.forEach((init, index) => {
       this.resolveExpression(init.value, context, `${path}.attributeInits[${index}].value`);
       this.validateObjectCreationInit(

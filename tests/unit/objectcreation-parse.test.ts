@@ -20,7 +20,6 @@
  */
 
 import { AntlrParser } from '../../src';
-import { SemanticAnalyzer } from '../../src/semantic-analyzer';
 import { ObjectCreation } from '../../src/ast/rules';
 
 describe('ObjectCreation parsing (Phase 1)', () => {
@@ -267,8 +266,8 @@ Regel badge met type
     });
   });
 
-  describe('Phase 2: Semantic analyzer FeitType validation', () => {
-    it('warns when role not found in any FeitType', () => {
+  describe('Phase 2: Resolver FeitType validation', () => {
+    it('reports a role not found in any FeitType', () => {
       const source = `
 Objecttype de Vlucht (mv: vluchten)
     de naam Tekst;
@@ -277,12 +276,9 @@ Regel MaakOnbekendeRol
     geldig altijd
         Een vlucht heeft het onbekendeRol.
 `;
-      const model = parser.parseModel(source);
-      const analyzer = new SemanticAnalyzer();
-      const errors = analyzer.analyze(model);
+      const { diagnostics } = parser.parseResolvedModel(source, { strict: true });
 
-      // Should have an error about unknown role
-      const roleError = errors.find(e => e.message.includes('unknown role'));
+      const roleError = diagnostics.find(d => d.message.includes('unknown role'));
       expect(roleError).toBeDefined();
     });
 
@@ -303,12 +299,9 @@ Regel maak contingent
     geldig altijd
         Een vlucht heeft het contingent.
 `;
-      const model = parser.parseModel(source);
-      const analyzer = new SemanticAnalyzer();
-      const errors = analyzer.analyze(model);
+      const { diagnostics } = parser.parseResolvedModel(source, { strict: true });
 
-      // Should NOT have an error about unknown role
-      const roleError = errors.find(e => e.message.includes('unknown role'));
+      const roleError = diagnostics.find(d => d.message.includes('unknown role'));
       expect(roleError).toBeUndefined();
     });
   });

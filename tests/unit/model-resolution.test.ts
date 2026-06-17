@@ -1,7 +1,6 @@
 import { AntlrParser } from '../../src/parser';
 import { Engine } from '../../src/engine';
 import { resolveModel } from '../../src/resolver';
-import { SemanticAnalyzer } from '../../src/semantic-analyzer';
 
 function findNode(node: any, predicate: (node: any) => boolean): any | undefined {
   if (!node || typeof node !== 'object') {
@@ -442,19 +441,16 @@ De burgerservicenummers van alle Personen moeten uniek zijn.
     ]);
   });
 
-  test('semantic analyzer exposes transpilation-grade diagnostics', () => {
+  test('the resolver exposes transpilation-grade diagnostics', () => {
     const parser = new AntlrParser();
-    const analyzer = new SemanticAnalyzer();
-    const model = parser.parseModel(`
+    const { diagnostics } = parser.parseResolvedModel(`
 Objecttype de Persoon (mv: personen) (bezield)
   de toeslag Numeriek;
 
 Regel bereken toeslag
 geldig altijd
 De toeslag van een Persoon moet berekend worden als zijn leeftijd.
-`);
-
-    const diagnostics = analyzer.analyzeForTranspilation(model);
+`, { strict: true });
 
     expect(diagnostics.some(diagnostic =>
       diagnostic.message.includes("Cannot resolve navigation segment 'leeftijd'")

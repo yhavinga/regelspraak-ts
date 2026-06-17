@@ -1,40 +1,33 @@
 import { AntlrParser } from '../../src/parser';
-import { SemanticAnalyzer } from '../../src/semantic-analyzer';
-import { DomainModel } from '../../src/ast/domain-model';
 
 /**
- * Semantic Validation Tests
+ * Resolver validation tests (migrated from the retired semantic-analyzer).
  *
- * Tests verify semantic analyzer validation using spec-compliant syntax:
- * - ObjectCreation: "Een X heeft een Y"
- * - Kenmerktoekenning: "Een X is kenmerk"
- * - Parameter references
+ * The resolver is the single semantic authority — parseResolvedModel runs it and surfaces
+ * diagnostics — so these assertions exercise the live resolution path that gates the transpiler,
+ * not a dead pre-flight pass. Unknown ObjectCreation roles and unknown kenmerk assignments are now
+ * caught here (they previously lived only in the analyzer, which nothing called).
  */
-describe('Semantic Validation', () => {
+describe('Resolver Validation', () => {
   const parser = new AntlrParser();
-  const analyzer = new SemanticAnalyzer();
+  const diagnose = (src: string): string[] =>
+    parser.parseResolvedModel(src, { strict: true }).diagnostics.map(d => d.message);
 
   describe('Unknown Role Validation (ObjectCreation)', () => {
-    test('should warn when role not found in any FeitType', () => {
-      const modelText = `
+    test('reports a role not backed by any FeitType', () => {
+      const messages = diagnose(`
 Objecttype de Winkel (mv: winkels)
     de naam Tekst;
 
 Regel MaakOnbekend
     geldig altijd
         Een winkel heeft het onbekendeRol.
-      `;
-
-      const model = parser.parseModel(modelText);
-      const errors = analyzer.analyze(model);
-
-      expect(errors.length).toBeGreaterThan(0);
-      const roleError = errors.find(e => e.message.includes('unknown role'));
-      expect(roleError).toBeDefined();
+      `);
+      expect(messages.some(m => /unknown role/.test(m))).toBe(true);
     });
 
-    test('should pass when role exists in FeitType', () => {
-      const modelText = `
+    test('accepts a role backed by a FeitType', () => {
+      const messages = diagnose(`
 Objecttype de Winkel (mv: winkels)
     de naam Tekst;
 
@@ -42,27 +35,21 @@ Objecttype de Product (mv: producten)
     de naam Tekst;
 
 Feittype producten van winkel
-    de winkel	Winkel
-    het product (mv: producten)	Product
+    de winkel\tWinkel
+    het product (mv: producten)\tProduct
 één winkel heeft meerdere producten
 
 Regel MaakProduct
     geldig altijd
         Een winkel heeft het product.
-      `;
-
-      const model = parser.parseModel(modelText);
-      const errors = analyzer.analyze(model);
-
-      // Should not have any role errors
-      const roleErrors = errors.filter(e => e.message.includes('unknown role'));
-      expect(roleErrors.length).toBe(0);
+      `);
+      expect(messages.some(m => /unknown role/.test(m))).toBe(false);
     });
   });
 
   describe('Unknown Attribute Validation (ObjectCreation)', () => {
-    test('should fail when setting unknown attribute', () => {
-      const modelText = `
+    test('reports an unknown initializer attribute', () => {
+      const messages = diagnose(`
 Objecttype de Winkel (mv: winkels)
     de naam Tekst;
 
@@ -71,26 +58,20 @@ Objecttype de Product (mv: producten)
     de prijs Numeriek;
 
 Feittype producten van winkel
-    de winkel	Winkel
-    het product (mv: producten)	Product
+    de winkel\tWinkel
+    het product (mv: producten)\tProduct
 één winkel heeft meerdere producten
 
 Regel MaakProductFout
     geldig altijd
         Een winkel heeft het product
         met naam gelijk aan "Test" en onbekend attribuut gelijk aan 123.
-      `;
-
-      const model = parser.parseModel(modelText);
-      const errors = analyzer.analyze(model);
-
-      expect(errors.length).toBeGreaterThan(0);
-      const attrError = errors.find(e => e.message.includes('onbekend'));
-      expect(attrError).toBeDefined();
+      `);
+      expect(messages.some(m => /Unknown attribute or kenmerk 'onbekend/.test(m))).toBe(true);
     });
 
-    test('should pass when setting known attributes', () => {
-      const modelText = `
+    test('accepts known initializer attributes', () => {
+      const messages = diagnose(`
 Objecttype de Winkel (mv: winkels)
     de naam Tekst;
 
@@ -99,58 +80,22 @@ Objecttype de Product (mv: producten)
     de prijs Numeriek;
 
 Feittype producten van winkel
-    de winkel	Winkel
-    het product (mv: producten)	Product
+    de winkel\tWinkel
+    het product (mv: producten)\tProduct
 één winkel heeft meerdere producten
 
 Regel MaakProduct
     geldig altijd
         Een winkel heeft het product
         met naam gelijk aan "Test" en prijs gelijk aan 100.
-      `;
-
-      const model = parser.parseModel(modelText);
-      const errors = analyzer.analyze(model);
-
-      // Should not have any attribute errors
-      const attrErrors = errors.filter(e => e.message.includes('Attribute') && e.message.includes('not defined'));
-      expect(attrErrors.length).toBe(0);
+      `);
+      expect(messages.some(m => /Unknown attribute or kenmerk/.test(m))).toBe(false);
     });
   });
 
-  describe('ObjectCreation Subject/Role Required', () => {
-    test('should require subject field', () => {
-      // This is validated at parse time - new syntax requires subject
-      // Testing that a properly formed ObjectCreation doesn't generate missing subject error
-      const modelText = `
-Objecttype de Winkel (mv: winkels)
-    de naam Tekst;
-
-Objecttype de Product (mv: producten)
-    de naam Tekst;
-
-Feittype producten van winkel
-    de winkel	Winkel
-    het product (mv: producten)	Product
-één winkel heeft meerdere producten
-
-Regel MaakProduct
-    geldig altijd
-        Een winkel heeft het product.
-      `;
-
-      const model = parser.parseModel(modelText);
-      const errors = analyzer.analyze(model);
-
-      // Should not have missing subject/role errors
-      const subjectErrors = errors.filter(e => e.message.includes('missing'));
-      expect(subjectErrors.length).toBe(0);
-    });
-  });
-
-  describe('Unknown Kenmerk Validation', () => {
-    test('should fail when setting unknown kenmerk', () => {
-      const modelText = `
+  describe('Unknown Kenmerk Validation (Kenmerktoekenning)', () => {
+    test('reports a kenmerk the object type does not declare', () => {
+      const messages = diagnose(`
 Objecttype de Persoon (mv: personen)
     de naam Tekst;
     is minderjarig kenmerk (bijvoeglijk);
@@ -158,19 +103,12 @@ Objecttype de Persoon (mv: personen)
 Regel TestOnbekendKenmerk
     geldig altijd
         Een Persoon is onbekend_kenmerk.
-      `;
-
-      const model = parser.parseModel(modelText);
-      const errors = analyzer.analyze(model);
-
-      expect(errors.length).toBeGreaterThan(0);
-      const kenmerkError = errors.find(e => e.message.includes('onbekend_kenmerk'));
-      expect(kenmerkError).toBeDefined();
-      expect(kenmerkError!.message).toContain("Kenmerk 'onbekend_kenmerk' not defined");
+      `);
+      expect(messages.some(m => /Kenmerk 'onbekend_kenmerk' not defined/.test(m))).toBe(true);
     });
 
-    test('should pass when setting known kenmerk', () => {
-      const modelText = `
+    test('accepts a declared kenmerk', () => {
+      const messages = diagnose(`
 Objecttype de Persoon (mv: personen)
     de naam Tekst;
     is minderjarig kenmerk (bijvoeglijk);
@@ -178,20 +116,14 @@ Objecttype de Persoon (mv: personen)
 Regel TestKenmerk
     geldig altijd
         Een Persoon is minderjarig.
-      `;
-
-      const model = parser.parseModel(modelText);
-      const errors = analyzer.analyze(model);
-
-      // Should not have any kenmerk errors
-      const kenmerkErrors = errors.filter(e => e.message.includes('Kenmerk'));
-      expect(kenmerkErrors.length).toBe(0);
+      `);
+      expect(messages.some(m => /not defined/.test(m))).toBe(false);
     });
   });
 
   describe('Unknown Parameter Validation', () => {
-    test('should fail when referencing unknown parameter', () => {
-      const modelText = `
+    test('reports an unresolved parameter reference', () => {
+      const messages = diagnose(`
 Parameter de leeftijdsgrens : Numeriek
 
 Objecttype de Persoon (mv: personen)
@@ -200,19 +132,13 @@ Objecttype de Persoon (mv: personen)
 Regel TestParameter
     geldig altijd
         De leeftijd van een Persoon moet berekend worden als de onbekende_parameter.
-      `;
-
-      const model = parser.parseModel(modelText);
-      const errors = analyzer.analyze(model);
-
-      expect(errors.length).toBeGreaterThan(0);
-      const paramError = errors.find(e => e.message.includes('Unknown parameter'));
-      expect(paramError).toBeDefined();
-      expect(paramError!.message).toContain('Unknown parameter: onbekende_parameter');
+      `);
+      // The reference resolves to no parameter, attribute or variable, so the resolver rejects it.
+      expect(messages.some(m => /not resolved|navigation segment/.test(m))).toBe(true);
     });
 
-    test('should pass when referencing known parameter', () => {
-      const modelText = `
+    test('accepts a declared parameter', () => {
+      const messages = diagnose(`
 Parameter de leeftijdsgrens : Numeriek
 
 Objecttype de Persoon (mv: personen)
@@ -221,35 +147,8 @@ Objecttype de Persoon (mv: personen)
 Regel TestParameter
     geldig altijd
         De leeftijd van een Persoon moet berekend worden als de leeftijdsgrens.
-      `;
-
-      const model = parser.parseModel(modelText);
-      const errors = analyzer.analyze(model);
-
-      // Should not have any parameter errors
-      const paramErrors = errors.filter(e => e.message.includes('Unknown parameter'));
-      expect(paramErrors.length).toBe(0);
-    });
-  });
-
-  describe('Decision Table Validation', () => {
-    test('should validate typed header expressions', () => {
-      const modelText = `
-Beslistabel Test
-geldig altijd
-|   | de korting moet gesteld worden op | indien leeftijd groter is dan |
-|---|-----------------------------------|--------------------------------|
-| 1 | 10                                | 18                             |
-      `;
-
-      const model = parser.parseModel(modelText);
-      const version = model.beslistabels[0].versions![0];
-      (version.conclusionColumns[0].result.targetExpression as any).path = [];
-      (version.conditionColumns[0].condition.subjectExpression as any).path = [];
-
-      const errors = analyzer.analyze(model);
-
-      expect(errors.filter(error => error.message === 'Empty attribute reference path')).toHaveLength(2);
+      `);
+      expect(messages.some(m => /not resolved/.test(m))).toBe(false);
     });
   });
 });
