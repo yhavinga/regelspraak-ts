@@ -8,7 +8,7 @@ import { DecisionTable } from './ast/decision-tables';
 import { ObjectTypeDefinition } from './ast/object-types';
 import { ParameterDefinition } from './ast/parameters';
 import { DomainModel } from './ast/domain-model';
-import { CollectingErrorListener } from './parser-error-listener';
+import { CollectingErrorListener, ParseError } from './parser-error-listener';
 import { ModelResolutionOptions, ModelResolutionResult, resolveModel } from './resolver';
 
 /**
@@ -152,7 +152,7 @@ export class AntlrParser {
     // Check for parse errors
     const errors = errorListener.getErrors();
     if (errors.length > 0) {
-      throw new Error(errors.join('\n'));
+      throw new ParseError(errors.join('\n'), errorListener.getDiagnostics());
     }
 
     // Visit the tree to build our AST
@@ -174,7 +174,7 @@ export class AntlrParser {
     // Check for parse errors
     const errors = errorListener.getErrors();
     if (errors.length > 0) {
-      throw new Error(errors.join('\n'));
+      throw new ParseError(errors.join('\n'), errorListener.getDiagnostics());
     }
 
     // Visit the tree to build our AST
@@ -217,7 +217,7 @@ export class AntlrParser {
             throw new Error(`Missing argument for "${fn}"`);
           }
         }
-        throw new Error(errors.join('\n'));
+        throw new ParseError(errors.join('\n'), errorListener.getDiagnostics());
       }
 
       // Check if there's unparsed input (multiple arguments)
@@ -275,7 +275,7 @@ export class AntlrParser {
           firstError.includes("expecting 'wordt")) {
           throw new Error('Expected gelijkstelling pattern (moet berekend worden als)');
         }
-        throw new Error(errors.join('\n'));
+        throw new ParseError(errors.join('\n'), errorListener.getDiagnostics());
       }
 
       if (!tree) {
@@ -308,7 +308,7 @@ export class AntlrParser {
       // Check for parse errors
       const errors = errorListener.getErrors();
       if (errors.length > 0) {
-        throw new Error(errors.join('\n'));
+        throw new ParseError(errors.join('\n'), errorListener.getDiagnostics());
       }
 
       if (!tree) {
@@ -335,7 +335,7 @@ export class AntlrParser {
       // Check for parse errors
       const errors = errorListener.getErrors();
       if (errors.length > 0) {
-        throw new Error(errors.join('\n'));
+        throw new ParseError(errors.join('\n'), errorListener.getDiagnostics());
       }
 
       if (!tree) {
@@ -362,7 +362,7 @@ export class AntlrParser {
       // Check for parse errors
       const errors = errorListener.getErrors();
       if (errors.length > 0) {
-        throw new Error(errors.join('\n'));
+        throw new ParseError(errors.join('\n'), errorListener.getDiagnostics());
       }
 
       if (!tree) {

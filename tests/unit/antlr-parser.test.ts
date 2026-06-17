@@ -1,4 +1,5 @@
 import { AntlrParser } from '../../src/parser';
+import { ParseError } from '../../src/parser-error-listener';
 
 describe('ANTLR Parser Integration', () => {
   let parser: AntlrParser;
@@ -62,6 +63,30 @@ describe('ANTLR Parser Integration', () => {
           }
         }
       });
+    });
+  });
+
+  describe('Structured parse diagnostics', () => {
+    test('a syntax error throws a ParseError carrying structured diagnostics', () => {
+      // A missing ';' on an attribuut: the parser collects it and throws ParseError, whose
+      // .diagnostics expose the resolver-style {severity, line, column, message}, while .message stays
+      // the joined human-readable string callers historically matched on.
+      let caught: unknown;
+      try {
+        parser.parseModel('Objecttype de zaak\n    de naam Tekst');
+      } catch (e) {
+        caught = e;
+      }
+      expect(caught).toBeInstanceOf(ParseError);
+      const err = caught as ParseError;
+      expect(err.diagnostics.length).toBeGreaterThan(0);
+      expect(err.diagnostics[0]).toMatchObject({
+        severity: 'error',
+        line: expect.any(Number),
+        column: expect.any(Number),
+        message: expect.any(String),
+      });
+      expect(err.message).toContain('line');
     });
   });
 });

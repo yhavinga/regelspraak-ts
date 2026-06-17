@@ -4,6 +4,8 @@ export { Engine } from './engine';
 export { Context } from './context';
 export type { StructuredTraceEntry } from './context';
 export { AntlrParser } from './parser';
+export { ParseError } from './parser-error-listener';
+export type { ParseDiagnostic } from './parser-error-listener';
 export * from './ast';
 export * from './resolver';
 
