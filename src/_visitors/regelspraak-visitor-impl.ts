@@ -844,35 +844,47 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     return node;
   }
 
-  // Map a Dutch comparison operator's surface text — bare ("groter dan"), vragende ("groter is dan")
-  // or stellende ("is groter dan") — to the canonical symbol. Datum-ordening (§8.1.1): "later dan" is
-  // after (>) and "eerder dan" before (<), the datum datatype being Comparable, so they reuse the
-  // ordinal lowering. Shared by the vragende and stellende §8.2 comparison visitors.
+  // Map a Dutch comparison operator's surface text to the canonical symbol. All four Tabel 16
+  // variants collapse here — bare ("groter dan"), vragende-enkelvoud ("groter is dan"), stellende
+  // ("is groter dan" / meervoud "zijn groter dan") and vragende-meervoud ("groter zijn dan",
+  // §13.4.14.24/.30) — so mood/number never reaches the resolver. Datum-ordening (§8.1.1): "later
+  // dan" is after (>) and "eerder dan" before (<), the datum datatype being Comparable, so they
+  // reuse the ordinal lowering. Shared by the vragende and stellende §8.2 comparison visitors.
   private mapComparisonOperatorText(opText: string): string {
     switch (opText) {
       case 'gelijk aan': case 'gelijk is aan': case 'is gelijk aan': case 'zijn gelijk aan':
+      case 'gelijk zijn aan':
         return '==';
       case 'ongelijk aan': case 'ongelijk is aan': case 'is ongelijk aan': case 'zijn ongelijk aan':
+      case 'ongelijk zijn aan':
         return '!=';
       case 'groter dan': case 'groter is dan': case 'is groter dan': case 'zijn groter dan':
+      case 'groter zijn dan':
         return '>';
       case 'groter of gelijk aan': case 'groter of gelijk is aan':
       case 'is groter of gelijk aan': case 'zijn groter of gelijk aan':
+      case 'groter of gelijk zijn aan':
         return '>=';
       case 'kleiner dan': case 'kleiner is dan': case 'is kleiner dan': case 'zijn kleiner dan':
+      case 'kleiner zijn dan':
         return '<';
       case 'kleiner of gelijk aan': case 'kleiner of gelijk is aan':
       case 'is kleiner of gelijk aan': case 'zijn kleiner of gelijk aan':
+      case 'kleiner of gelijk zijn aan':
         return '<=';
       case 'later dan': case 'later is dan': case 'is later dan': case 'zijn later dan':
+      case 'later zijn dan':
         return '>';
       case 'later of gelijk aan': case 'later of gelijk is aan':
       case 'is later of gelijk aan': case 'zijn later of gelijk aan':
+      case 'later of gelijk zijn aan':
         return '>=';
       case 'eerder dan': case 'eerder is dan': case 'is eerder dan': case 'zijn eerder dan':
+      case 'eerder zijn dan':
         return '<';
       case 'eerder of gelijk aan': case 'eerder of gelijk is aan':
       case 'is eerder of gelijk aan': case 'zijn eerder of gelijk aan':
+      case 'eerder of gelijk zijn aan':
         return '<=';
       default:
         throw new Error(`Unknown comparison operator: ${opText}`);
@@ -1005,6 +1017,8 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       return this.visitUnaryUniekCondition(ctx);
     } else if (contextName === 'UnaryNumeriekExactConditionContext') {
       return this.visitUnaryNumeriekExactCondition(ctx);
+    } else if (contextName === 'UnaryNumeriekExactVragendConditionContext') {
+      return this.visitUnaryNumeriekExactVragendCondition(ctx);
     } else {
       throw new Error(`Unsupported unary condition type: ${contextName}`);
     }
@@ -1077,35 +1091,18 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     return node;
   }
 
-  visitUnaryNumeriekExactCondition(ctx: any): Expression {
-    // expr=primaryExpression op=(IS_NUMERIEK_MET_EXACT | ...) NUMBER CIJFERS
+  // Build the getalcontrole (§8.1.3) node shared by the verb-first/verb-mid and the verb-last forms:
+  // a BinaryExpression carrying the unified numeriek_exact predicate. The surface tokens differ only
+  // in where the verb sits; the operator string and digit count are all the consumers need.
+  private buildNumeriekExactNode(ctx: any, operator: string, negated: boolean): Expression {
     const expr = this.visit(ctx.primaryExpression());
 
-    // Get the digit count from NUMBER token
     const digitCountToken = ctx.NUMBER();
     if (!digitCountToken) {
       throw new Error('Expected digit count in numeric exact condition');
     }
     const digitCount = parseInt(digitCountToken.getText());
 
-    // Map operator token to string and determine negation
-    let operator: string;
-    let negated = false;
-    if (ctx.IS_NUMERIEK_MET_EXACT()) {
-      operator = 'is numeriek met exact';
-    } else if (ctx.IS_NIET_NUMERIEK_MET_EXACT()) {
-      operator = 'is niet numeriek met exact';
-      negated = true;
-    } else if (ctx.ZIJN_NUMERIEK_MET_EXACT()) {
-      operator = 'zijn numeriek met exact';
-    } else if (ctx.ZIJN_NIET_NUMERIEK_MET_EXACT()) {
-      operator = 'zijn niet numeriek met exact';
-      negated = true;
-    } else {
-      throw new Error('Unknown numeric exact operator');
-    }
-
-    // Create binary expression with unified predicate
     const node: any = {
       type: 'BinaryExpression',
       left: expr,
@@ -1114,7 +1111,6 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
         type: 'NumberLiteral',
         value: digitCount
       },
-      // Add unified predicate representation
       predicate: {
         type: 'SimplePredicate',
         operator: 'numeriek_exact',
@@ -1128,6 +1124,40 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       this.setLocation(node.predicate, ctx);
     }
     return node;
+  }
+
+  visitUnaryNumeriekExactCondition(ctx: any): Expression {
+    // expr=primaryExpression op=(IS_NUMERIEK_MET_EXACT | ... | NUMERIEK_IS_MET_EXACT | ...) NUMBER CIJFERS
+    let operator: string;
+    let negated = false;
+    if (ctx.IS_NUMERIEK_MET_EXACT()) {
+      operator = 'is numeriek met exact';
+    } else if (ctx.IS_NIET_NUMERIEK_MET_EXACT()) {
+      operator = 'is niet numeriek met exact';
+      negated = true;
+    } else if (ctx.ZIJN_NUMERIEK_MET_EXACT()) {
+      operator = 'zijn numeriek met exact';
+    } else if (ctx.ZIJN_NIET_NUMERIEK_MET_EXACT()) {
+      operator = 'zijn niet numeriek met exact';
+      negated = true;
+    } else if (ctx.NUMERIEK_IS_MET_EXACT()) {
+      // syntaxdiagrammen verb-mid "numeriek is met exact" — same predicate as the verb-first form.
+      operator = 'is numeriek met exact';
+    } else if (ctx.NUMERIEK_ZIJN_MET_EXACT()) {
+      // syntaxdiagrammen verb-mid meervoud "numeriek zijn met exact".
+      operator = 'zijn numeriek met exact';
+    } else {
+      throw new Error('Unknown numeric exact operator');
+    }
+    return this.buildNumeriekExactNode(ctx, operator, negated);
+  }
+
+  visitUnaryNumeriekExactVragendCondition(ctx: any): Expression {
+    // Tabel 16 verb-last "numeriek met exact <n> cijfers is/zijn" (+ "niet" form). The trailing
+    // verb carries number only; map to the verb-first canonical operator so consumers are untouched.
+    const negated = !!(ctx.NIET_NUMERIEK_MET_EXACT && ctx.NIET_NUMERIEK_MET_EXACT());
+    const operator = negated ? 'is niet numeriek met exact' : 'is numeriek met exact';
+    return this.buildNumeriekExactNode(ctx, operator, negated);
   }
 
   visitAdditiveExpression(ctx: AdditiveExpressionContext): Expression {
@@ -5942,6 +5972,24 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
       operator = 'voldoen aan de elfproef';
       isElfproef = true;
     } else if (ctx.VOLDOEN_NIET_AAN_DE_ELFPROEF && ctx.VOLDOEN_NIET_AAN_DE_ELFPROEF()) {
+      operator = 'voldoen niet aan de elfproef';
+      isElfproef = true;
+      negated = true;
+    } else if (ctx.AAN_DE_ELFPROEF_VOLDOET && ctx.AAN_DE_ELFPROEF_VOLDOET()) {
+      // §13.4.14.20 vragende-enkelvoud — same canonical operator as the verb-first form.
+      operator = 'voldoet aan de elfproef';
+      isElfproef = true;
+    } else if (ctx.AAN_DE_ELFPROEF_VOLDOEN && ctx.AAN_DE_ELFPROEF_VOLDOEN()) {
+      // §13.4.14.21 vragende-meervoud.
+      operator = 'voldoen aan de elfproef';
+      isElfproef = true;
+    } else if (ctx.NIET_AAN_DE_ELFPROEF_VOLDOET && ctx.NIET_AAN_DE_ELFPROEF_VOLDOET()) {
+      // Tabel 16 negated vragende-enkelvoud — same canonical operator as "voldoet niet aan de elfproef".
+      operator = 'voldoet niet aan de elfproef';
+      isElfproef = true;
+      negated = true;
+    } else if (ctx.NIET_AAN_DE_ELFPROEF_VOLDOEN && ctx.NIET_AAN_DE_ELFPROEF_VOLDOEN()) {
+      // Tabel 16 negated vragende-meervoud.
       operator = 'voldoen niet aan de elfproef';
       isElfproef = true;
       negated = true;

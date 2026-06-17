@@ -62,19 +62,15 @@ NIEUWE: 'nieuwe';  // Still used in naamPhrase for rule names
 ER_AAN: [Ee]'r aan';
 
 // --- Comparison Phrase Tokens ---
-// KNOWN GAP — spec Tabel 16 (§8.1) / EBNF §13.4.11 in "RegelSpraak-specificatie - syntaxdiagrammen
-// v2.3.0.md" (see ../specification/). The predicaten table lists four variants per comparison:
-// vragende/stellende × enkelvoud/meervoud. We tokenize stellende-enkelvoud (IS_*), stellende-
-// meervoud (ZIJN_*) and vragende-enkelvoud (*_IS_*), but NOT the vragende-meervoud forms
-// "gelijk zijn aan", "groter zijn dan", "kleiner of gelijk zijn aan", "later zijn dan",
-// "eerder zijn dan", … — only ONGELIJK_ZIJN_AAN (below) exists, added when the TOKA
-// "moet ongelijk zijn aan" rule hit the gap. This is deliberate, not an oversight: none of the
-// other vragende-meervoud forms occur in any rule/example/test, so they are added on demand (the
-// same add-when-hit pattern that produced the vragende-enkelvoud tokens). If a real rule gets
-// stuck on one, the fix is cheap and semantics-free: add the token here, add the alternative to
-// `comparisonOperator` in RegelSpraak.g4, and reuse the existing comparison visitor label — no
-// resolver/transpiler change (mood/number is surface syntax only). ONGELIJK_ZIJN_AAN is the
-// worked template.
+// Spec Tabel 16 (§8.1) lists four variants per comparison (vragende/stellende × enkelvoud/meervoud);
+// the formal EBNF — "toplevel tweezijdige getal-/datumvergelijkingsoperator", §13.4.14.22-30 of
+// "RegelSpraak-specificatie - syntaxdiagrammen v2.1.0.md" — is the oracle and enumerates the full
+// set. We tokenize all four: stellende-enkelvoud (IS_*), stellende-meervoud (ZIJN_*), vragende-
+// enkelvoud (*_IS_*) and vragende-meervoud (the *_ZIJN_* suffix forms "gelijk zijn aan",
+// "groter zijn dan", "later zijn dan", … added below; ONGELIJK_ZIJN_AAN sits in the keyword block
+// further down, where the TOKA "moet ongelijk zijn aan" first introduced it). The visitor folds all
+// four onto one symbol (mapComparisonOperatorText), so `comparisonOperator` in RegelSpraak.g4 just
+// lists them and the resolver/engine/transpiler are untouched — mood/number is surface syntax only.
 GELIJK_IS_AAN: 'gelijk is aan';
 // Vragende (verb-in-middle) operators completing §13.4.11 forms 23 (getal) and 29 (datum), the
 // siblings of GROTER_IS_DAN / GELIJK_IS_AAN: the verb "is" sits inside the operator phrase. Without
@@ -105,15 +101,34 @@ ZIJN_LATER_DAN: 'zijn later dan';
 ZIJN_LATER_OF_GELIJK_AAN: 'zijn later of gelijk aan';
 ZIJN_EERDER_DAN: 'zijn eerder dan';
 ZIJN_EERDER_OF_GELIJK_AAN: 'zijn eerder of gelijk aan';
+// Vragende-meervoud (§13.4.14.24/.30): the verb "zijn" sits inside the phrase ("gelijk zijn aan"),
+// the meervoud sibling of the vragende-enkelvoud "gelijk is aan" (GELIJK_IS_AAN). ONGELIJK_ZIJN_AAN
+// completes the set but lives in the keyword block below for historical reasons.
+GELIJK_ZIJN_AAN: 'gelijk zijn aan';
+GROTER_ZIJN_DAN: 'groter zijn dan';
+GROTER_OF_GELIJK_ZIJN_AAN: 'groter of gelijk zijn aan';
+KLEINER_ZIJN_DAN: 'kleiner zijn dan';
+KLEINER_OF_GELIJK_ZIJN_AAN: 'kleiner of gelijk zijn aan';
+LATER_ZIJN_DAN: 'later zijn dan';
+LATER_OF_GELIJK_ZIJN_AAN: 'later of gelijk zijn aan';
+EERDER_ZIJN_DAN: 'eerder zijn dan';
+EERDER_OF_GELIJK_ZIJN_AAN: 'eerder of gelijk zijn aan';
 
 // --- Condition Phrase Tokens ---
-// KNOWN GAP — spec Tabel 16 (§8.1). The verb-last vragende forms of the unary predicates are not
-// tokenized: "aan de elfproef voldoen" (only VOLDOEN_/VOLDOET_AAN_DE_ELFPROEF, verb-first),
-// "numeriek met exact <n> cijfers is" (only IS_/ZIJN_NUMERIEK_MET_EXACT), and the Resultaat-Regel
-// "gevuurd is" / "inconsistent is" (only IS_GEVUURD / IS_INCONSISTENT). Same rationale as the
-// comparison gap above: none occur in any rule/example/test, so add on demand — token here, plus
-// an alternative on the existing unaryCondition / regelStatusCondition rules in RegelSpraak.g4,
-// reusing the same visitor label.
+// The vragende forms of the unary predicates. Tabel 16 (§8.1) is the authoritative, complete
+// enumeration of the predicate surface; the syntaxdiagrammen EBNF is a secondary cross-check whose
+// surface coverage is less complete (a PDF→Markdown rendering), so where the two disagree we follow
+// the table. We tokenize the full Tabel 16 surface:
+//   - elfproef: "aan de elfproef voldoet/voldoen" and the negated "niet aan de elfproef
+//     voldoet/voldoen" (verb-last vragende; the stellende VOLDOET_*/VOLDOEN_* are above);
+//   - getalcontrole: BOTH the table's verb-last "numeriek met exact <n> cijfers is" and the
+//     syntaxdiagrammen's verb-mid "numeriek is/zijn met exact <n> cijfers" — the two specs put the
+//     verb in different places, and the loose parser accepts either;
+//   - regel-status: the verb-last "gevuurd is" / "inconsistent is" (Tabel 16 lists it; the
+//     syntaxdiagrammen <consistentievoorwaarde> shows only "is gevuurd"/"is inconsistent", but the
+//     table is the surface oracle).
+// Each folds onto the same canonical operator its verb-first sibling (IS_*/ZIJN_*) produces, so the
+// resolver, engine and transpiler are untouched — mood/number/verb-position is surface syntax only.
 IS_LEEG: 'is leeg';
 IS_GEVULD: 'is gevuld';
 ZIJN_LEEG: 'zijn leeg';
@@ -130,13 +145,31 @@ VOLDOET_AAN_DE_ELFPROEF: 'voldoet aan de elfproef';
 VOLDOEN_AAN_DE_ELFPROEF: 'voldoen aan de elfproef';
 VOLDOET_NIET_AAN_DE_ELFPROEF: 'voldoet niet aan de elfproef';
 VOLDOEN_NIET_AAN_DE_ELFPROEF: 'voldoen niet aan de elfproef';
+// Vragende (verb-last) elfproef: "aan de elfproef voldoet" (enkelvoud) / "voldoen" (meervoud) and
+// the negated "niet aan de elfproef voldoet/voldoen" (Tabel 16). The visitor maps each to the
+// verb-first canonical operator (VOLDOET/VOLDOEN ± niet).
+AAN_DE_ELFPROEF_VOLDOET: 'aan de elfproef voldoet';
+AAN_DE_ELFPROEF_VOLDOEN: 'aan de elfproef voldoen';
+NIET_AAN_DE_ELFPROEF_VOLDOET: 'niet aan de elfproef voldoet';
+NIET_AAN_DE_ELFPROEF_VOLDOEN: 'niet aan de elfproef voldoen';
 IS_NUMERIEK_MET_EXACT: 'is numeriek met exact';
 IS_NIET_NUMERIEK_MET_EXACT: 'is niet numeriek met exact';
 ZIJN_NUMERIEK_MET_EXACT: 'zijn numeriek met exact';
 ZIJN_NIET_NUMERIEK_MET_EXACT: 'zijn niet numeriek met exact';
+// Vragende getalcontrole. Two surfaces, kept in parallel (see the block comment above): the table's
+// verb-last "numeriek met exact <n> cijfers is" (the pre-existing NUMERIEK_MET_EXACT token + NUMBER
+// CIJFERS + is/zijn) and the syntaxdiagrammen's verb-mid "numeriek is/zijn met exact <n> cijfers".
+NIET_NUMERIEK_MET_EXACT: 'niet numeriek met exact';
+NUMERIEK_IS_MET_EXACT: 'numeriek is met exact';
+NUMERIEK_ZIJN_MET_EXACT: 'numeriek zijn met exact';
 MOETEN_UNIEK_ZIJN: 'moeten uniek zijn';
 IS_GEVUURD: 'is gevuurd';
 IS_INCONSISTENT: 'is inconsistent';
+// Vragende (verb-last) regel-status, Tabel 16: "<regelversie> gevuurd is" / "inconsistent is".
+// Maximal-munch tokens (mirroring IS_GEVUURD/IS_INCONSISTENT) so regelversieNaam stops cleanly
+// before them; folded into the existing regelStatusCondition labels.
+GEVUURD_IS: 'gevuurd is';
+INCONSISTENT_IS: 'inconsistent is';
 
 // --- Other Keywords (Grouped by category) ---
 

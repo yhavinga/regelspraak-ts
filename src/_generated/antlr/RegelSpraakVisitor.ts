@@ -259,6 +259,7 @@ import { UnaryCheckConditionContext } from "./RegelSpraakParser";
 import { UnaryCheckStellendeGehelePeriodeConditionContext } from "./RegelSpraakParser";
 import { UnaryCheckVragendConditionContext } from "./RegelSpraakParser";
 import { UnaryNumeriekExactConditionContext } from "./RegelSpraakParser";
+import { UnaryNumeriekExactVragendConditionContext } from "./RegelSpraakParser";
 import { UnaryKenmerkConditionContext } from "./RegelSpraakParser";
 import { UnaryRolConditionContext } from "./RegelSpraakParser";
 import { UnaryUniekConditionContext } from "./RegelSpraakParser";
@@ -1926,6 +1927,13 @@ export default class RegelSpraakVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitUnaryNumeriekExactCondition?: (ctx: UnaryNumeriekExactConditionContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `unaryNumeriekExactVragendCondition`
+	 * labeled alternative in `RegelSpraakParser.unaryCondition`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUnaryNumeriekExactVragendCondition?: (ctx: UnaryNumeriekExactVragendConditionContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `unaryKenmerkCondition`
 	 * labeled alternative in `RegelSpraakParser.unaryCondition`.

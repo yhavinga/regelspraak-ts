@@ -1017,6 +1017,10 @@ comparisonOperator // Expanded list
     | ZIJN_GELIJK_AAN | ZIJN_ONGELIJK_AAN | ZIJN_KLEINER_DAN | ZIJN_KLEINER_OF_GELIJK_AAN | ZIJN_GROTER_DAN | ZIJN_GROTER_OF_GELIJK_AAN
     | IS_LATER_DAN | IS_LATER_OF_GELIJK_AAN | IS_EERDER_DAN | IS_EERDER_OF_GELIJK_AAN
     | ZIJN_LATER_DAN | ZIJN_LATER_OF_GELIJK_AAN | ZIJN_EERDER_DAN | ZIJN_EERDER_OF_GELIJK_AAN
+    // Vragende-meervoud (§13.4.14.24/.30 toplevel tweezijdige ... meervoud), the "<word> zijn <prep>"
+    // forms. The visitor folds them onto the same symbols as their is-/zijn-/bare siblings.
+    | GELIJK_ZIJN_AAN | ONGELIJK_ZIJN_AAN | KLEINER_ZIJN_DAN | KLEINER_OF_GELIJK_ZIJN_AAN | GROTER_ZIJN_DAN | GROTER_OF_GELIJK_ZIJN_AAN
+    | LATER_ZIJN_DAN | LATER_OF_GELIJK_ZIJN_AAN | EERDER_ZIJN_DAN | EERDER_OF_GELIJK_ZIJN_AAN
     ;
 
 additiveExpression
@@ -1207,7 +1211,7 @@ aggregerenOverBereik // EBNF 13.4.16.49 - Using naamwoord for both dimension nam
 // Represents unary conditions like 'is leeg', 'voldoet aan...' (the dagsoortcontrole
 // "is een <dagsoort>" lives in comparisonExpression as IsDagsoortExpr, not here)
 unaryCondition // Now potentially part of comparisonExpression
-    : expr=primaryExpression op=(IS_LEEG | IS_GEVULD | VOLDOET_AAN_DE_ELFPROEF | VOLDOET_NIET_AAN_DE_ELFPROEF | ZIJN_LEEG | ZIJN_GEVULD | VOLDOEN_AAN_DE_ELFPROEF | VOLDOEN_NIET_AAN_DE_ELFPROEF) # unaryCheckCondition
+    : expr=primaryExpression op=(IS_LEEG | IS_GEVULD | VOLDOET_AAN_DE_ELFPROEF | VOLDOET_NIET_AAN_DE_ELFPROEF | ZIJN_LEEG | ZIJN_GEVULD | VOLDOEN_AAN_DE_ELFPROEF | VOLDOEN_NIET_AAN_DE_ELFPROEF | AAN_DE_ELFPROEF_VOLDOET | AAN_DE_ELFPROEF_VOLDOEN | NIET_AAN_DE_ELFPROEF_VOLDOET | NIET_AAN_DE_ELFPROEF_VOLDOEN) # unaryCheckCondition
     // The §8.2 stellende emptiness check ("<x> is gedurende de gehele maand leeg"): the fused IS_LEEG
     // token de-fuses to IS + LEEG once the geheleperiodevergelijking prefix intervenes, so the prefix
     // is required here (its absence is the plain "is leeg" above). Same operator tag, plus the
@@ -1218,7 +1222,11 @@ unaryCondition // Now potentially part of comparisonExpression
     // makes it a whole-period check ("<x> gedurende de gehele maand leeg is"). Maps to the same
     // operator tag as its verb-first sibling, so the resolver and transpiler are untouched bar gp.
     | expr=primaryExpression gp=geheleVergelijkingPrefix? check=(LEEG | GEVULD) v=(IS | ZIJN) # unaryCheckVragendCondition
-    | expr=primaryExpression op=(IS_NUMERIEK_MET_EXACT | IS_NIET_NUMERIEK_MET_EXACT | ZIJN_NUMERIEK_MET_EXACT | ZIJN_NIET_NUMERIEK_MET_EXACT) NUMBER CIJFERS # unaryNumeriekExactCondition
+    | expr=primaryExpression op=(IS_NUMERIEK_MET_EXACT | IS_NIET_NUMERIEK_MET_EXACT | ZIJN_NUMERIEK_MET_EXACT | ZIJN_NIET_NUMERIEK_MET_EXACT | NUMERIEK_IS_MET_EXACT | NUMERIEK_ZIJN_MET_EXACT) NUMBER CIJFERS # unaryNumeriekExactCondition
+    // Tabel 16 verb-last getalcontrole "numeriek met exact <n> cijfers is/zijn": the operator phrase
+    // is front-loaded and the verb trails after "cijfers", so it needs its own alternative. Same
+    // numeriek_exact predicate as its verb-first/verb-mid siblings, the trailing verb carrying number.
+    | expr=primaryExpression op=(NUMERIEK_MET_EXACT | NIET_NUMERIEK_MET_EXACT) NUMBER CIJFERS v=(IS | ZIJN) # unaryNumeriekExactVragendCondition
     | expr=primaryExpression op=(IS_KENMERK | ZIJN_KENMERK | IS_NIET_KENMERK | ZIJN_NIET_KENMERK) kenmerk=identifier # unaryKenmerkCondition
     | expr=primaryExpression op=(IS_ROL | ZIJN_ROL | IS_NIET_ROL | ZIJN_NIET_ROL) rol=identifier # unaryRolCondition
     | ref=onderwerpReferentie MOETEN_UNIEK_ZIJN # unaryUniekCondition // Specific for 'moeten uniek zijn'
@@ -1232,9 +1240,12 @@ unaryCondition // Now potentially part of comparisonExpression
 // swallows — so neither parses the canonical reference. `regelversieNaam` is a free run of name
 // words (including `geen`) up to the status token; because that token absorbs the name's final
 // "is", the parsed name ends one "is" short of the declared name and the resolver reconciles it.
+// The verb-last Tabel 16 forms ("<regelversie> gevuurd is" / "inconsistent is") fold into the same
+// labels via the GEVUURD_IS/INCONSISTENT_IS tokens; there the name is captured whole (no trailing
+// "is" absorbed), and the visitor reads the check off the same context class either way.
 regelStatusCondition // Now potentially part of comparisonExpression
-    : REGELVERSIE name=regelversieNaam IS_GEVUURD # regelStatusGevuurdCheck
-    | REGELVERSIE name=regelversieNaam IS_INCONSISTENT # regelStatusInconsistentCheck
+    : REGELVERSIE name=regelversieNaam (IS_GEVUURD | GEVUURD_IS) # regelStatusGevuurdCheck
+    | REGELVERSIE name=regelversieNaam (IS_INCONSISTENT | INCONSISTENT_IS) # regelStatusInconsistentCheck
     ;
 
 regelversieNaam

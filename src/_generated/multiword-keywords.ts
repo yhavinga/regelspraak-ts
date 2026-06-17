@@ -10,9 +10,9 @@ export interface MultiWordData {
 }
 
 export const multiWordKeywords: MultiWordData = {
-  "generated": "2026-06-14T18:23:53.713Z",
+  "generated": "2026-06-17T12:41:26.179Z",
   "source": "grammar/RegelSpraakLexer.g4",
-  "totalMultiWords": 132,
+  "totalMultiWords": 150,
   "byFirstWord": {
     "(voor": [
       "(voor het attribuut zonder voorzetsel):"
@@ -65,25 +65,33 @@ export const multiWordKeywords: MultiWordData = {
       "groter dan",
       "groter is dan",
       "groter of gelijk aan",
-      "groter of gelijk is aan"
+      "groter of gelijk is aan",
+      "groter of gelijk zijn aan",
+      "groter zijn dan"
     ],
     "kleiner": [
       "kleiner dan",
       "kleiner is dan",
       "kleiner of gelijk aan",
-      "kleiner of gelijk is aan"
+      "kleiner of gelijk is aan",
+      "kleiner of gelijk zijn aan",
+      "kleiner zijn dan"
     ],
     "later": [
       "later dan",
       "later is dan",
       "later of gelijk aan",
-      "later of gelijk is aan"
+      "later of gelijk is aan",
+      "later of gelijk zijn aan",
+      "later zijn dan"
     ],
     "eerder": [
       "eerder dan",
       "eerder is dan",
       "eerder of gelijk aan",
-      "eerder of gelijk is aan"
+      "eerder of gelijk is aan",
+      "eerder of gelijk zijn aan",
+      "eerder zijn dan"
     ],
     "waarbij": [
       "waarbij wordt verdeeld"
@@ -135,10 +143,14 @@ export const multiWordKeywords: MultiWordData = {
       "naar rato van"
     ],
     "numeriek": [
-      "numeriek met exact"
+      "numeriek is met exact",
+      "numeriek met exact",
+      "numeriek zijn met exact"
     ],
     "aan": [
-      "aan de elfproef"
+      "aan de elfproef",
+      "aan de elfproef voldoen",
+      "aan de elfproef voldoet"
     ],
     "of": [
       "of 0 als die er niet zijn"
@@ -149,7 +161,8 @@ export const multiWordKeywords: MultiWordData = {
     ],
     "gelijk": [
       "gelijk aan",
-      "gelijk is aan"
+      "gelijk is aan",
+      "gelijk zijn aan"
     ],
     "ongelijk": [
       "ongelijk aan",
@@ -184,8 +197,19 @@ export const multiWordKeywords: MultiWordData = {
       "voldoen aan de elfproef",
       "voldoen niet aan de elfproef"
     ],
+    "niet": [
+      "niet aan de elfproef voldoen",
+      "niet aan de elfproef voldoet",
+      "niet numeriek met exact"
+    ],
     "moeten": [
       "moeten uniek zijn"
+    ],
+    "gevuurd": [
+      "gevuurd is"
+    ],
+    "inconsistent": [
+      "inconsistent is"
     ],
     "daarbij": [
       "daarbij geldt:"
@@ -244,6 +268,8 @@ export const multiWordKeywords: MultiWordData = {
     "(voor het attribuut zonder voorzetsel):",
     ", bestaande uit de",
     "aan de elfproef",
+    "aan de elfproef voldoen",
+    "aan de elfproef voldoet",
     "afgerond op",
     "als onverdeelde rest blijft",
     "bij een even groot criterium",
@@ -266,6 +292,8 @@ export const multiWordKeywords: MultiWordData = {
     "eerder is dan",
     "eerder of gelijk aan",
     "eerder of gelijk is aan",
+    "eerder of gelijk zijn aan",
+    "eerder zijn dan",
     "gedeeld door",
     "gedeeld door (abs)",
     "gedimensioneerd met",
@@ -276,15 +304,20 @@ export const multiWordKeywords: MultiWordData = {
     "geheel getal",
     "gelijk aan",
     "gelijk is aan",
+    "gelijk zijn aan",
+    "gevuurd is",
     "groter dan",
     "groter is dan",
     "groter of gelijk aan",
     "groter of gelijk is aan",
+    "groter of gelijk zijn aan",
+    "groter zijn dan",
     "het tijdsevenredig deel per",
     "het totaal van",
     "het volgende criterium:",
     "in gelijke delen",
     "in hele",
+    "inconsistent is",
     "is eerder dan",
     "is eerder of gelijk aan",
     "is gelijk aan",
@@ -311,10 +344,14 @@ export const multiWordKeywords: MultiWordData = {
     "kleiner is dan",
     "kleiner of gelijk aan",
     "kleiner of gelijk is aan",
+    "kleiner of gelijk zijn aan",
+    "kleiner zijn dan",
     "later dan",
     "later is dan",
     "later of gelijk aan",
     "later of gelijk is aan",
+    "later of gelijk zijn aan",
+    "later zijn dan",
     "met een maximum van",
     "met een minimum van",
     "met eenheid",
@@ -325,7 +362,12 @@ export const multiWordKeywords: MultiWordData = {
     "naar beneden",
     "naar boven",
     "naar rato van",
+    "niet aan de elfproef voldoen",
+    "niet aan de elfproef voldoet",
+    "niet numeriek met exact",
+    "numeriek is met exact",
     "numeriek met exact",
+    "numeriek zijn met exact",
     "of 0 als die er niet zijn",
     "ongelijk aan",
     "ongelijk is aan",
