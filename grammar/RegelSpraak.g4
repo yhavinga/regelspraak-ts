@@ -253,6 +253,11 @@ objectTypeDefinition
       ( objectTypeMember )*
     ;
 
+// §13.3.1.4 koptekst ("--- <heading>") section headers inside an objecttype body are deliberately
+// UNSUPPORTED. A '---' lexer token would collide with the decision-table separator row (|---|---|,
+// which beslistabelSeparator consumes as individual MINUS tokens); koptekst is non-semantic (a visual
+// grouping header carrying no model meaning); and no corpus document uses it. So the lexer-mode work
+// to disambiguate '---' and the decision-table regression risk outweigh supporting a never-used header.
 objectTypeMember
     : ( kenmerkSpecificatie | attribuutSpecificatie ) SEMICOLON
     ;
