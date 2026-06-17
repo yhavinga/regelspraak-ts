@@ -1702,6 +1702,17 @@ function ordinalComparisonClass(
   }
 }
 
+/**
+ * The two disjoint ordinal families an ordinal comparison may stay within: the numeric family
+ * (§5.1-5.6, Numeriek/Percentage) and the date family (§5.7-5.10, Datum(-tijd)). They never mix.
+ */
+function ordinalFamily(baseType: string): 'numeriek' | 'datum' {
+  return baseType === 'Datum' || baseType === 'DatumTijd' ||
+    baseType === 'Datum in dagen' || baseType === 'Datum en tijd in millisecondes'
+    ? 'datum'
+    : 'numeriek';
+}
+
 function resolveBinaryExpression(
   expr: BinaryExpression,
   context: ResolutionContext,
@@ -1777,6 +1788,18 @@ function resolveBinaryExpression(
         throw new Error(
           `Operator '${expr.operator}' is een ordinale vergelijking en vereist Numeriek-, ` +
           `Percentage- of Datum(-tijd)-operanden (typeringen §5.1-5.10); de ${bad.side}expressie is ${bad.t}.`,
+        );
+      }
+      // The numeric family (§5.1-5.6) and the date family (§5.7-5.10) are disjoint — neither section
+      // admits a cross-family comparison. The visitor collapses both onto the same <,<=,>,>= symbol,
+      // so when both operands are ordinal their families must still match (e.g. Numeriek vs Datum is
+      // rejected, while Numeriek vs Percentage and Datum vs DatumTijd stay within one family).
+      if (leftClass.kind === 'ordinal' && rightClass.kind === 'ordinal' &&
+          ordinalFamily(leftClass.baseType) !== ordinalFamily(rightClass.baseType)) {
+        throw new Error(
+          `Operator '${expr.operator}' vergelijkt onverenigbare datatypes: de linkerexpressie is ` +
+          `${leftClass.baseType}, de rechterexpressie is ${rightClass.baseType} (typeringen §5.1-5.10: ` +
+          `een ordinale vergelijking blijft binnen de numerieke óf de datum-familie).`,
         );
       }
     }

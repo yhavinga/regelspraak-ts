@@ -489,6 +489,34 @@ Regel Bereken totaal
     )).toBe(true);
   });
 
+  test('rejects an ordinal comparison across the numeric and date families; allows within-family (§5.1-5.10)', () => {
+    const parser = new AntlrParser();
+    const compare = (lhs: string, rhs: string): string => `
+Objecttype de persoon (mv: personen)
+    de leeftijd Numeriek (geheel getal);
+    de geboortedatum Datum in dagen;
+    de naam Tekst;
+    de score Numeriek (geheel getal);
+
+Regel r
+    geldig altijd
+        De score van een persoon moet berekend worden als 1 indien ${lhs} groter is dan ${rhs}.
+`;
+    const ordinalDiag = /onverenigbare datatypes|ordinale vergelijking en vereist/;
+
+    // Numeriek vs Datum: the numeric (§5.1-5.6) and date (§5.7-5.10) ordinal families are disjoint.
+    expect(parser.parseResolvedModel(compare('zijn leeftijd', 'zijn geboortedatum'), { strict: true })
+      .diagnostics.some(d => /onverenigbare datatypes/.test(d.message))).toBe(true);
+
+    // Tekst: not ordinal at all (admits only ==/!=).
+    expect(parser.parseResolvedModel(compare('zijn naam', 'zijn naam'), { strict: true })
+      .diagnostics.some(d => /ordinale vergelijking en vereist/.test(d.message))).toBe(true);
+
+    // Numeriek vs Numeriek: within one family — accepted.
+    expect(parser.parseResolvedModel(compare('zijn leeftijd', 'zijn score'), { strict: true })
+      .diagnostics.some(d => ordinalDiag.test(d.message))).toBe(false);
+  });
+
   test('ObjectCreation with an unknown initializer attribute is a diagnostic', () => {
     const parser = new AntlrParser();
     const result = parser.parseResolvedModel(`
