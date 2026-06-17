@@ -108,6 +108,8 @@ export interface ResolutionMaps {
   kenmerkRegistries: Map<string, KenmerkEquivalenceRegistry>;
   /** domain name → DomainReference */
   domains: Map<string, DomainReference>;
+  /** domain name → its declared baseType, for resolving a DomainReference to its underlying datatype */
+  domainBaseTypes: Map<string, string>;
   /** dimension name → Dimension definition */
   dimensions: Map<string, Dimension>;
   /** label → dimension name (for reverse lookup) */
@@ -165,6 +167,7 @@ function buildMaps(model: DomainModel): ResolutionMaps {
   const kenmerken = new Map<string, Map<string, KenmerkSpecification>>();
   const kenmerkRegistries = new Map<string, KenmerkEquivalenceRegistry>();
   const domains = new Map<string, DomainReference>();
+  const domainBaseTypes = new Map<string, string>();
   const dimensions = new Map<string, Dimension>();
   const labelToDimension = new Map<string, string>();
   const dagsoorten = new Map<string, Dagsoort>();
@@ -206,6 +209,8 @@ function buildMaps(model: DomainModel): ResolutionMaps {
     const reference: DomainReference = { type: 'DomainReference', domain: domain.name };
     domains.set(domain.name, reference);
     domains.set(domain.name.toLowerCase(), reference);
+    domainBaseTypes.set(domain.name, domain.baseType);
+    domainBaseTypes.set(domain.name.toLowerCase(), domain.baseType);
   }
 
   // Check both 'feitTypes' and 'feittypen' - AST uses 'feittypen', some code uses 'feitTypes'
@@ -254,6 +259,7 @@ function buildMaps(model: DomainModel): ResolutionMaps {
     kenmerken,
     kenmerkRegistries,
     domains,
+    domainBaseTypes,
     dimensions,
     labelToDimension,
     dagsoorten,
@@ -1656,6 +1662,40 @@ function combineTimelineInfo(
   }
 }
 
+/**
+ * Classify an operand's resolved type for ordinal comparison (typeringen §5.1-5.10). Only Numeriek,
+ * Percentage and Datum(-tijd) admit <,<=,>,>=; Tekst, Boolean and Enumeratie admit only ==/!=. A
+ * domein is classified by its declared baseType — most numerieke attributen are domein-typed, so the
+ * raw resolvedType is a DomainReference that must be looked through. An unresolved or purely
+ * structural type (ObjectType, Lijst, …) is 'unknown', and the caller fails open on it so that
+ * resolution incompleteness never masquerades as a type error.
+ */
+function ordinalComparisonClass(
+  rt: DataType | DomainReference | { type: string } | undefined,
+  maps: ResolutionMaps,
+): { kind: 'ordinal' | 'non-ordinal' | 'unknown'; baseType: string } {
+  let baseType = (rt as any)?.type as string | undefined;
+  if (baseType === 'DomainReference') {
+    const domain = (rt as DomainReference).domain;
+    baseType = maps.domainBaseTypes.get(domain) ?? maps.domainBaseTypes.get(domain.toLowerCase());
+  }
+  switch (baseType) {
+    case 'Numeriek':
+    case 'Percentage':
+    case 'Datum':
+    case 'DatumTijd':
+    case 'Datum in dagen':                 // domein baseType spelling for Datum
+    case 'Datum en tijd in millisecondes': // domein baseType spelling for DatumTijd
+      return { kind: 'ordinal', baseType };
+    case 'Tekst':
+    case 'Boolean':
+    case 'Enumeratie':
+      return { kind: 'non-ordinal', baseType };
+    default:
+      return { kind: 'unknown', baseType: baseType ?? 'onbekend' };
+  }
+}
+
 function resolveBinaryExpression(
   expr: BinaryExpression,
   context: ResolutionContext,
@@ -1712,6 +1752,26 @@ function resolveBinaryExpression(
       }
       if (cls.kind === 'convertible') {
         unitConversion = { operand: 'right', multiplyBy: cls.multiplyBy, divideBy: cls.divideBy };
+      }
+    }
+    // Typeringen §5.1-5.10: an ordinal comparison is defined only for numerieke, percentage and
+    // Datum(-tijd) operands — "kleiner/groter dan (of gelijk aan)" on numbers (§5.1/5.2/5.4/5.5) and
+    // the datum-ordening "eerder/later dan" on dates (§5.7-5.10). Tekst, Boolean and Enumeratie admit
+    // only gelijk/ongelijk aan (==/!=, §5.3/5.6). The visitor folds both surface families onto the
+    // same <,<=,>,>= symbols, so accept either ordinal family and reject the rest. Unresolved operands
+    // are skipped: resolution incompleteness must fail open, not masquerade as a type error.
+    const orderedComparisonOps = ['>', '<', '>=', '<='];
+    if (orderedComparisonOps.includes(expr.operator)) {
+      const leftClass = ordinalComparisonClass(expr.left.resolved?.resolvedType, maps);
+      const rightClass = ordinalComparisonClass(expr.right.resolved?.resolvedType, maps);
+      const bad =
+        leftClass.kind === 'non-ordinal' ? { side: 'linker', t: leftClass.baseType } :
+        rightClass.kind === 'non-ordinal' ? { side: 'rechter', t: rightClass.baseType } : null;
+      if (bad) {
+        throw new Error(
+          `Operator '${expr.operator}' is een ordinale vergelijking en vereist Numeriek-, ` +
+          `Percentage- of Datum(-tijd)-operanden (typeringen §5.1-5.10); de ${bad.side}expressie is ${bad.t}.`,
+        );
       }
     }
     expr.resolved = {
