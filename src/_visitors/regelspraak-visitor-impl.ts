@@ -4656,6 +4656,13 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     const rawName = this.extractTextWithSpaces(nameCtx);
     const name = this.extractParameterName(rawName);
 
+    // A naamwoord may carry a meervoudsvorm "(mv: ...)"; capture it so the resolver can match the
+    // plural form a sommatie reads ("de leeftijden van alle passagiers") back to this attribute.
+    let plural: string | undefined;
+    if (ctx._meervoud) {
+      plural = this.extractParameterName(this.extractTextWithSpaces(ctx._meervoud));
+    }
+
     // Get data type or domain reference
     let dataType: DataType | DomainReference;
     const datatypeCtx = ctx.datatype();
@@ -4697,6 +4704,9 @@ export class RegelSpraakVisitorImpl extends ParseTreeVisitor<any> implements Reg
     };
 
     // Only add optional properties when they have values
+    if (plural !== undefined) {
+      node.plural = plural;
+    }
     if (unit !== undefined) {
       node.unit = unit;
     }

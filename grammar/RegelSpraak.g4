@@ -267,10 +267,10 @@ kenmerkSpecificatie
 // optionally, the way rolDefinition anchors on TAB. A space-separated source hides the whitespace
 // and omits the token, so both layouts parse.
 attribuutSpecificatie
-    : naamwoordWithNumbers TAB? ( datatype | domeinRef | objectTypeRef )
+    : naamwoordWithNumbers (MV_START meervoud=naamwoord RPAREN)? TAB? ( datatype | domeinRef | objectTypeRef )
       (MET_EENHEID eenheidExpressie)?
       (GEDIMENSIONEERD_MET dimensieRef (EN dimensieRef)*)?
-      tijdlijn? 
+      tijdlijn?
     ;
 
 // §13.3.3 Datatypes

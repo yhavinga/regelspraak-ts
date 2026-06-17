@@ -150,6 +150,20 @@ describe('Engine - Object Type Definitions', () => {
       });
     });
 
+    test('should capture an attribute meervoudsvorm "(mv: ...)"', () => {
+      // A naamwoord carries its plural via "(mv: ...)" (§13.3.2). The resolver matches a sommatie's
+      // plural form ("de som van de leeftijden van ...") back to the attribute through this.
+      const result = engine.parse(`Objecttype persoon\n  de leeftijd (mv: leeftijden) Numeriek (geheel getal);`);
+
+      expect(result.success).toBe(true);
+      expect(stripLocations(result.ast?.members[0])).toEqual({
+        type: 'AttributeSpecification',
+        name: 'leeftijd',
+        plural: 'leeftijden',
+        dataType: { type: 'Numeriek', numericSpec: { format: 'geheel getal', signConstraint: undefined, decimals: undefined } }
+      });
+    });
+
     test('should parse list attribute with primitive element type', () => {
       const source = `Objecttype factuur
   bedragen Lijst van Numeriek;`;

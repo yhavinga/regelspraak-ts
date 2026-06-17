@@ -38,6 +38,12 @@ export type TimelineGranularity = 'dag' | 'maand' | 'jaar';
 export interface AttributeSpecification {
   type: 'AttributeSpecification';
   name: string;
+  /**
+   * Declared meervoudsvorm of the attribute name ("(mv: leeftijden)"), per the naamwoord rule.
+   * A sommatie over a collection reads the plural form ("de som van de leeftijden van alle
+   * passagiers"), which the resolver matches back to this attribute via its declared plural.
+   */
+  plural?: string;
   dataType: DataType | DomainReference;
   unit?: string;
   unitExpression?: UnitExpression;

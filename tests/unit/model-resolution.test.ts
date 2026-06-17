@@ -457,6 +457,38 @@ De toeslag van een Persoon moet berekend worden als zijn leeftijd.
     )).toBe(true);
   });
 
+  test('a sommatie resolves an attribute via its declared meervoudsvorm, not an undeclared plural', () => {
+    const parser = new AntlrParser();
+    // "de som van de leeftijden van alle passagiers" reads the plural form of the attribute leeftijd;
+    // it resolves only when leeftijd declares "(mv: leeftijden)". An undeclared plural stays unresolved
+    // — the resolver matches the declared meervoudsvorm, never a guessed one. Pins the grammar +
+    // visitor capture + resolver indexing together.
+    const model = (pluralDecl: string): string => `
+Objecttype de Vlucht (mv: vluchten)
+    het totaal Numeriek (geheel getal);
+
+Objecttype de Persoon (mv: personen) (bezield)
+    de leeftijd ${pluralDecl}Numeriek (geheel getal);
+
+Feittype vlucht van personen
+    de reis\tVlucht
+    de passagier (mv: passagiers)\tPersoon
+één reis betreft de verplaatsing van meerdere passagiers
+
+Regel Bereken totaal
+    geldig altijd
+        Het totaal van een Vlucht moet berekend worden als
+        de som van de leeftijden van alle passagiers van de vlucht.
+`;
+    const declared = parser.parseResolvedModel(model('(mv: leeftijden) '), { strict: true });
+    expect(declared.diagnostics.some(d => /navigation segment 'leeftijden'/.test(d.message))).toBe(false);
+
+    const undeclared = parser.parseResolvedModel(model(''), { strict: true });
+    expect(undeclared.diagnostics.some(d =>
+      /Cannot resolve navigation segment 'leeftijden'/.test(d.message)
+    )).toBe(true);
+  });
+
   test('ObjectCreation with an unknown initializer attribute is a diagnostic', () => {
     const parser = new AntlrParser();
     const result = parser.parseResolvedModel(`

@@ -184,6 +184,12 @@ function buildMaps(model: DomainModel): ResolutionMaps {
       if (member.type === 'AttributeSpecification') {
         attrMap.set(member.name, member);
         attrMap.set(member.name.toLowerCase(), member);
+        // Index the declared meervoudsvorm too, so a sommatie reading the plural form resolves to
+        // this attribute (its resolvedName stays the singular canonical name).
+        if (member.plural) {
+          attrMap.set(member.plural, member);
+          attrMap.set(member.plural.toLowerCase(), member);
+        }
       } else if (member.type === 'KenmerkSpecification') {
         kenmerkMap.set(member.name, member);
         kenmerkMap.set(member.name.toLowerCase(), member);
