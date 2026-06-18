@@ -81,6 +81,63 @@ De toeslag van een Persoon moet berekend worden als zijn leeftijd.
     )).toBe(true);
   });
 
+  test('rejects a self-referential derivation as a §9.9 cyclic derivation', () => {
+    const parser = new AntlrParser();
+    const model = parser.parseModel(`
+Objecttype de Vlucht (mv: vluchten)
+  de korting Numeriek;
+
+Regel bereken korting
+geldig altijd
+De korting van een Vlucht moet berekend worden als de korting van de Vlucht plus 1.
+`);
+
+    const result = resolveModel(model);
+
+    expect(result.success).toBe(false);
+    expect(result.diagnostics.some(diagnostic => diagnostic.message.includes('§9.9'))).toBe(true);
+  });
+
+  test('rejects a mutual derivation cycle across two rules (§9.9)', () => {
+    const parser = new AntlrParser();
+    const model = parser.parseModel(`
+Objecttype de Werknemer (mv: werknemers)
+  de toeslag Numeriek;
+  het basisbedrag Numeriek;
+
+Regel cyclus a
+geldig altijd
+De toeslag van een Werknemer moet berekend worden als het basisbedrag van de Werknemer plus 1.
+
+Regel cyclus b
+geldig altijd
+Het basisbedrag van een Werknemer moet berekend worden als de toeslag van de Werknemer plus 1.
+`);
+
+    const result = resolveModel(model);
+
+    expect(result.success).toBe(false);
+    expect(result.diagnostics.filter(diagnostic => diagnostic.message.includes('§9.9')).length)
+      .toBeGreaterThanOrEqual(1);
+  });
+
+  test('allows the same self-reference inside a recursief regelgroep (§9.9 escape hatch)', () => {
+    const parser = new AntlrParser();
+    const model = parser.parseModel(`
+Objecttype de Teller (mv: tellers)
+  de waarde Numeriek;
+
+Regelgroep verhogen is recursief
+Regel verhoog waarde
+geldig altijd
+De waarde van een Teller moet berekend worden als de waarde van de Teller plus 1.
+`);
+
+    const result = resolveModel(model);
+
+    expect(result.diagnostics.every(diagnostic => !diagnostic.message.includes('§9.9'))).toBe(true);
+  });
+
   test('engine exposes an explicit resolved-model API', () => {
     const engine = new Engine();
     const result = engine.parseResolvedModel(source);

@@ -121,6 +121,7 @@ class DomainModelResolver {
     this.resolveRuleGroups(this.model.regelGroepen || []);
     this.resolveDecisionTables(this.model.beslistabels || []);
     this.resolveDagsoortDefinitions(this.model.dagsoortDefinities || []);
+    this.checkCyclicDerivations();
 
     const result: ModelResolutionResult = {
       success: this.diagnostics.length === 0,
@@ -1240,4 +1241,267 @@ class DomainModelResolver {
       location,
     });
   }
+
+  /**
+   * §9.9: reject a cyclic derivation — a property of an instance derived from the
+   * same property of the same instance — unless the modeller declared the
+   * recursion by marking its regelgroep `recursief`. The graph analysis lives in
+   * findCyclicDerivations below.
+   */
+  private checkCyclicDerivations(): void {
+    for (const diagnostic of findCyclicDerivations(this.model)) {
+      this.addDiagnostic(diagnostic.message, diagnostic.path, diagnostic.location);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// §9.9 cyclic-derivation detection
+//
+// A gelijkstelling / kenmerktoekenning / verdeling / objectcreatie that derives a
+// property (attribuut or kenmerk) of an instance from the SAME property of the
+// SAME instance is foutief (§9.9). Whether a cycle is that illegal kind or legal
+// recursion (the same property of a DIFFERENT instance) cannot be told apart
+// automatically, so the spec rejects cyclic derivations unless the modeller
+// declares the recursion by marking its regelgroep `recursief`.
+//
+// We build a derivation graph over the rules keyed by BARE same-instance members:
+// a node produces the plain attribuut/kenmerk it writes on its subject, and
+// consumes the plain attribuut/kenmerk it reads on that same subject WITHOUT
+// relation navigation. A dimensioned cell, a navigated read and relation creation
+// are deliberately excluded — they are a different cell / a different instance,
+// not "the same property of the same instance". A rule whose produced member is
+// among its own bare reads is a self-cycle; a multi-rule strongly connected
+// component is a mutual cycle. Either is an error unless every rule in it sits in
+// a recursief regelgroep.
+// ---------------------------------------------------------------------------
+
+interface CyclicDiagnostic {
+  message: string;
+  path: string;
+  location?: SourceLocation;
+}
+
+function cdMemberKey(objectType: string, member: string): string {
+  return `member:${objectType.toLowerCase()}#${member.toLowerCase()}`;
+}
+
+/**
+ * The bare same-instance member key of a reference, or null. "Bare" means a plain
+ * (non-dimensioned) attribuut/kenmerk on the subject itself, reached WITHOUT
+ * relation navigation. A dimensioned cell is a different value-slot and a
+ * navigated read is a different instance — neither is "the same property of the
+ * same instance" that §9.9 forbids, so both return null.
+ */
+function cdBareMemberKey(ref: any): string | null {
+  if (!ref || typeof ref !== 'object' || ref.type === 'DimensionedAttributeReference') return null;
+  const path = ref.resolved?.resolvedPath;
+  if (!Array.isArray(path) || path.length === 0) return null;
+  if (path.some((s: any) => s?.kind === 'feittype')) return null;
+  const last = path[path.length - 1];
+  return last?.kind === 'attribute' && last.sourceType && last.resolvedName
+    ? cdMemberKey(last.sourceType, last.resolvedName)
+    : null;
+}
+
+/** A bare kenmerk-check read (the subject's own kenmerk, not navigated), or null. */
+function cdBareKenmerkKey(expr: any): string | null {
+  let ownerRef: any;
+  let kenmerk: unknown;
+  if (expr.type === 'BinaryExpression' &&
+      (expr.operator === 'is een kenmerk' || expr.operator === 'is geen kenmerk')) {
+    ownerRef = expr.left;
+    kenmerk = expr.right?.value;
+  } else if (expr.type === 'SimplePredicate' && expr.operator === 'kenmerk') {
+    ownerRef = expr.subject ?? expr.onderwerp ?? expr.navigation;
+    kenmerk = expr.kenmerk;
+  } else if (expr.type === 'VergelijkingInPredicaat' && expr.vergelijkingType === 'kenmerk_check') {
+    ownerRef = expr.onderwerp;
+    kenmerk = expr.kenmerkNaam;
+  } else {
+    return null;
+  }
+  if (typeof kenmerk !== 'string') return null;
+  const path = ownerRef?.resolved?.resolvedPath;
+  if (Array.isArray(path) && path.some((s: any) => s?.kind === 'feittype')) return null;
+  const last = Array.isArray(path) ? path[path.length - 1] : undefined;
+  return last?.targetType ? cdMemberKey(last.targetType, kenmerk) : null;
+}
+
+/** Walk an expression tree collecting the BARE member/kenmerk keys it reads. */
+function cdCollectBareReads(expr: any, out: Set<string>): void {
+  if (!expr || typeof expr !== 'object') return;
+  const member = cdBareMemberKey(expr);
+  if (member) out.add(member);
+  const kenmerk = cdBareKenmerkKey(expr);
+  if (kenmerk) out.add(kenmerk);
+  for (const k of Object.keys(expr)) {
+    if (k === 'resolved') continue;
+    const v = expr[k];
+    if (Array.isArray(v)) v.forEach(child => cdCollectBareReads(child, out));
+    else if (v && typeof v === 'object') cdCollectBareReads(v, out);
+  }
+}
+
+/**
+ * The bare member a result writes (a gelijkstelling/kenmerktoekenning on the
+ * subject itself). A dimensioned or navigated target writes a different cell /
+ * instance, and objectcreatie/feitcreatie/verdeling do not derive a bare member
+ * value from itself, so those produce nothing here — §9.9 is about a plain
+ * attribuut/kenmerk derived from itself.
+ */
+function cdCollectProduces(result: any, out: Set<string>): void {
+  if (!result || typeof result !== 'object') return;
+  if (result.type === 'MultipleResults') {
+    for (const r of result.results ?? []) cdCollectProduces(r, out);
+    return;
+  }
+  if (result.type === 'Gelijkstelling') {
+    const k = cdBareMemberKey(result.target);
+    if (k) out.add(k);
+  } else if (result.type === 'Kenmerktoekenning') {
+    const path = result.subject?.resolved?.resolvedPath;
+    const navigated = Array.isArray(path) && path.some((s: any) => s?.kind === 'feittype');
+    const last = Array.isArray(path) ? path[path.length - 1] : undefined;
+    if (!navigated && last?.targetType && result.characteristic) {
+      out.add(cdMemberKey(last.targetType, result.characteristic));
+    }
+  }
+}
+
+/**
+ * Bare member/kenmerk keys a result READS — its own write target excluded. A
+ * Gelijkstelling's target is itself a reference, so walking the whole result node
+ * would re-read the produced member and make ordinary rules look self-cyclic; we
+ * read only the value expression, the temporal condition, and (for non-writing
+ * results) the whole node.
+ */
+function cdCollectResultReads(result: any, out: Set<string>): void {
+  if (!result || typeof result !== 'object') return;
+  switch (result.type) {
+    case 'Gelijkstelling':
+      cdCollectBareReads(result.expression, out);
+      cdCollectBareReads(result.temporalCondition, out);
+      break;
+    case 'Kenmerktoekenning':
+      cdCollectBareReads(result.temporalCondition, out);
+      break;
+    case 'Verdeling':
+      cdCollectBareReads(result.sourceAmount, out);
+      for (const m of result.distributionMethods ?? []) cdCollectBareReads(m, out);
+      break;
+    case 'MultipleResults':
+      for (const r of result.results ?? []) cdCollectResultReads(r, out);
+      break;
+    default:
+      cdCollectBareReads(result, out);
+  }
+}
+
+/** Each (result, condition, variables) triple of a rule, across its versions. */
+function cdRuleBodies(rule: any): Array<{ result: any; condition: any; variables: any[] }> {
+  const versions = Array.isArray(rule.versions) && rule.versions.length > 0 ? rule.versions : undefined;
+  if (versions) return versions.map((v: any) => ({ result: v.result, condition: v.condition, variables: v.variables ?? [] }));
+  if (rule.version) return [{ result: rule.version.result, condition: rule.version.condition, variables: rule.version.variables ?? [] }];
+  return [{ result: rule.result ?? rule.resultaat, condition: rule.condition ?? rule.voorwaarde, variables: rule.variables ?? [] }];
+}
+
+function cdProducesConsumes(rule: any): { produces: Set<string>; consumes: Set<string> } {
+  const produces = new Set<string>();
+  const consumes = new Set<string>();
+  for (const body of cdRuleBodies(rule)) {
+    cdCollectProduces(body.result, produces);
+    cdCollectResultReads(body.result, consumes);
+    cdCollectBareReads(body.condition, consumes);
+    for (const v of body.variables ?? []) cdCollectBareReads(v.expression, consumes);
+  }
+  return { produces, consumes };
+}
+
+/**
+ * Build the rule-derivation graph and return a §9.9 diagnostic for every cyclic
+ * rule (a self-cycle on a member, or a member/relation cycle spanning rules) that
+ * is not declared inside a `recursief` regelgroep.
+ */
+function findCyclicDerivations(model: DomainModel): CyclicDiagnostic[] {
+  const entries: Array<{ rule: any; recursief: boolean; path: string }> = [];
+  (model.regels ?? []).forEach((r, i) => entries.push({ rule: r, recursief: false, path: `regels[${i}]` }));
+  (model.regelGroepen ?? []).forEach((g: any, gi: number) =>
+    (g.rules ?? []).forEach((r: any, ri: number) =>
+      entries.push({ rule: r, recursief: !!g.isRecursive, path: `regelGroepen[${gi}].rules[${ri}]` })));
+
+  const n = entries.length;
+  if (n === 0) return [];
+  const pc = entries.map(e => cdProducesConsumes(e.rule));
+
+  // Self-cycle: a rule that reads a member (attribuut/kenmerk) it also writes —
+  // "the same property of the same instance" §9.9 forbids. Relation self-creation
+  // (objectcreatie producing the relation it sits on) is intentional, so only
+  // member keys count for the self-cycle.
+  const selfCyclic = pc.map(p => {
+    for (const k of p.produces) if (k.startsWith('member:') && p.consumes.has(k)) return true;
+    return false;
+  });
+
+  // Inter-rule edges p → c when c reads something p writes (self-edges excluded; tracked above).
+  const succ: number[][] = entries.map(() => []);
+  for (let p = 0; p < n; p++) {
+    if (pc[p].produces.size === 0) continue;
+    for (let c = 0; c < n; c++) {
+      if (c === p) continue;
+      for (const key of pc[p].produces) {
+        if (pc[c].consumes.has(key)) { succ[p].push(c); break; }
+      }
+    }
+  }
+
+  // Tarjan SCC: components of size > 1 are multi-rule derivation cycles.
+  const componentOf = new Array<number>(n).fill(-1);
+  const componentSizes: number[] = [];
+  {
+    let index = 0;
+    const idx = new Array<number>(n).fill(-1);
+    const low = new Array<number>(n).fill(0);
+    const onStack = new Array<boolean>(n).fill(false);
+    const stack: number[] = [];
+    const strongConnect = (v: number): void => {
+      idx[v] = low[v] = index++;
+      stack.push(v); onStack[v] = true;
+      for (const w of succ[v]) {
+        if (idx[w] === -1) { strongConnect(w); low[v] = Math.min(low[v], low[w]); }
+        else if (onStack[w]) low[v] = Math.min(low[v], idx[w]);
+      }
+      if (low[v] === idx[v]) {
+        const comp = componentSizes.length;
+        let size = 0;
+        for (;;) { const w = stack.pop()!; onStack[w] = false; componentOf[w] = comp; size++; if (w === v) break; }
+        componentSizes.push(size);
+      }
+    };
+    for (let v = 0; v < n; v++) if (idx[v] === -1) strongConnect(v);
+  }
+
+  // A rule is cyclic if it self-derives or sits in a size>1 component; cyclic is
+  // legal only when declared recursief, else it is a §9.9 error.
+  const diagnostics: CyclicDiagnostic[] = [];
+  for (let i = 0; i < n; i++) {
+    const inComponentCycle = componentSizes[componentOf[i]] > 1;
+    if ((!selfCyclic[i] && !inComponentCycle) || entries[i].recursief) continue;
+    const others: string[] = [];
+    if (inComponentCycle) {
+      for (let j = 0; j < n; j++) {
+        if (j !== i && componentOf[j] === componentOf[i]) others.push(entries[j].rule.name ?? 'unnamed');
+      }
+    }
+    const withWhom = others.length > 0 ? ` (with ${others.map(o => `'${o}'`).join(', ')})` : '';
+    diagnostics.push({
+      message:
+        `§9.9: regel '${entries[i].rule.name ?? 'unnamed'}'${withWhom} derives a property from the ` +
+        `same property of the same instance (cyclic derivation), which is foutief. If this is ` +
+        `recursion over distinct instances, place the rules in a regelgroep marked 'is recursief'.`,
+      path: entries[i].path,
+      location: entries[i].rule.location,
+    });
+  }
+  return diagnostics;
 }
